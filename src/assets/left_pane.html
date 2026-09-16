@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tailorbird Sidebar</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --border-accent: #388bfd;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-bright: #f0f6fc;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+      --primary: #1f6feb;
+      --primary-hover: #388bfd;
+      --danger: #da3633;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.45;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      font-size: 20px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -0.3px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: rgba(56, 139, 253, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(56, 139, 253, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .content {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 11px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--border-accent);
+      box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .btn-autofill {
+      background-color: var(--accent);
+      color: #ffffff;
+      border-color: rgba(240, 246, 252, 0.1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      font-size: 14px;
+      padding: 11px 16px;
+    }
+
+    .btn-autofill:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-autofill:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background-color: #21262d;
+      color: var(--text);
+      border-color: var(--border);
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #30363d;
+      color: var(--text-bright);
+      border-color: #8b949e;
+    }
+
+    .nav-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .nav-row input {
+      flex: 1;
+    }
+
+    .nav-row .btn {
+      width: auto;
+      white-space: nowrap;
+    }
+
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      background: #21262d;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 9px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+
+    .chip:hover, .chip.active {
+      background: #30363d;
+      color: var(--text-bright);
+      border-color: var(--border-accent);
+    }
+
+    .console-log {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 6px;
+      word-break: break-all;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-msg-success {
+      color: #3fb950;
+    }
+
+    .log-msg-info {
+      color: #58a6ff;
+    }
+
+    .log-msg-warn {
+      color: #d29922;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🐦</span>
+      <div>
+        <div class="brand-title">Tailorbird</div>
+      </div>
+    </div>
+    <span class="badge">PoC v0.1.0</span>
+  </header>
+
+  <div class="content">
+
+    <!-- Target Site Navigation -->
+    <div class="section">
+      <div class="section-title">
+        <span>Target Job Page</span>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-row">
+          <input type="text" id="targetUrl" placeholder="Enter Job URL or use Presets..." value="local://mock">
+          <button class="btn btn-secondary" id="btnGo" type="button">Go</button>
+        </div>
+        <div class="preset-chips">
+          <span class="chip active" data-url="local://mock">📄 Built-in Mock ATS</span>
+          <span class="chip" data-url="https://boards.greenhouse.io/github">💼 Greenhouse</span>
+          <span class="chip" data-url="https://jobs.lever.co/leverdemo">💼 Lever Demo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Action Button -->
+    <button class="btn btn-autofill" id="btnAutofill" type="button">
+      <span>⚡ Autofill Application</span>
+    </button>
+
+    <!-- Candidate Profile Section -->
+    <div class="section">
+      <div class="section-title">
+        <span>Candidate Profile</span>
+        <button id="btnResetProfile" class="btn btn-secondary" style="width: auto; padding: 2px 7px; font-size: 10px;" type="button">Reset</button>
+      </div>
+
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+      </div>
+
+      <div class="form-group">
+        <label for="linkedin">LinkedIn Profile URL</label>
+        <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
+      </div>
+
+      <div class="form-group">
+        <label for="github">GitHub / Portfolio URL</label>
+        <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
+      </div>
+
+      <div class="form-group">
+        <label for="experienceYears">Years of Experience</label>
+        <input type="number" id="experienceYears" value="8" min="0" max="50">
+      </div>
+    </div>
+
+    <!-- Live Activity Log -->
+    <div class="section">
+      <div class="section-title">
+        <span>Activity Log</span>
+      </div>
+      <div class="console-log" id="logBox">
+        <div class="log-item">
+          <span class="log-time">[Init]</span>
+          <span class="log-msg-info">Tailorbird sidebar ready</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const logBox = document.getElementById('logBox');
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString().split(' ')[0];
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      item.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg-${type}">${msg}</span>`;
+      logBox.appendChild(item);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function sendIpc(action, payload = {}) {
+      const message = JSON.stringify({
+        action: action,
+        ...payload
+      });
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(message);
+        return true;
+      } else {
+        log('IPC not available in standalone preview', 'warn');
+        return false;
+      }
+    }
+
+    // Autofill trigger
+    document.getElementById('btnAutofill').addEventListener('click', () => {
+      const data = {
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        linkedin: document.getElementById('linkedin').value.trim(),
+        github: document.getElementById('github').value.trim(),
+        experienceYears: document.getElementById('experienceYears').value.trim()
+      };
+
+      log(`Triggering AUTOFILL for ${data.fullName || 'applicant'}...`, 'info');
+      sendIpc('AUTOFILL', { data: data });
+      log('Autofill command dispatched to Target Webview', 'success');
+    });
+
+    // Navigation trigger
+    const targetUrlInput = document.getElementById('targetUrl');
+    const btnGo = document.getElementById('btnGo');
+
+    function navigateTo(url) {
+      targetUrlInput.value = url;
+      log(`Navigating right pane to: ${url}`, 'info');
+      sendIpc('NAVIGATE', { url: url });
+    }
+
+    btnGo.addEventListener('click', () => {
+      const url = targetUrlInput.value.trim();
+      if (url) {
+        navigateTo(url);
+      }
+    });
+
+    targetUrlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const url = targetUrlInput.value.trim();
+        if (url) {
+          navigateTo(url);
+        }
+      }
+    });
+
+    // Preset chips
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const url = chip.getAttribute('data-url');
+        navigateTo(url);
+      });
+    });
+
+    // Reset profile values
+    document.getElementById('btnResetProfile').addEventListener('click', () => {
+      document.getElementById('fullName').value = 'Alex Rivera';
+      document.getElementById('email').value = 'alex@example.com';
+      document.getElementById('phone').value = '555-0199';
+      document.getElementById('linkedin').value = 'https://linkedin.com/in/alex';
+      document.getElementById('github').value = 'https://github.com/alex';
+      document.getElementById('experienceYears').value = '8';
+      log('Reset candidate profile to defaults', 'info');
+    });
+  </script>
+</body>
+</html>

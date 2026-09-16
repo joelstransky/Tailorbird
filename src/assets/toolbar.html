@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tailorbird Toolbar</title>
+  <style>
+    :root {
+      --bg: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent: #238636;
+      --input-bg: #0d1117;
+      --hover-bg: #21262d;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      height: 44px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+      gap: 8px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--hover-bg);
+      color: var(--text-bright);
+      border-color: var(--border);
+    }
+
+    .nav-btn:active {
+      transform: scale(0.94);
+    }
+
+    .url-bar-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      height: 30px;
+      padding: 0 10px;
+      gap: 8px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .url-bar-container:focus-within {
+      border-color: #388bfd;
+      box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.25);
+    }
+
+    .url-icon {
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    #urlInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-bright);
+      font-size: 12px;
+      font-family: var(--font-sans);
+    }
+
+    .url-go-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .url-go-btn:hover {
+      background: var(--hover-bg);
+      color: var(--text-bright);
+    }
+
+    .preset-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill {
+      background: #21262d;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover {
+      background: #30363d;
+      color: var(--text-bright);
+      border-color: #388bfd;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Controls -->
+  <div class="nav-buttons">
+    <button class="nav-btn" id="btnBack" title="Back" type="button">◀</button>
+    <button class="nav-btn" id="btnForward" title="Forward" type="button">▶</button>
+    <button class="nav-btn" id="btnReload" title="Reload Page" type="button">🔄</button>
+    <button class="nav-btn" id="btnHome" title="Home (Built-in Mock ATS)" type="button">🏠</button>
+  </div>
+
+  <!-- Omnibar / URL Input -->
+  <div class="url-bar-container">
+    <span class="url-icon" id="urlIcon">📄</span>
+    <input type="text" id="urlInput" placeholder="Search Google or enter job URL..." value="local://mock">
+    <button class="url-go-btn" id="btnGo" type="button">Go</button>
+  </div>
+
+  <!-- Quick Presets -->
+  <div class="preset-pills">
+    <span class="pill" data-url="local://mock">📄 Mock Form</span>
+    <span class="pill" data-url="https://boards.greenhouse.io/github">Greenhouse</span>
+    <span class="pill" data-url="https://jobs.lever.co/leverdemo">Lever</span>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const urlIcon = document.getElementById('urlIcon');
+
+    function sendIpc(action, payload = {}) {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(JSON.stringify({ action, ...payload }));
+      }
+    }
+
+    // Window global to receive current URL updates from target webview
+    window.setUrl = function(url) {
+      if (url) {
+        urlInput.value = url;
+        if (url.includes('google.com/search')) {
+          urlIcon.textContent = '🔍';
+        } else if (url === 'local://mock') {
+          urlIcon.textContent = '📄';
+        } else if (url.startsWith('https://')) {
+          urlIcon.textContent = '🔒';
+        } else {
+          urlIcon.textContent = '🌐';
+        }
+      }
+    };
+
+    function navigate() {
+      let url = urlInput.value.trim();
+      if (!url) return;
+      sendIpc('NAVIGATE', { url: url });
+    }
+
+    document.getElementById('btnBack').addEventListener('click', () => sendIpc('BACK'));
+    document.getElementById('btnForward').addEventListener('click', () => sendIpc('FORWARD'));
+    document.getElementById('btnReload').addEventListener('click', () => sendIpc('RELOAD'));
+    document.getElementById('btnHome').addEventListener('click', () => {
+      urlInput.value = 'local://mock';
+      sendIpc('HOME');
+    });
+
+    document.getElementById('btnGo').addEventListener('click', navigate);
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') navigate();
+    });
+
+    // Preset pills
+    document.querySelectorAll('.pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const url = pill.getAttribute('data-url');
+        urlInput.value = url;
+        sendIpc('NAVIGATE', { url: url });
+      });
+    });
+  </script>
+</body>
+</html>

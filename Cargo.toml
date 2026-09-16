@@ -1,0 +1,11 @@
+[package]
+name = "tailorbird"
+version = "0.1.0"
+edition = "2021"
+description = "A dual-pane specialized job-search desktop browser built with Rust, Tao, and Wry"
+
+[dependencies]
+tao = "0.37"
+wry = "0.57"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

@@ -23,6 +23,8 @@ pub struct AppData {
     pub resume_source: String,
     pub work_history: Vec<WorkHistoryEntry>,
     pub prospects: Vec<Prospect>,
+    #[serde(default)]
+    pub split_width: Option<f64>,
 }
 
 fn storage_file_path() -> PathBuf {

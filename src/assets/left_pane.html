@@ -86,13 +86,16 @@
       border: 1px solid #444444;
     }
 
-    /* Panels Container: Flex column filling all remaining height */
+    /* Panels Container: Flex column with parent scrollbar */
     .dock-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       background: var(--ps-bg);
+      min-height: 0;
+      position: relative;
     }
 
     /* Photoshop Collapsible Drawer Row */
@@ -101,18 +104,18 @@
       flex-direction: column;
       border-bottom: 1px solid var(--ps-border);
       background: var(--ps-panel-bg);
-      overflow: hidden;
-      transition: flex 0.2s ease;
       flex-shrink: 0;
     }
 
-    /* When open, row expands full height (flex: 1) regardless of content! */
+    /* When open, each panel has a minimum height of 25% */
     .panel-drawer.open {
-      flex: 1 1 0%;
-      min-height: 120px;
+      flex: 1 0 auto;
+      min-height: calc((100vh - 32px) * 0.25);
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Panel Header Strip (Photoshop tab header style) */
+    /* Panel Header Strip (Photoshop tab header style) - sticky to top when scrolling */
     .panel-drawer-header {
       height: 28px;
       background: var(--ps-header-bg);
@@ -124,6 +127,9 @@
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.1s ease;
+      position: sticky;
+      top: 0;
+      z-index: 20;
     }
 
     .panel-drawer-header:hover {
@@ -158,20 +164,63 @@
       gap: 4px;
     }
 
-    /* Panel Content Area (fills full height when drawer is open) */
+    /* Panel Content Area (fills available height or grows with content) */
     .panel-content {
-      flex: 1 1 0%;
+      flex: 1 1 auto;
       min-height: 0;
       display: none;
       flex-direction: column;
       padding: 10px;
-      overflow-y: auto;
       gap: 8px;
       background: var(--ps-bg);
     }
 
     .panel-drawer.open .panel-content {
       display: flex;
+    }
+
+    /* Resizable Middle Divider between Control Panel and Browser */
+    .middle-resizer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 6px;
+      height: 100vh;
+      cursor: col-resize;
+      z-index: 99999;
+      background: transparent;
+      border-right: 1px solid #1c1c1c;
+      transition: background-color 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .resizer-handle {
+      width: 2px;
+      height: 36px;
+      background: #555555;
+      border-radius: 1px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .middle-resizer:hover,
+    .middle-resizer.resizing {
+      background: var(--ps-accent-blue);
+    }
+
+    .middle-resizer:hover .resizer-handle,
+    .middle-resizer.resizing .resizer-handle {
+      opacity: 1;
+      background: #ffffff;
+    }
+
+    body.is-resizing {
+      user-select: none !important;
+      cursor: col-resize !important;
     }
 
     /* Photoshop Section Subheaders (e.g. ˅ Transform) */
@@ -296,9 +345,6 @@
 
     /* Work History Item Cards */
     .history-scroll-area {
-      flex: 1 1 0%;
-      min-height: 0;
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -337,9 +383,8 @@
     }
 
     .layers-table-wrap {
-      flex: 1 1 0%;
-      min-height: 0;
-      overflow: auto;
+      width: 100%;
+      overflow-x: auto;
       background: #1c1c1c;
       border: 1px solid #333333;
       border-radius: 2px;
@@ -909,9 +954,75 @@
       sendIpc('SAVE_DATA', {
         resumeSource: resumeSourceInput.value.trim(),
         workHistory,
-        prospects
+        prospects,
+        splitWidth: window.innerWidth
       });
     }
+
+    // --- Middle Divider Resizing Logic ---
+    (function initResizer() {
+      const resizer = document.getElementById('middleResizer');
+      if (!resizer) return;
+
+      let isResizing = false;
+      let startX = 0;
+      let initialWidth = 0;
+      let rafId = null;
+      let lastWidth = null;
+
+      resizer.addEventListener('pointerdown', (e) => {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.classList.add('is-resizing');
+        resizer.setPointerCapture(e.pointerId);
+        startX = e.screenX;
+        initialWidth = window.innerWidth;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      resizer.addEventListener('pointermove', (e) => {
+        if (!isResizing) return;
+        const deltaX = e.screenX - startX;
+        const newWidth = Math.round(initialWidth + deltaX);
+        if (newWidth < 200) return;
+
+        lastWidth = newWidth;
+        if (!rafId) {
+          rafId = requestAnimationFrame(() => {
+            rafId = null;
+            if (lastWidth !== null && window.ipc) {
+              window.ipc.postMessage(JSON.stringify({
+                action: 'SET_LEFT_WIDTH',
+                width: lastWidth
+              }));
+            }
+          });
+        }
+      });
+
+      function onPointerEnd(e) {
+        if (!isResizing) return;
+        isResizing = false;
+        resizer.classList.remove('resizing');
+        document.body.classList.remove('is-resizing');
+        try {
+          resizer.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+
+        if (lastWidth !== null && window.ipc) {
+          window.ipc.postMessage(JSON.stringify({
+            action: 'SET_LEFT_WIDTH',
+            width: lastWidth
+          }));
+          saveAllData();
+        }
+      }
+
+      resizer.addEventListener('pointerup', onPointerEnd);
+      resizer.addEventListener('pointercancel', onPointerEnd);
+      resizer.addEventListener('lostpointercapture', onPointerEnd);
+    })();
 
     window.onload = function() {
       sendIpc('LOAD_DATA');
@@ -927,5 +1038,10 @@
         .replace(/'/g, '&#039;');
     }
   </script>
+
+  <!-- Resizable Middle Divider between Control Panel and Browser -->
+  <div id="middleResizer" class="middle-resizer" title="Drag to resize Control Panel">
+    <div class="resizer-handle"></div>
+  </div>
 </body>
 </html>

@@ -98,6 +98,8 @@ enum IpcMessage {
     ScrapeCurrentPage,
     #[serde(rename = "RECORD_PAGE_DATA")]
     RecordPageData { data: ScrapedData },
+    #[serde(rename = "SET_LEFT_WIDTH")]
+    SetLeftWidth { width: f64 },
     #[serde(rename = "SAVE_DATA")]
     SaveData {
         #[serde(rename = "resumeSource")]
@@ -105,6 +107,8 @@ enum IpcMessage {
         #[serde(rename = "workHistory")]
         work_history: Vec<WorkHistoryEntry>,
         prospects: Vec<Prospect>,
+        #[serde(rename = "splitWidth")]
+        split_width: Option<f64>,
     },
     #[serde(rename = "LOAD_DATA")]
     LoadData,
@@ -135,14 +139,74 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     window.set_focus();
     println!("[Tailorbird] Native parent window created successfully.");
 
+    // Load persisted app data to restore split width if available
+    let initial_app_data = load_stored_data();
+    let initial_left_width = initial_app_data.split_width.unwrap_or(LEFT_PANE_WIDTH);
+
     // Shared references across IPC handlers and event loop
     let left_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     let toolbar_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     let target_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
 
+    let left_width_holder = Arc::new(Mutex::new(initial_left_width));
+    let window_size_holder = Arc::new(Mutex::new((DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)));
+
     let left_for_ipc = left_wv_holder.clone();
     let toolbar_for_ipc = toolbar_wv_holder.clone();
     let target_for_ipc = target_wv_holder.clone();
+    let left_width_for_ipc = left_width_holder.clone();
+
+    // Reusable layout coordinator to update all 3 webview bounds seamlessly
+    let layout_coordinator = Arc::new({
+        let left_h = left_wv_holder.clone();
+        let toolbar_h = toolbar_wv_holder.clone();
+        let target_h = target_wv_holder.clone();
+        let left_w_h = left_width_holder.clone();
+        let win_sz_h = window_size_holder.clone();
+
+        move |new_width: Option<f64>| {
+            let (win_width, win_height) = *win_sz_h.lock().unwrap();
+            let mut cur_lw = *left_w_h.lock().unwrap();
+            if let Some(w) = new_width {
+                cur_lw = w;
+            }
+
+            let min_w = 220.0;
+            let max_w = (win_width - 250.0).max(min_w);
+            let clamped_lw = cur_lw.clamp(min_w, max_w);
+            *left_w_h.lock().unwrap() = clamped_lw;
+
+            let right_width = (win_width - clamped_lw).max(0.0);
+            let target_height = (win_height - TOOLBAR_HEIGHT).max(0.0);
+
+            if let Ok(guard) = left_h.lock() {
+                if let Some(ref wv) = *guard {
+                    let _ = wv.set_bounds(Rect {
+                        position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
+                        size: Size::Logical(LogicalSize::new(clamped_lw, win_height)),
+                    });
+                }
+            }
+            if let Ok(guard) = toolbar_h.lock() {
+                if let Some(ref wv) = *guard {
+                    let _ = wv.set_bounds(Rect {
+                        position: Position::Logical(LogicalPosition::new(clamped_lw, 0.0)),
+                        size: Size::Logical(LogicalSize::new(right_width, TOOLBAR_HEIGHT)),
+                    });
+                }
+            }
+            if let Ok(guard) = target_h.lock() {
+                if let Some(ref wv) = *guard {
+                    let _ = wv.set_bounds(Rect {
+                        position: Position::Logical(LogicalPosition::new(clamped_lw, TOOLBAR_HEIGHT)),
+                        size: Size::Logical(LogicalSize::new(right_width, target_height)),
+                    });
+                }
+            }
+        }
+    });
+
+    let coordinator_for_ipc = layout_coordinator.clone();
 
     // Helper to perform navigation on the target webview and update the toolbar UI
     let do_navigate = {
@@ -177,7 +241,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let left_webview = WebViewBuilder::new()
         .with_bounds(Rect {
             position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
-            size: Size::Logical(LogicalSize::new(LEFT_PANE_WIDTH, DEFAULT_WINDOW_HEIGHT)),
+            size: Size::Logical(LogicalSize::new(initial_left_width, DEFAULT_WINDOW_HEIGHT)),
         })
         .with_devtools(true)
         .with_html(LEFT_PANE_HTML)
@@ -185,6 +249,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let target_holder = target_for_ipc.clone();
             let left_holder = left_for_ipc.clone();
             let do_nav = do_navigate.clone();
+            let coord = coordinator_for_ipc.clone();
+            let left_w_holder = left_width_for_ipc.clone();
 
             move |req| {
                 let body = req.body();
@@ -255,11 +321,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     }
-                    Ok(IpcMessage::SaveData { resume_source, work_history, prospects }) => {
+                    Ok(IpcMessage::SetLeftWidth { width }) => {
+                        coord(Some(width));
+                    }
+                    Ok(IpcMessage::SaveData { resume_source, work_history, prospects, split_width }) => {
+                        let cur_w = split_width.unwrap_or_else(|| *left_w_holder.lock().unwrap());
                         let data = AppData {
                             resume_source,
                             work_history,
                             prospects,
+                            split_width: Some(cur_w),
                         };
                         if let Err(e) = save_stored_data(&data) {
                             eprintln!("[Tailorbird Host] Error saving app data: {}", e);
@@ -293,13 +364,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Share WebView2 environment on Windows across all webviews
     let shared_env = left_webview.environment();
 
-    let initial_right_width = (DEFAULT_WINDOW_WIDTH - LEFT_PANE_WIDTH).max(0.0);
+    let initial_right_width = (DEFAULT_WINDOW_WIDTH - initial_left_width).max(0.0);
 
     // 2. Initialize Browser Toolbar (Back, Forward, Reload, Home, Omnibar)
     let toolbar_webview = WebViewBuilder::new()
         .with_environment(shared_env.clone())
         .with_bounds(Rect {
-            position: Position::Logical(LogicalPosition::new(LEFT_PANE_WIDTH, 0.0)),
+            position: Position::Logical(LogicalPosition::new(initial_left_width, 0.0)),
             size: Size::Logical(LogicalSize::new(initial_right_width, TOOLBAR_HEIGHT)),
         })
         .with_devtools(true)
@@ -349,7 +420,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let target_webview = WebViewBuilder::new()
         .with_environment(shared_env)
         .with_bounds(Rect {
-            position: Position::Logical(LogicalPosition::new(LEFT_PANE_WIDTH, TOOLBAR_HEIGHT)),
+            position: Position::Logical(LogicalPosition::new(initial_left_width, TOOLBAR_HEIGHT)),
             size: Size::Logical(LogicalSize::new(initial_right_width, initial_target_height)),
         })
         .with_devtools(true)
@@ -391,6 +462,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("[Tailorbird] All panes and browser toolbar ready! Event loop running.");
 
+    let coordinator_for_loop = layout_coordinator.clone();
+
     // Event loop management
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -402,40 +475,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } => {
                 let scale_factor = window.scale_factor();
                 let logical_size = physical_size.to_logical::<f64>(scale_factor);
-
-                let right_width = (logical_size.width - LEFT_PANE_WIDTH).max(0.0);
-                let height = logical_size.height;
-                let target_height = (height - TOOLBAR_HEIGHT).max(0.0);
-
-                // 1. Update Left Sidebar: fixed width, full window height
-                if let Ok(guard) = left_wv_holder.lock() {
-                    if let Some(ref left_wv) = *guard {
-                        let _ = left_wv.set_bounds(Rect {
-                            position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
-                            size: Size::Logical(LogicalSize::new(LEFT_PANE_WIDTH, height)),
-                        });
-                    }
+                if let Ok(mut sz) = window_size_holder.lock() {
+                    *sz = (logical_size.width, logical_size.height);
                 }
-
-                // 2. Update Browser Toolbar: spans right width, fixed 44px height at top
-                if let Ok(guard) = toolbar_wv_holder.lock() {
-                    if let Some(ref tb_wv) = *guard {
-                        let _ = tb_wv.set_bounds(Rect {
-                            position: Position::Logical(LogicalPosition::new(LEFT_PANE_WIDTH, 0.0)),
-                            size: Size::Logical(LogicalSize::new(right_width, TOOLBAR_HEIGHT)),
-                        });
-                    }
-                }
-
-                // 3. Update Target Pane: spans right width, fills height beneath toolbar
-                if let Ok(guard) = target_wv_holder.lock() {
-                    if let Some(ref target_wv) = *guard {
-                        let _ = target_wv.set_bounds(Rect {
-                            position: Position::Logical(LogicalPosition::new(LEFT_PANE_WIDTH, TOOLBAR_HEIGHT)),
-                            size: Size::Logical(LogicalSize::new(right_width, target_height)),
-                        });
-                    }
-                }
+                coordinator_for_loop(None);
             }
 
             Event::WindowEvent {

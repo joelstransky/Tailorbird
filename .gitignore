@@ -1,3 +1,6 @@
 /target
 **/*.rs.bk
 *.pdb
+tailorbird_data.json
+*.local.json
+*.csv

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tailorbird Sidebar</title>
+  <title>Tailorbird Control Panel</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -18,22 +18,20 @@
       --primary: #1f6feb;
       --primary-hover: #388bfd;
       --danger: #da3633;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --danger-hover: #f85149;
+      --warning: #d29922;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg);
       color: var(--text);
       font-family: var(--font-sans);
-      font-size: 13px;
-      line-height: 1.45;
+      font-size: 12px;
+      line-height: 1.4;
       height: 100vh;
       overflow-y: auto;
       overflow-x: hidden;
@@ -42,46 +40,26 @@
       user-select: none;
     }
 
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--bg);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
     header {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       background: var(--card-bg);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .brand-icon {
-      font-size: 20px;
-    }
-
-    .brand-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-bright);
-      letter-spacing: -0.3px;
-    }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand-icon { font-size: 18px; }
+    .brand-title { font-size: 14px; font-weight: 700; color: var(--text-bright); letter-spacing: -0.2px; }
 
     .badge {
       font-size: 10px;
@@ -96,191 +74,293 @@
     }
 
     .content {
-      padding: 16px 18px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 10px;
       flex: 1;
     }
 
-    .section {
+    /* Accordion Styles */
+    .accordion-section {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
     }
 
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
+    .accordion-section.active {
+      border-color: #444c56;
+    }
+
+    .accordion-header {
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      cursor: pointer;
+      background: #161b22;
+      transition: background 0.15s;
     }
 
+    .accordion-header:hover {
+      background: #1c2128;
+    }
+
+    .accordion-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .accordion-chevron {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .accordion-section.open .accordion-chevron {
+      transform: rotate(90deg);
+    }
+
+    .accordion-body {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      background: #0d1117;
+    }
+
+    .accordion-section.open .accordion-body {
+      display: flex;
+    }
+
+    /* Common Form & Button Elements */
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin-bottom: 11px;
+      gap: 4px;
+      margin-bottom: 8px;
     }
 
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
+    .form-group:last-child { margin-bottom: 0; }
 
     label {
       font-size: 11px;
       font-weight: 600;
       color: var(--text);
+      display: flex;
+      justify-content: space-between;
     }
 
-    input, select, textarea {
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea {
       width: 100%;
-      background: #0d1117;
+      background: #161b22;
       border: 1px solid var(--border);
       color: var(--text-bright);
-      padding: 7px 10px;
+      padding: 6px 10px;
       border-radius: 6px;
       font-size: 12px;
       font-family: inherit;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
     input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--border-accent);
-      box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.2);
+      box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.2);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 9px 14px;
-      font-size: 13px;
+      gap: 5px;
+      padding: 7px 12px;
+      font-size: 12px;
       font-weight: 600;
       border-radius: 6px;
       cursor: pointer;
       border: 1px solid transparent;
-      transition: all 0.15s ease;
-      width: 100%;
+      transition: all 0.15s;
     }
 
-    .btn-autofill {
-      background-color: var(--accent);
-      color: #ffffff;
-      border-color: rgba(240, 246, 252, 0.1);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      font-size: 14px;
-      padding: 11px 16px;
-    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
 
-    .btn-autofill:hover {
-      background-color: var(--accent-hover);
-    }
-
-    .btn-autofill:active {
-      transform: scale(0.98);
-    }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: var(--accent-hover); }
 
     .btn-secondary {
-      background-color: #21262d;
+      background: #21262d;
       color: var(--text);
       border-color: var(--border);
-      font-size: 12px;
-      padding: 6px 10px;
     }
-
     .btn-secondary:hover {
-      background-color: #30363d;
+      background: #30363d;
       color: var(--text-bright);
       border-color: #8b949e;
     }
 
-    .nav-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .btn-danger { background: rgba(218, 54, 51, 0.2); color: #f85149; border-color: rgba(218, 54, 51, 0.4); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
 
-    .nav-row {
-      display: flex;
-      gap: 6px;
-    }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
 
-    .nav-row input {
-      flex: 1;
-    }
+    .btn:active { transform: scale(0.97); }
 
-    .nav-row .btn {
-      width: auto;
-      white-space: nowrap;
-    }
-
-    .preset-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .chip {
-      background: #21262d;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 3px 9px;
-      font-size: 11px;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: all 0.15s ease;
-    }
-
-    .chip:hover, .chip.active {
-      background: #30363d;
-      color: var(--text-bright);
-      border-color: var(--border-accent);
-    }
-
-    .console-log {
-      background: #090d13;
+    /* Work History Card */
+    .history-card {
+      background: #161b22;
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      max-height: 120px;
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-    }
-
-    .log-item {
-      display: flex;
       gap: 6px;
-      word-break: break-all;
+      position: relative;
     }
 
-    .log-time {
-      color: var(--text-muted);
-      flex-shrink: 0;
+    .history-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .log-msg-success {
-      color: #3fb950;
+    .history-role {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-bright);
     }
 
-    .log-msg-info {
+    .history-company {
+      font-size: 11px;
       color: #58a6ff;
     }
 
-    .log-msg-warn {
-      color: #d29922;
+    /* Prospect Sheet Table */
+    .table-container {
+      overflow-x: auto;
+      max-height: 260px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #161b22;
+    }
+
+    .prospect-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .prospect-table th, .prospect-table td {
+      padding: 6px 10px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .prospect-table th {
+      background: #161b22;
+      color: var(--text-muted);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .prospect-table tr:hover td {
+      background: #1c2128;
+    }
+
+    .prospect-link {
+      color: #58a6ff;
+      text-decoration: none;
+      cursor: pointer;
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .prospect-link:hover { text-decoration: underline; }
+
+    .status-select {
+      padding: 2px 4px;
+      font-size: 10px;
+      border-radius: 4px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+    }
+
+    /* Checkbox list */
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #161b22;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input {
+      accent-color: #388bfd;
+      cursor: pointer;
+    }
+
+    /* Modal Warning */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f85149;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
     }
   </style>
 </head>
@@ -293,114 +373,177 @@
         <div class="brand-title">Tailorbird</div>
       </div>
     </div>
-    <span class="badge">PoC v0.1.0</span>
+    <span class="badge">Control Panel</span>
   </header>
 
   <div class="content">
 
-    <!-- Target Site Navigation -->
-    <div class="section">
-      <div class="section-title">
-        <span>Target Job Page</span>
+    <!-- Accordion 1: Candidate Profile & Autofill -->
+    <div class="accordion-section open" id="secProfile">
+      <div class="accordion-header" onclick="toggleAccordion('secProfile')">
+        <span class="accordion-title">👤 Candidate Profile</span>
+        <span class="accordion-chevron">▶</span>
       </div>
-      <div class="nav-bar">
-        <div class="nav-row">
-          <input type="text" id="targetUrl" placeholder="Enter Job URL or use Presets..." value="local://mock">
-          <button class="btn btn-secondary" id="btnGo" type="button">Go</button>
+      <div class="accordion-body">
+        <button class="btn btn-accent" id="btnAutofill" type="button" style="padding: 10px; font-size: 13px;">
+          <span>⚡ Autofill Application Form</span>
+        </button>
+
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
         </div>
-        <div class="preset-chips">
-          <span class="chip active" data-url="local://mock">📄 Built-in Mock ATS</span>
-          <span class="chip" data-url="https://boards.greenhouse.io/github">💼 Greenhouse</span>
-          <span class="chip" data-url="https://jobs.lever.co/leverdemo">💼 Lever Demo</span>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+        </div>
+
+        <div class="form-group">
+          <label for="linkedin">LinkedIn Profile URL</label>
+          <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
+        </div>
+
+        <div class="form-group">
+          <label for="github">GitHub / Portfolio URL</label>
+          <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
+        </div>
+
+        <div class="form-group">
+          <label for="experienceYears">Years of Experience</label>
+          <input type="number" id="experienceYears" value="8" min="0" max="50">
         </div>
       </div>
     </div>
 
-    <!-- Main Action Button -->
-    <button class="btn btn-autofill" id="btnAutofill" type="button">
-      <span>⚡ Autofill Application</span>
-    </button>
-
-    <!-- Candidate Profile Section -->
-    <div class="section">
-      <div class="section-title">
-        <span>Candidate Profile</span>
-        <button id="btnResetProfile" class="btn btn-secondary" style="width: auto; padding: 2px 7px; font-size: 10px;" type="button">Reset</button>
+    <!-- Accordion 2: Resume & Work History -->
+    <div class="accordion-section open" id="secResume">
+      <div class="accordion-header" onclick="toggleAccordion('secResume')">
+        <span class="accordion-title">📄 Resume & Work History</span>
+        <span class="accordion-chevron">▶</span>
       </div>
+      <div class="accordion-body">
+        <div class="form-group">
+          <label>Linked Resume (Local File or Google Doc)</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="resumeSource" placeholder="C:\path\resume.pdf or Google Doc URL..." style="flex: 1;">
+            <button class="btn btn-secondary btn-sm" id="btnBrowseResume" type="button">Browse...</button>
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label for="fullName">Full Name</label>
-        <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
-      </div>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-primary" id="btnImportResume" style="flex: 1;" type="button">📥 Import & Scan</button>
+          <button class="btn btn-secondary btn-sm" id="btnAddPosition" type="button">+ Add Position</button>
+        </div>
 
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
-      </div>
-
-      <div class="form-group">
-        <label for="phone">Phone Number</label>
-        <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
-      </div>
-
-      <div class="form-group">
-        <label for="linkedin">LinkedIn Profile URL</label>
-        <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
-      </div>
-
-      <div class="form-group">
-        <label for="github">GitHub / Portfolio URL</label>
-        <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
-      </div>
-
-      <div class="form-group">
-        <label for="experienceYears">Years of Experience</label>
-        <input type="number" id="experienceYears" value="8" min="0" max="50">
+        <!-- Work History Items Container -->
+        <div id="workHistoryList" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;">
+          <!-- Dynamically injected history cards -->
+        </div>
       </div>
     </div>
 
-    <!-- Live Activity Log -->
-    <div class="section">
-      <div class="section-title">
-        <span>Activity Log</span>
+    <!-- Accordion 3: Prospect Spreadsheet -->
+    <div class="accordion-section open" id="secProspects">
+      <div class="accordion-header" onclick="toggleAccordion('secProspects')">
+        <span class="accordion-title">📊 Prospect Sheet <span id="prospectCount" style="font-weight: normal; color: var(--text-muted); font-size: 11px;">(0)</span></span>
+        <span class="accordion-chevron">▶</span>
       </div>
-      <div class="console-log" id="logBox">
-        <div class="log-item">
-          <span class="log-time">[Init]</span>
-          <span class="log-msg-info">Tailorbird sidebar ready</span>
+      <div class="accordion-body">
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-accent" id="btnRecordPage" style="flex: 1;" type="button">➕ Record Current Page</button>
+          <button class="btn btn-secondary btn-sm" id="btnExportCsv" title="Export to CSV" type="button">CSV</button>
         </div>
+
+        <div class="table-container">
+          <table class="prospect-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Job Title</th>
+                <th>Status</th>
+                <th>Link</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="prospectTableBody">
+              <!-- Dynamically populated prospect rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion 4: Job Finder (Search Tools) -->
+    <div class="accordion-section" id="secFinder">
+      <div class="accordion-header" onclick="toggleAccordion('secFinder')">
+        <span class="accordion-title">🔍 Job Finder</span>
+        <span class="accordion-chevron">▶</span>
+      </div>
+      <div class="accordion-body">
+        <div class="form-group">
+          <label for="searchTitle">Job Title / Keywords</label>
+          <input type="text" id="searchTitle" placeholder="e.g. Senior Rust Engineer, Systems" value="Systems Engineer">
+        </div>
+
+        <div class="form-group">
+          <label for="searchLocation">Target Location</label>
+          <input type="text" id="searchLocation" placeholder="e.g. San Francisco, CA or Remote" value="Remote">
+        </div>
+
+        <div class="checkbox-group">
+          <label style="margin-bottom: 2px; color: var(--text-bright);">Target Platforms</label>
+          <label class="checkbox-item"><input type="checkbox" id="chkGreenhouse" checked> Greenhouse (boards.greenhouse.io)</label>
+          <label class="checkbox-item"><input type="checkbox" id="chkLever" checked> Lever (jobs.lever.co)</label>
+          <label class="checkbox-item"><input type="checkbox" id="chkLinkedin" checked> LinkedIn Jobs (linkedin.com/jobs)</label>
+          <label class="checkbox-item"><input type="checkbox" id="chkIndeed"> Indeed (indeed.com)</label>
+          <label class="checkbox-item"><input type="checkbox" id="chkGoogleJobs" checked> Google Jobs Search</label>
+        </div>
+
+        <button class="btn btn-primary" id="btnRunSearch" type="button" style="padding: 9px;">
+          <span>🔍 Launch Targeted Search</span>
+        </button>
       </div>
     </div>
 
   </div>
 
-  <script>
-    const logBox = document.getElementById('logBox');
+  <!-- Warning Modal for Resume Re-Import -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-card">
+      <div class="modal-title">⚠️ Overwrite Work History?</div>
+      <p style="font-size: 12px; color: var(--text);">Importing and scanning this resume will replace your current manual work history entries. Do you want to proceed?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-sm" id="btnCancelImport" type="button">Cancel</button>
+        <button class="btn btn-danger btn-sm" id="btnProceedImport" type="button">Yes, Overwrite</button>
+      </div>
+    </div>
+  </div>
 
-    function log(msg, type = 'info') {
-      const time = new Date().toLocaleTimeString().split(' ')[0];
-      const item = document.createElement('div');
-      item.className = 'log-item';
-      item.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg-${type}">${msg}</span>`;
-      logBox.appendChild(item);
-      logBox.scrollTop = logBox.scrollHeight;
-    }
+  <script>
+    // State Store
+    let workHistory = [];
+    let prospects = [];
 
     function sendIpc(action, payload = {}) {
-      const message = JSON.stringify({
-        action: action,
-        ...payload
-      });
       if (window.ipc && typeof window.ipc.postMessage === 'function') {
-        window.ipc.postMessage(message);
+        window.ipc.postMessage(JSON.stringify({ action, ...payload }));
         return true;
-      } else {
-        log('IPC not available in standalone preview', 'warn');
-        return false;
       }
+      return false;
     }
 
-    // Autofill trigger
+    function toggleAccordion(id) {
+      const section = document.getElementById(id);
+      section.classList.toggle('open');
+    }
+
+    // --- Profile & Autofill ---
     document.getElementById('btnAutofill').addEventListener('click', () => {
       const data = {
         fullName: document.getElementById('fullName').value.trim(),
@@ -410,59 +553,266 @@
         github: document.getElementById('github').value.trim(),
         experienceYears: document.getElementById('experienceYears').value.trim()
       };
-
-      log(`Triggering AUTOFILL for ${data.fullName || 'applicant'}...`, 'info');
-      sendIpc('AUTOFILL', { data: data });
-      log('Autofill command dispatched to Target Webview', 'success');
+      sendIpc('AUTOFILL', { data });
     });
 
-    // Navigation trigger
-    const targetUrlInput = document.getElementById('targetUrl');
-    const btnGo = document.getElementById('btnGo');
+    // --- Resume & Work History ---
+    const resumeSourceInput = document.getElementById('resumeSource');
+    const workHistoryList = document.getElementById('workHistoryList');
+    const confirmModal = document.getElementById('confirmModal');
 
-    function navigateTo(url) {
-      targetUrlInput.value = url;
-      log(`Navigating right pane to: ${url}`, 'info');
-      sendIpc('NAVIGATE', { url: url });
+    document.getElementById('btnBrowseResume').addEventListener('click', () => {
+      sendIpc('PICK_RESUME_FILE');
+    });
+
+    window.setResumePath = function(path) {
+      resumeSourceInput.value = path;
+      saveAllData();
+    };
+
+    document.getElementById('btnImportResume').addEventListener('click', () => {
+      const source = resumeSourceInput.value.trim();
+      if (!source) {
+        alert('Please select a local resume file or paste a public Google Doc URL.');
+        return;
+      }
+
+      if (workHistory.length > 0) {
+        confirmModal.style.display = 'flex';
+      } else {
+        performImport(source);
+      }
+    });
+
+    document.getElementById('btnCancelImport').addEventListener('click', () => {
+      confirmModal.style.display = 'none';
+    });
+
+    document.getElementById('btnProceedImport').addEventListener('click', () => {
+      confirmModal.style.display = 'none';
+      performImport(resumeSourceInput.value.trim());
+    });
+
+    function performImport(source) {
+      sendIpc('IMPORT_RESUME', { source });
     }
 
-    btnGo.addEventListener('click', () => {
-      const url = targetUrlInput.value.trim();
-      if (url) {
-        navigateTo(url);
-      }
-    });
+    window.setWorkHistory = function(entries) {
+      workHistory = entries || [];
+      renderWorkHistory();
+      saveAllData();
+    };
 
-    targetUrlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const url = targetUrlInput.value.trim();
-        if (url) {
-          navigateTo(url);
-        }
+    function renderWorkHistory() {
+      workHistoryList.innerHTML = '';
+      if (workHistory.length === 0) {
+        workHistoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 11px; text-align: center; padding: 10px;">No work history loaded. Click Import & Scan or + Add Position.</div>';
+        return;
       }
-    });
 
-    // Preset chips
-    const chips = document.querySelectorAll('.chip');
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        const url = chip.getAttribute('data-url');
-        navigateTo(url);
+      workHistory.forEach((entry, idx) => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.innerHTML = `
+          <div class="history-card-header">
+            <input type="text" value="${escapeHtml(entry.role)}" placeholder="Role / Title" style="font-weight:700; flex:1; margin-right:4px;" onchange="updateHistory(${idx}, 'role', this.value)">
+            <button class="btn btn-danger btn-sm" onclick="deleteHistory(${idx})">✕</button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" value="${escapeHtml(entry.company)}" placeholder="Company Name" style="flex:1;" onchange="updateHistory(${idx}, 'company', this.value)">
+            <input type="text" value="${escapeHtml(entry.startDate)} - ${escapeHtml(entry.endDate)}" placeholder="Dates" style="width:110px;" onchange="updateHistoryDates(${idx}, this.value)">
+          </div>
+          <textarea rows="2" placeholder="Responsibilities & achievements..." style="resize:vertical;" onchange="updateHistory(${idx}, 'summary', this.value)">${escapeHtml(entry.summary || '')}</textarea>
+        `;
+        workHistoryList.appendChild(card);
       });
+    }
+
+    function updateHistory(index, field, value) {
+      if (workHistory[index]) {
+        workHistory[index][field] = value;
+        saveAllData();
+      }
+    }
+
+    function updateHistoryDates(index, value) {
+      if (workHistory[index]) {
+        const parts = value.split('-');
+        workHistory[index].startDate = (parts[0] || '').trim();
+        workHistory[index].endDate = (parts[1] || 'Present').trim();
+        saveAllData();
+      }
+    }
+
+    function deleteHistory(index) {
+      workHistory.splice(index, 1);
+      renderWorkHistory();
+      saveAllData();
+    }
+
+    document.getElementById('btnAddPosition').addEventListener('click', () => {
+      workHistory.unshift({
+        id: 'exp-' + Date.now(),
+        company: 'New Company',
+        role: 'Job Title',
+        startDate: '2023',
+        endDate: 'Present',
+        summary: ''
+      });
+      renderWorkHistory();
+      saveAllData();
     });
 
-    // Reset profile values
-    document.getElementById('btnResetProfile').addEventListener('click', () => {
-      document.getElementById('fullName').value = 'Alex Rivera';
-      document.getElementById('email').value = 'alex@example.com';
-      document.getElementById('phone').value = '555-0199';
-      document.getElementById('linkedin').value = 'https://linkedin.com/in/alex';
-      document.getElementById('github').value = 'https://github.com/alex';
-      document.getElementById('experienceYears').value = '8';
-      log('Reset candidate profile to defaults', 'info');
+    // --- Prospect Spreadsheet ---
+    const prospectTableBody = document.getElementById('prospectTableBody');
+    const prospectCountSpan = document.getElementById('prospectCount');
+
+    document.getElementById('btnRecordPage').addEventListener('click', () => {
+      sendIpc('SCRAPE_CURRENT_PAGE');
     });
+
+    window.addProspectRow = function(p) {
+      // Check if already in list
+      const existing = prospects.find(item => item.url === p.url);
+      if (existing) {
+        alert(`Already tracking position: ${existing.jobTitle} at ${existing.company}`);
+        return;
+      }
+
+      prospects.unshift({
+        id: 'prospect-' + Date.now(),
+        company: p.company || 'Unknown Co.',
+        jobTitle: p.jobTitle || 'Listing',
+        url: p.url || '',
+        status: 'Interested',
+        dateAdded: new Date().toLocaleDateString(),
+        notes: ''
+      });
+
+      renderProspects();
+      saveAllData();
+    };
+
+    window.setProspects = function(list) {
+      prospects = list || [];
+      renderProspects();
+    };
+
+    function renderProspects() {
+      prospectTableBody.innerHTML = '';
+      prospectCountSpan.textContent = `(${prospects.length})`;
+
+      if (prospects.length === 0) {
+        prospectTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:14px;">No prospects recorded yet. Open a job and click ➕ Record Current Page.</td></tr>';
+        return;
+      }
+
+      prospects.forEach((p, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(p.company)}</strong></td>
+          <td title="${escapeHtml(p.jobTitle)}">${escapeHtml(p.jobTitle)}</td>
+          <td>
+            <select class="status-select" onchange="updateProspectStatus(${idx}, this.value)">
+              <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
+              <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
+              <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
+              <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
+              <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
+              <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
+              <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+            </select>
+          </td>
+          <td><span class="prospect-link" onclick="openProspectUrl('${escapeHtml(p.url)}')">${escapeHtml(p.url)}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteProspect(${idx})">✕</button></td>
+        `;
+        prospectTableBody.appendChild(tr);
+      });
+    }
+
+    function updateProspectStatus(index, status) {
+      if (prospects[index]) {
+        prospects[index].status = status;
+        saveAllData();
+      }
+    }
+
+    function deleteProspect(index) {
+      prospects.splice(index, 1);
+      renderProspects();
+      saveAllData();
+    }
+
+    function openProspectUrl(url) {
+      if (url) {
+        sendIpc('NAVIGATE', { url });
+      }
+    }
+
+    // Export CSV
+    document.getElementById('btnExportCsv').addEventListener('click', () => {
+      if (prospects.length === 0) {
+        alert('No prospects to export.');
+        return;
+      }
+
+      let csv = 'Company,Job Title,Status,Date Added,URL\n';
+      prospects.forEach(p => {
+        csv += `"${(p.company||'').replace(/"/g, '""')}","${(p.jobTitle||'').replace(/"/g, '""')}","${p.status}","${p.dateAdded}","${p.url}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `tailorbird_prospects_${Date.now()}.csv`;
+      a.click();
+    });
+
+    // --- Job Finder ---
+    document.getElementById('btnRunSearch').addEventListener('click', () => {
+      const title = document.getElementById('searchTitle').value.trim();
+      const location = document.getElementById('searchLocation').value.trim();
+
+      const sites = [];
+      if (document.getElementById('chkGreenhouse').checked) sites.push('site:boards.greenhouse.io');
+      if (document.getElementById('chkLever').checked) sites.push('site:jobs.lever.co');
+      if (document.getElementById('chkLinkedin').checked) sites.push('site:linkedin.com/jobs');
+      if (document.getElementById('chkIndeed').checked) sites.push('site:indeed.com');
+
+      let queryParts = [];
+      if (sites.length > 0) {
+        queryParts.push('(' + sites.join(' OR ') + ')');
+      }
+
+      if (title) queryParts.push(`"${title}"`);
+      if (location) queryParts.push(`"${location}"`);
+
+      const query = queryParts.join(' ');
+      sendIpc('NAVIGATE', { url: query });
+    });
+
+    // --- Storage & Sync ---
+    function saveAllData() {
+      sendIpc('SAVE_DATA', {
+        resumeSource: resumeSourceInput.value.trim(),
+        workHistory,
+        prospects
+      });
+    }
+
+    window.onload = function() {
+      sendIpc('LOAD_DATA');
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
   </script>
 </body>
 </html>

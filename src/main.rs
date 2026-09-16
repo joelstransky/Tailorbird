@@ -1,4 +1,6 @@
 mod autofill;
+mod prospect;
+mod resume;
 
 use std::sync::{Arc, Mutex};
 use tao::{
@@ -10,6 +12,8 @@ use tao::{
 use wry::{PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows, WebViewExtWindows};
 
 use crate::autofill::{generate_autofill_script, CandidateProfile};
+use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect};
+use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 
 const LEFT_PANE_WIDTH: f64 = 420.0;
 const TOOLBAR_HEIGHT: f64 = 44.0;
@@ -20,6 +24,56 @@ const DEFAULT_WINDOW_HEIGHT: f64 = 750.0;
 const LEFT_PANE_HTML: &str = include_str!("assets/left_pane.html");
 const TOOLBAR_HTML: &str = include_str!("assets/toolbar.html");
 const MOCK_JOB_HTML: &str = include_str!("assets/mock_job_page.html");
+
+const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
+    try {
+        const url = window.location.href;
+        const title = document.title || '';
+
+        const ogTitle = document.querySelector('meta[property="og:title"]')?.content;
+        const ogSite = document.querySelector('meta[property="og:site_name"]')?.content;
+
+        const ghTitle = document.querySelector('.app-title')?.innerText?.trim();
+        const ghCompany = document.querySelector('.company-name')?.innerText?.trim();
+
+        const leverTitle = document.querySelector('.posting-headline h2')?.innerText?.trim();
+        const ashbyTitle = document.querySelector('h1')?.innerText?.trim();
+        const h1 = document.querySelector('h1')?.innerText?.trim();
+
+        let jobTitle = ghTitle || leverTitle || ashbyTitle || h1 || ogTitle || title;
+        let company = ghCompany || ogSite || '';
+
+        if (!company) {
+            if (title.includes(' at ')) {
+                company = title.split(' at ')[1].split(/[-–|]/)[0].trim();
+            } else if (title.includes(' - ')) {
+                const parts = title.split(' - ');
+                if (parts.length > 1) company = parts[1].trim();
+            } else {
+                const host = window.location.hostname.replace('www.', '');
+                company = host.split('.')[0];
+                if (company) company = company.charAt(0).toUpperCase() + company.slice(1);
+            }
+        }
+
+        if (jobTitle.includes(' at ')) {
+            jobTitle = jobTitle.split(' at ')[0].trim();
+        }
+
+        if (window.ipc && typeof window.ipc.postMessage === 'function') {
+            window.ipc.postMessage(JSON.stringify({
+                action: "RECORD_PAGE_DATA",
+                data: {
+                    url: url,
+                    jobTitle: jobTitle.substring(0, 120),
+                    company: company.substring(0, 80)
+                }
+            }));
+        }
+    } catch (e) {
+        console.error("Tailorbird scrape error:", e);
+    }
+})();"#;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(tag = "action")]
@@ -36,6 +90,32 @@ enum IpcMessage {
     Reload,
     #[serde(rename = "HOME")]
     Home,
+    #[serde(rename = "PICK_RESUME_FILE")]
+    PickResumeFile,
+    #[serde(rename = "IMPORT_RESUME")]
+    ImportResume { source: String },
+    #[serde(rename = "SCRAPE_CURRENT_PAGE")]
+    ScrapeCurrentPage,
+    #[serde(rename = "RECORD_PAGE_DATA")]
+    RecordPageData { data: ScrapedData },
+    #[serde(rename = "SAVE_DATA")]
+    SaveData {
+        #[serde(rename = "resumeSource")]
+        resume_source: String,
+        #[serde(rename = "workHistory")]
+        work_history: Vec<WorkHistoryEntry>,
+        prospects: Vec<Prospect>,
+    },
+    #[serde(rename = "LOAD_DATA")]
+    LoadData,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ScrapedData {
+    url: String,
+    job_title: String,
+    company: String,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -68,7 +148,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let do_navigate = {
         let target_holder = target_for_ipc.clone();
         let toolbar_holder = toolbar_for_ipc.clone();
-        let left_holder = left_for_ipc.clone();
 
         move |input: &str| {
             let formatted_url = format_input_to_url(input);
@@ -91,20 +170,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let _ = tb_wv.evaluate_script(&js);
                 }
             }
-
-            // Sync Log to Left Pane
-            if let Ok(guard) = left_holder.lock() {
-                if let Some(ref left_wv) = *guard {
-                    let _ = left_wv.evaluate_script(&format!(
-                        "if (window.log) {{ log('Loaded: {}', 'info'); }}",
-                        formatted_url
-                    ));
-                }
-            }
         }
     };
 
-    // 1. Initialize Left Pane (Sidebar candidate profile & controls)
+    // 1. Initialize Left Pane (Control Panel: Profile, Resume/Work History, Prospects, Finder)
     let left_webview = WebViewBuilder::new()
         .with_bounds(Rect {
             position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
@@ -130,17 +199,90 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     eprintln!("[Tailorbird Host] Script injection error: {:?}", e);
                                 } else {
                                     println!("[Tailorbird Host] Autofill script injected into target pane.");
-                                    if let Ok(l_guard) = left_holder.lock() {
-                                        if let Some(ref left_wv) = *l_guard {
-                                            let _ = left_wv.evaluate_script("if (window.log) { log('Autofill injected successfully!', 'success'); }");
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
                     Ok(IpcMessage::Navigate { url }) => {
                         do_nav(&url);
+                    }
+                    Ok(IpcMessage::PickResumeFile) => {
+                        if let Some(file) = rfd::FileDialog::new()
+                            .set_title("Select Resume File")
+                            .add_filter("Resume / CV Files", &["pdf", "txt", "md", "json", "docx"])
+                            .pick_file()
+                        {
+                            let path_str = file.to_string_lossy().to_string();
+                            println!("[Tailorbird Host] Selected resume file: {}", path_str);
+                            if let Ok(guard) = left_holder.lock() {
+                                if let Some(ref left_wv) = *guard {
+                                    let js = format!("if (window.setResumePath) {{ window.setResumePath({}); }}", serde_json::to_string(&path_str).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                            }
+                        }
+                    }
+                    Ok(IpcMessage::ImportResume { source }) => {
+                        println!("[Tailorbird Host] Importing and scanning resume from: {}", source);
+                        match load_resume_text(&source) {
+                            Ok(text) => {
+                                let entries = parse_work_history(&text);
+                                println!("[Tailorbird Host] Successfully parsed {} work history entries.", entries.len());
+                                if let Ok(guard) = left_holder.lock() {
+                                    if let Some(ref left_wv) = *guard {
+                                        let json_entries = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".to_string());
+                                        let js = format!("if (window.setWorkHistory) {{ window.setWorkHistory({}); }}", json_entries);
+                                        let _ = left_wv.evaluate_script(&js);
+                                    }
+                                }
+                            }
+                            Err(err) => {
+                                eprintln!("[Tailorbird Host] Error reading resume: {}", err);
+                                if let Ok(guard) = left_holder.lock() {
+                                    if let Some(ref left_wv) = *guard {
+                                        let js = format!("alert('Failed to read resume: {}');", err.replace('\'', "\\'"));
+                                        let _ = left_wv.evaluate_script(&js);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Ok(IpcMessage::ScrapeCurrentPage) => {
+                        println!("[Tailorbird Host] Triggering page scraper on target webview...");
+                        if let Ok(guard) = target_holder.lock() {
+                            if let Some(ref target_wv) = *guard {
+                                let _ = target_wv.evaluate_script(SCRAPE_PAGE_SCRIPT);
+                            }
+                        }
+                    }
+                    Ok(IpcMessage::SaveData { resume_source, work_history, prospects }) => {
+                        let data = AppData {
+                            resume_source,
+                            work_history,
+                            prospects,
+                        };
+                        if let Err(e) = save_stored_data(&data) {
+                            eprintln!("[Tailorbird Host] Error saving app data: {}", e);
+                        }
+                    }
+                    Ok(IpcMessage::LoadData) => {
+                        let data = load_stored_data();
+                        if let Ok(guard) = left_holder.lock() {
+                            if let Some(ref left_wv) = *guard {
+                                if !data.resume_source.is_empty() {
+                                    let js = format!("if (window.setResumePath) {{ window.setResumePath({}); }}", serde_json::to_string(&data.resume_source).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                                if !data.work_history.is_empty() {
+                                    let js = format!("if (window.setWorkHistory) {{ window.setWorkHistory({}); }}", serde_json::to_string(&data.work_history).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                                if !data.prospects.is_empty() {
+                                    let js = format!("if (window.setProspects) {{ window.setProspects({}); }}", serde_json::to_string(&data.prospects).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                            }
+                        }
                     }
                     _ => {}
                 }
@@ -153,7 +295,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let initial_right_width = (DEFAULT_WINDOW_WIDTH - LEFT_PANE_WIDTH).max(0.0);
 
-    // 2. Initialize Browser Toolbar (Back, Forward, Reload, Home, URL Bar)
+    // 2. Initialize Browser Toolbar (Back, Forward, Reload, Home, Omnibar)
     let toolbar_webview = WebViewBuilder::new()
         .with_environment(shared_env.clone())
         .with_bounds(Rect {
@@ -212,6 +354,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .with_devtools(true)
         .with_html(MOCK_JOB_HTML)
+        .with_ipc_handler({
+            let left_holder = left_for_ipc.clone();
+            move |req| {
+                let body = req.body();
+                if let Ok(IpcMessage::RecordPageData { data }) = serde_json::from_str::<IpcMessage>(body) {
+                    println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
+                    if let Ok(guard) = left_holder.lock() {
+                        if let Some(ref left_wv) = *guard {
+                            let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
+                            let _ = left_wv.evaluate_script(&js);
+                        }
+                    }
+                }
+            }
+        })
         .with_on_page_load_handler({
             let toolbar_holder = toolbar_wv_holder.clone();
             move |event, url| {

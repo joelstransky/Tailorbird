@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tailorbird | Dual-Pane Job Search Command Center</title>
+  <meta name="description" content="Tailorbird is a blazing-fast, dual-pane desktop job application browser and control center built in Rust. Autofill ATS applications, scan resumes, track prospect pipelines, and find jobs locally without telemetry.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐦</text></svg>">
+  <style>
+    :root {
+      --bg-dark: #0f1117;
+      --bg-card: #161b22;
+      --bg-surface: #1e242e;
+      --border: #30363d;
+      --border-light: #484f58;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --text-dim: #6e7681;
+      --blue: #388bfd;
+      --blue-hover: #58a6ff;
+      --green: #238636;
+      --green-accent: #2ea043;
+      --amber: #f59e0b;
+      --purple: #a371f7;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background glow */
+    .glow-sphere {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(56, 139, 253, 0.12) 0%, rgba(15, 17, 23, 0) 70%);
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Navigation */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-main);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(56, 139, 253, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-hover);
+      box-shadow: 0 6px 20px rgba(56, 139, 253, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 5rem 1.5rem 3rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.85rem;
+      background: rgba(56, 139, 253, 0.12);
+      border: 1px solid rgba(56, 139, 253, 0.3);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--blue-hover);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(180deg, #ffffff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: clamp(1.05rem, 2vw, 1.28rem);
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 2.25rem;
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* App Preview Simulation */
+    .app-preview-container {
+      max-width: 1160px;
+      margin: 0 auto 5rem;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .app-window {
+      background: #1e1e1e;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+    }
+
+    .window-titlebar {
+      background: #282828;
+      height: 34px;
+      border-bottom: 1px solid #383838;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      gap: 0.5rem;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .window-title {
+      font-size: 0.78rem;
+      color: #999;
+      font-weight: 500;
+      margin: 0 auto;
+      transform: translateX(-20px);
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      min-height: 520px;
+      background: #181818;
+    }
+
+    @media (max-width: 860px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Control Panel Mockup */
+    .mock-panel {
+      background: #252525;
+      border-right: 1px solid #383838;
+      display: flex;
+      flex-direction: column;
+      font-size: 0.8rem;
+    }
+
+    .panel-header {
+      background: #2f2f2f;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ccc;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    .panel-section {
+      padding: 0.85rem;
+      border-bottom: 1px solid #303030;
+    }
+
+    .panel-section-title {
+      color: #388bfd;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .mock-input {
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      padding: 0.4rem 0.6rem;
+      color: #ddd;
+      font-size: 0.75rem;
+      width: 100%;
+      margin-bottom: 0.45rem;
+    }
+
+    .mock-btn-autofill {
+      background: linear-gradient(180deg, #2ea043 0%, #238636 100%);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid #3fb950;
+      border-radius: 4px;
+      padding: 0.45rem 0.75rem;
+      width: 100%;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .mock-pill-tag {
+      display: inline-block;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.68rem;
+      margin-right: 4px;
+    }
+
+    /* Right Browser Pane Mockup */
+    .mock-browser {
+      display: flex;
+      flex-direction: column;
+      background: #0d1117;
+    }
+
+    .mock-toolbar {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mock-url-bar {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      color: #58a6ff;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .mock-page-content {
+      padding: 1.5rem;
+      flex: 1;
+      position: relative;
+    }
+
+    .mock-job-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.25rem;
+      max-width: 580px;
+    }
+
+    .mock-job-header {
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .mock-job-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .mock-job-company {
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .form-field {
+      margin-bottom: 0.75rem;
+    }
+
+    .form-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #8b949e;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .form-input-filled {
+      background: #0d1117;
+      border: 1px solid #238636;
+      box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.2);
+      border-radius: 4px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.78rem;
+      color: #3fb950;
+      width: 100%;
+    }
+
+    .form-input-unfilled {
+      background: rgba(245, 158, 11, 0.05);
+      border: 2px dashed #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+      border-radius: 4px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      color: #f59e0b;
+      width: 100%;
+    }
+
+    .mock-toast {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: #1f242c;
+      border: 1px solid #f59e0b;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      border-radius: 6px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.75rem;
+      color: #e6edf3;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Section Styling */
+    section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 5rem 1.5rem;
+    }
+
+    .section-head {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .section-head h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-head p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-icon {
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .feature-card h3 {
+      font-size: 1.18rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    /* Tech Specs & Highlights */
+    .specs-strip {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .specs-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .spec-item h4 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--blue-hover);
+      margin-bottom: 0.25rem;
+    }
+
+    .spec-item p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    /* Code Block / Quickstart */
+    .quickstart-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .code-header {
+      background: #161b22;
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+    }
+
+    pre {
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #e6edf3;
+    }
+
+    .code-comment { color: var(--text-dim); }
+    .code-cmd { color: #58a6ff; font-weight: 600; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--blue-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-sphere"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#" class="brand">
+      <span class="brand-icon">🐦</span>
+      <span>Tailorbird</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="badge">Blazing Fast • 100% Local & Private • Rust Desktop App</div>
+    <h1>The Job Search Browser & Application Command Center</h1>
+    <p>
+      Tailorbird unites resume scanning, prospect pipeline tracking, targeted ATS search, and intelligent form autofill in a sleek dual-pane workspace designed for high-conviction job applicants.
+    </p>
+    <div class="hero-actions">
+      <a href="#quickstart" class="btn btn-primary">Get Started in Seconds</a>
+      <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary">Star on GitHub ⭐</a>
+    </div>
+  </header>
+
+  <!-- Interactive Dual-Pane Mockup Preview -->
+  <div class="app-preview-container">
+    <div class="app-window">
+      <div class="window-titlebar">
+        <div class="window-dots">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="window-title">Tailorbird — Application Control Center</div>
+      </div>
+      <div class="app-layout">
+        <!-- Left Pane: Photoshop-Style Dock -->
+        <div class="mock-panel">
+          <div class="panel-header">
+            <span>Control Panel</span>
+            <span>420px</span>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-title"><span>▼</span> Candidate Profile</div>
+            <input class="mock-input" type="text" value="Joel Stransky" readonly>
+            <input class="mock-input" type="text" value="stranskydesign@gmail.com" readonly>
+            <input class="mock-input" type="text" value="Senior Frontend / Fullstack Engineer" readonly>
+            <div class="mock-btn-autofill">⚡ Autofill Job Application</div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-title"><span>▼</span> Resume & Work History</div>
+            <div style="font-size: 0.72rem; color: #aaa; margin-bottom: 0.4rem;">Joel Stransky Resume 2026.pdf</div>
+            <div>
+              <span class="mock-pill-tag">Lead Engineer @ Scripted</span>
+              <span class="mock-pill-tag">Sr Developer @ Konami</span>
+            </div>
+          </div>
+
+          <div class="panel-section" style="border-bottom: none;">
+            <div class="panel-section-title"><span>▼</span> Prospects Pipeline</div>
+            <div style="font-size: 0.72rem; color: #888;">5 tracked jobs • 1 Interviewing • 2 Applied</div>
+          </div>
+        </div>
+
+        <!-- Right Pane: Target Webview -->
+        <div class="mock-browser">
+          <div class="mock-toolbar">
+            <div class="mock-url-bar">
+              <span>📄</span>
+              <span>local://mock/application-portal</span>
+            </div>
+            <span class="mock-pill-tag" style="background:#238636; color:#fff; border-color:#2ea043; cursor:default;">📄 Test Form</span>
+          </div>
+
+          <div class="mock-page-content">
+            <div class="mock-job-card">
+              <div class="mock-job-header">
+                <div class="mock-job-title">Staff Software Engineer</div>
+                <div class="mock-job-company">Acme Cloud Systems • San Francisco, CA (Remote)</div>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Full Legal Name</label>
+                <input class="form-input-filled" type="text" value="Joel Stransky" readonly>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Email Address</label>
+                <input class="form-input-filled" type="text" value="stranskydesign@gmail.com" readonly>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Why do you want to work at Acme Cloud Systems? *</label>
+                <textarea class="form-input-unfilled" rows="2" placeholder="Custom response required..." readonly></textarea>
+              </div>
+            </div>
+
+            <!-- Toast alert -->
+            <div class="mock-toast">
+              <span>⚡ 6 fields autofilled • ⚠️ 1 remaining marked in amber</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section id="features">
+    <div class="section-head">
+      <h2>Engineered for Job Seekers Who Value Speed and Privacy</h2>
+      <p>Stop wrestling with repetitive web forms, clunky browser extensions, and scattered spreadsheets.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Resilient ATS Autofill</h3>
+        <p>
+          Custom multi-modal heuristics that accurately populate text inputs, dropdowns, radio groups, and pronoun selectors across Greenhouse, Lever, Ashby, and Workday.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚠️</div>
+        <h3>Unfilled Fields Tracking</h3>
+        <p>
+          Never miss a required question. Unfilled interactive fields are highlighted with warm amber accents, paired with a persistent live countdown toast that confirms when your form is 100% complete.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📄</div>
+        <h3>Intelligent Resume Parser</h3>
+        <p>
+          Directly scan local PDFs, Markdown, JSON, or public Google Docs. The heuristic parser isolates dates, companies, and roles while preserving bullet achievements without splitting errors.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Built-in Prospect Sheet</h3>
+        <p>
+          One-click page scraping records company names, job titles, and application URLs directly into an integrated pipeline sheet with status stages, inline cell editing, and CSV export.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Boolean Search Synthesizer</h3>
+        <p>
+          Assemble laser-focused boolean queries targeting live postings on Greenhouse, Lever, LinkedIn, Indeed, and Google Jobs without search syntax collision.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Zero Telemetry, 100% Local</h3>
+        <p>
+          Your personal resume data, phone number, work history, and prospect pipelines remain entirely on your local machine in JSON format. No third-party servers, no analytics, no subscription traps.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical Specs -->
+  <div class="specs-strip" id="workflow">
+    <div class="specs-grid">
+      <div class="spec-item">
+        <h4>&lt; 15 MB</h4>
+        <p>Lightweight Binary</p>
+      </div>
+      <div class="spec-item">
+        <h4>Rust + Wry</h4>
+        <p>Native Webview Engine</p>
+      </div>
+      <div class="spec-item">
+        <h4>0% Cloud</h4>
+        <p>Offline Storage</p>
+      </div>
+      <div class="spec-item">
+        <h4>1-Click</h4>
+        <p>Form Autofill</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quickstart Section -->
+  <section id="quickstart">
+    <div class="section-head">
+      <h2>Get Started in Minutes</h2>
+      <p>Tailorbird runs natively on Windows, macOS, and Linux using Rust's official toolchain.</p>
+    </div>
+
+    <div class="quickstart-box">
+      <div class="code-header">
+        <span>Terminal (PowerShell / Bash)</span>
+        <span>Rust 1.75+</span>
+      </div>
+      <pre><code><span class="code-comment"># 1. Clone the repository</span>
+<span class="code-cmd">git clone</span> https://github.com/joelstransky/Tailorbird.git
+<span class="code-cmd">cd</span> Tailorbird
+
+<span class="code-comment"># 2. Run the application in development mode</span>
+<span class="code-cmd">cargo run</span>
+
+<span class="code-comment"># 3. Or compile an optimized production binary</span>
+<span class="code-cmd">cargo build</span> --release
+<span class="code-comment"># Executable is generated at target/release/tailorbird</span></code></pre>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Tailorbird is open source software created by <a href="https://github.com/joelstransky" target="_blank" rel="noopener">Joel Stransky</a>.</p>
+    <p style="margin-top: 0.5rem;">Released under the MIT License • Built with Rust, Wry, and Tao.</p>
+  </footer>
+
+</body>
+</html>

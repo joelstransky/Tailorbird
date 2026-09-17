@@ -455,7 +455,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      z-index: 100000;
       padding: 16px;
     }
 
@@ -657,7 +657,7 @@
 
   </div>
 
-  <!-- Photoshop-style Modal Confirmation Dialog -->
+  <!-- Photoshop-style Modal Confirmation Dialog (Import Overwrite) -->
   <div class="ps-modal-overlay" id="confirmModal">
     <div class="ps-modal-box">
       <div style="font-size:12px; font-weight:700; color:#ff7878; margin-bottom:6px;">⚠️ Replace Work History?</div>
@@ -665,6 +665,18 @@
       <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:12px;">
         <button class="ps-btn ps-btn-sm" id="btnCancelImport">Cancel</button>
         <button class="ps-btn ps-btn-danger ps-btn-sm" id="btnProceedImport">Yes, Overwrite</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Position Confirmation Dialog -->
+  <div class="ps-modal-overlay" id="deleteHistoryModal">
+    <div class="ps-modal-box">
+      <div style="font-size:12px; font-weight:700; color:#ff7878; margin-bottom:6px;">⚠️ Delete Position?</div>
+      <p style="font-size:11px; color:#cccccc; line-height:1.4;" id="deleteHistoryMessage">Are you sure you want to delete this position from your work history? This action cannot be undone.</p>
+      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:12px;">
+        <button class="ps-btn ps-btn-sm" id="btnCancelDeleteHistory">Cancel</button>
+        <button class="ps-btn ps-btn-danger ps-btn-sm" id="btnProceedDeleteHistory">Delete</button>
       </div>
     </div>
   </div>
@@ -748,6 +760,24 @@
       saveAllData();
     };
 
+    function isPositionPopulated(entry) {
+      if (!entry) return false;
+      const role = (entry.role || '').trim();
+      const company = (entry.company || '').trim();
+      const summary = (entry.summary || '').trim();
+      const startDate = (entry.startDate || '').trim();
+      const endDate = (entry.endDate || '').trim();
+
+      // Return true if any field contains text
+      if (role.length > 0) return true;
+      if (company.length > 0) return true;
+      if (summary.length > 0) return true;
+      if (startDate.length > 0) return true;
+      if (endDate.length > 0 && endDate !== 'Present') return true;
+
+      return false;
+    }
+
     function renderWorkHistory() {
       workHistoryList.innerHTML = '';
       if (workHistory.length === 0) {
@@ -758,14 +788,18 @@
       workHistory.forEach((entry, idx) => {
         const card = document.createElement('div');
         card.className = 'history-card';
+        const dateDisplay = (entry.startDate || entry.endDate)
+          ? `${entry.startDate || ''}${entry.startDate && entry.endDate ? ' - ' : ''}${entry.endDate || ''}`.trim()
+          : '';
+
         card.innerHTML = `
           <div class="history-card-header">
-            <input type="text" value="${escapeHtml(entry.role)}" placeholder="Role / Title" style="font-weight:700; flex:1; height:22px;" onchange="updateHistory(${idx}, 'role', this.value)">
+            <input type="text" value="${escapeHtml(entry.role || '')}" placeholder="Role / Title" style="font-weight:700; flex:1; height:22px;" onchange="updateHistory(${idx}, 'role', this.value)">
             <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding:1px 5px; height:20px;" onclick="deleteHistory(${idx})" title="Delete entry">✕</button>
           </div>
           <div style="display:flex; gap:4px;">
-            <input type="text" value="${escapeHtml(entry.company)}" placeholder="Company Name" style="flex:1; height:20px; font-size:10px;" onchange="updateHistory(${idx}, 'company', this.value)">
-            <input type="text" value="${escapeHtml(entry.startDate)} - ${escapeHtml(entry.endDate)}" placeholder="Dates" style="width:105px; height:20px; font-size:10px;" onchange="updateHistoryDates(${idx}, this.value)">
+            <input type="text" value="${escapeHtml(entry.company || '')}" placeholder="Company Name" style="flex:1; height:20px; font-size:10px;" onchange="updateHistory(${idx}, 'company', this.value)">
+            <input type="text" value="${escapeHtml(dateDisplay)}" placeholder="Dates" style="width:105px; height:20px; font-size:10px;" onchange="updateHistoryDates(${idx}, this.value)">
           </div>
           <textarea rows="2" placeholder="Responsibilities & highlights..." style="resize:vertical; font-size:10.5px; height:46px;" onchange="updateHistory(${idx}, 'summary', this.value)">${escapeHtml(entry.summary || '')}</textarea>
         `;
@@ -789,19 +823,80 @@
       }
     }
 
+    let pendingDeleteHistoryIndex = null;
+    const deleteHistoryModal = document.getElementById('deleteHistoryModal');
+    const deleteHistoryMessage = document.getElementById('deleteHistoryMessage');
+
     function deleteHistory(index) {
-      workHistory.splice(index, 1);
-      renderWorkHistory();
-      saveAllData();
+      const entry = workHistory[index];
+      if (!entry) return;
+
+      if (isPositionPopulated(entry)) {
+        pendingDeleteHistoryIndex = index;
+        const role = (entry.role || '').trim();
+        const company = (entry.company || '').trim();
+        let label = 'this position';
+        if (role && company) {
+          label = `"${role}" at ${company}`;
+        } else if (role) {
+          label = `"${role}"`;
+        } else if (company) {
+          label = `position at ${company}`;
+        }
+        deleteHistoryMessage.textContent = `Are you sure you want to delete ${label} from your work history? This action cannot be undone.`;
+        deleteHistoryModal.style.display = 'flex';
+      } else {
+        performDeleteHistory(index);
+      }
     }
+
+    function performDeleteHistory(index) {
+      if (index >= 0 && index < workHistory.length) {
+        workHistory.splice(index, 1);
+        renderWorkHistory();
+        saveAllData();
+      }
+      pendingDeleteHistoryIndex = null;
+    }
+
+    document.getElementById('btnCancelDeleteHistory').addEventListener('click', () => {
+      deleteHistoryModal.style.display = 'none';
+      pendingDeleteHistoryIndex = null;
+    });
+
+    document.getElementById('btnProceedDeleteHistory').addEventListener('click', () => {
+      deleteHistoryModal.style.display = 'none';
+      if (pendingDeleteHistoryIndex !== null) {
+        performDeleteHistory(pendingDeleteHistoryIndex);
+      }
+    });
+
+    deleteHistoryModal.addEventListener('click', (e) => {
+      if (e.target === deleteHistoryModal) {
+        deleteHistoryModal.style.display = 'none';
+        pendingDeleteHistoryIndex = null;
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (deleteHistoryModal && deleteHistoryModal.style.display === 'flex') {
+          deleteHistoryModal.style.display = 'none';
+          pendingDeleteHistoryIndex = null;
+        }
+        if (confirmModal && confirmModal.style.display === 'flex') {
+          confirmModal.style.display = 'none';
+        }
+      }
+    });
 
     document.getElementById('btnAddPosition').addEventListener('click', () => {
       workHistory.unshift({
         id: 'exp-' + Date.now(),
-        company: 'Company',
-        role: 'Job Title',
-        startDate: '2023',
-        endDate: 'Present',
+        company: '',
+        role: '',
+        startDate: '',
+        endDate: '',
         summary: ''
       });
       renderWorkHistory();

@@ -313,7 +313,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 eprintln!("[Tailorbird Host] Error reading resume: {}", err);
                                 if let Ok(guard) = left_holder.lock() {
                                     if let Some(ref left_wv) = *guard {
-                                        let js = format!("alert('Failed to read resume: {}');", err.replace('\'', "\\'"));
+                                        let js = format!(
+                                            "if (window.showErrorAlert) {{ window.showErrorAlert({}, 'Failed to Read Resume'); }} else {{ alert({}); }}",
+                                            serde_json::to_string(&err).unwrap_or_default(),
+                                            serde_json::to_string(&err).unwrap_or_default()
+                                        );
                                         let _ = left_wv.evaluate_script(&js);
                                     }
                                 }
@@ -329,6 +333,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Ok(IpcMessage::SetLeftWidth { width }) => {
+                        println!("[Tailorbird Host] SetLeftWidth received: {:.1}", width);
                         coord(Some(width));
                     }
                     Ok(IpcMessage::SaveData {

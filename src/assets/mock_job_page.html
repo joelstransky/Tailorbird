@@ -287,7 +287,7 @@
       <form id="jobForm" onsubmit="event.preventDefault(); alert('Application submitted successfully (mock)!');">
         <div class="form-grid">
           
-          <div class="col-span-2 field-group">
+          <div class="field-group">
             <label for="fullName">Full Name <span class="required-star">*</span></label>
             <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="First and last name" required>
           </div>
@@ -302,19 +302,74 @@
             <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000" required>
           </div>
 
-          <div class="col-span-2 field-group">
+          <div class="field-group">
+            <label for="location">Current Location <span class="required-star">*</span></label>
+            <input type="text" id="location" name="location" placeholder="City, State / Region" required>
+          </div>
+
+          <div class="field-group">
+            <label for="org">Current Company</label>
+            <input type="text" id="org" name="org" placeholder="Current employer or Organization">
+          </div>
+
+          <div class="field-group">
+            <label>Pronouns</label>
+            <div style="display: flex; gap: 12px; align-items: center; height: 42px;">
+              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="pronouns" value="He/him" style="width:auto;"> He/him
+              </label>
+              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="pronouns" value="She/her" style="width:auto;"> She/her
+              </label>
+              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="pronouns" value="They/them" style="width:auto;"> They/them
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
             <label for="linkedin">LinkedIn Profile URL</label>
             <input type="text" id="linkedin" name="urls[LinkedIn]" placeholder="https://linkedin.com/in/username">
           </div>
 
-          <div class="col-span-2 field-group">
-            <label for="github">GitHub / Portfolio URL</label>
+          <div class="field-group">
+            <label for="github">GitHub URL</label>
             <input type="text" id="github" name="urls[GitHub]" placeholder="https://github.com/username">
           </div>
 
-          <div class="col-span-2 field-group">
+          <div class="field-group">
+            <label for="portfolio">Portfolio / Other URL</label>
+            <input type="text" id="portfolio" name="urls[Portfolio]" placeholder="https://portfolio.dev">
+          </div>
+
+          <div class="field-group">
             <label for="experienceYears">Years of Relevant Experience</label>
             <input type="number" id="experienceYears" name="years_experience" placeholder="e.g. 5" min="0" max="40">
+          </div>
+
+          <!-- Lever-style Custom Survey Questions (Fields that remain unfilled) -->
+          <div class="col-span-2" style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px;">
+            <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Additional Questions (Visual Highlighting Demo)</div>
+          </div>
+
+          <div class="field-group">
+            <label for="noticePeriod">Notice Period</label>
+            <select id="noticePeriod" name="notice_period">
+              <option value="">-- Please select --</option>
+              <option value="immediate">Immediately</option>
+              <option value="2weeks">2 Weeks</option>
+              <option value="1month">1 Month</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="desiredSalary">Desired Annual Compensation</label>
+            <input type="text" id="desiredSalary" name="desired_salary" placeholder="e.g. $160,000">
+          </div>
+
+          <div class="col-span-2 field-group">
+            <label for="customComments">Additional Notes / Cover Note</label>
+            <textarea id="customComments" name="comments" rows="2" placeholder="Tell us anything else you'd like us to know..."></textarea>
           </div>
 
         </div>
@@ -328,10 +383,14 @@
           <table class="state-table">
             <tbody>
               <tr><td class="key">state.fullName</td><td class="val" id="stateFullName">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.email</td><td class="val" id="stateEmail">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.phone</td><td class="val" id="statePhone">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.location</td><td class="val" id="stateLocation">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.company</td><td class="val" id="stateOrg">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.linkedin</td><td class="val" id="stateLinkedin">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.github</td><td class="val" id="stateGithub">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.portfolio</td><td class="val" id="statePortfolio">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.yearsExperience</td><td class="val" id="stateExperience">&lt;empty&gt;</td></tr>
             </tbody>
           </table>
@@ -359,21 +418,30 @@
       const fn = document.getElementById('fullName').value;
       const em = document.getElementById('email').value;
       const ph = document.getElementById('phone').value;
+      const loc = document.getElementById('location').value;
+      const org = document.getElementById('org').value;
       const li = document.getElementById('linkedin').value;
       const gh = document.getElementById('github').value;
+      const pf = document.getElementById('portfolio').value;
       const ex = document.getElementById('experienceYears').value;
 
+      const checkedPronouns = Array.from(document.querySelectorAll('input[name="pronouns"]:checked')).map(cb => cb.value).join(', ');
+
       document.getElementById('stateFullName').textContent = fn || '<empty>';
+      document.getElementById('statePronouns').textContent = checkedPronouns || '<empty>';
       document.getElementById('stateEmail').textContent = em || '<empty>';
       document.getElementById('statePhone').textContent = ph || '<empty>';
+      document.getElementById('stateLocation').textContent = loc || '<empty>';
+      document.getElementById('stateOrg').textContent = org || '<empty>';
       document.getElementById('stateLinkedin').textContent = li || '<empty>';
       document.getElementById('stateGithub').textContent = gh || '<empty>';
+      document.getElementById('statePortfolio').textContent = pf || '<empty>';
       document.getElementById('stateExperience').textContent = ex || '<empty>';
     }
 
     // Attach listeners to test bubbling input/change events
-    const inputs = form.querySelectorAll('input');
-    inputs.forEach(input => {
+    const allFormInputs = form.querySelectorAll('input, select, textarea');
+    allFormInputs.forEach(input => {
       input.addEventListener('input', syncState);
       input.addEventListener('change', syncState);
     });

@@ -179,12 +179,25 @@
       display: flex;
     }
 
+    /* Resizer Overlay to capture pointer moves seamlessly across boundaries */
+    .resizer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 99998;
+      cursor: col-resize;
+      display: none;
+      background: transparent;
+    }
+
     /* Resizable Middle Divider between Control Panel and Browser */
     .middle-resizer {
       position: fixed;
       top: 0;
       right: 0;
-      width: 6px;
+      width: 8px;
       height: 100vh;
       cursor: col-resize;
       z-index: 99999;
@@ -343,6 +356,48 @@
       font-size: 10px;
     }
 
+    /* Work History Scan Feature Callout */
+    .scan-callout {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      background: rgba(0, 102, 214, 0.12);
+      border: 1px solid rgba(0, 102, 214, 0.35);
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .scan-callout-icon {
+      font-size: 13px;
+      line-height: 1.2;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .scan-callout-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scan-callout-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #70b0ff;
+      margin-bottom: 2px;
+    }
+
+    .scan-callout-desc {
+      font-size: 10px;
+      color: #cccccc;
+      line-height: 1.35;
+    }
+
+    .scan-callout-desc strong {
+      color: #ffffff;
+    }
+
     /* Work History Item Cards */
     .history-scroll-area {
       display: flex;
@@ -435,6 +490,47 @@
       text-decoration: underline;
     }
 
+    .prospect-status-select {
+      background: #141414;
+      color: #fff;
+      border: 1px solid #383838;
+      font-size: 9.5px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      min-width: 98px;
+      width: 98px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .prospect-status-select:focus {
+      border-color: var(--ps-accent-blue);
+      outline: none;
+    }
+
+    .ps-table-input {
+      background: #141414;
+      border: 1px solid #4a4a4a;
+      color: #ffffff;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 2px;
+      width: 100%;
+      min-width: 80px;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease;
+    }
+
+    .ps-table-input:focus {
+      border-color: var(--ps-accent-blue);
+      outline: none;
+      box-shadow: 0 0 0 1px var(--ps-accent-blue);
+    }
+
+    .prospect-row-editing td {
+      background: #252830 !important;
+    }
+
     .layers-footer-bar {
       height: 26px;
       background: #222222;
@@ -505,6 +601,24 @@
         </div>
 
         <div class="prop-row">
+          <span class="prop-label">Pronouns</span>
+          <div class="prop-input-wrap" style="display:flex; gap:4px;">
+            <select id="pronounSelect" style="flex:1;">
+              <option value="">-- Select --</option>
+              <option value="He/him">He/him</option>
+              <option value="She/her">She/her</option>
+              <option value="They/them">They/them</option>
+              <option value="He/they">He/they</option>
+              <option value="She/they">She/they</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input type="text" id="pronounsCustom" placeholder="Write-in..." style="display:none; flex:1;">
+            <input type="hidden" id="pronouns" value="">
+          </div>
+        </div>
+
+        <div class="prop-row">
           <span class="prop-label">Email</span>
           <div class="prop-input-wrap">
             <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
@@ -515,6 +629,20 @@
           <span class="prop-label">Phone</span>
           <div class="prop-input-wrap">
             <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <span class="prop-label">Location</span>
+          <div class="prop-input-wrap">
+            <input type="text" id="location" value="" placeholder="e.g. Las Vegas, NV or Remote">
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <span class="prop-label">Company</span>
+          <div class="prop-input-wrap">
+            <input type="text" id="currentCompany" value="" placeholder="Current employer">
           </div>
         </div>
 
@@ -533,10 +661,26 @@
         </div>
 
         <div class="prop-row">
+          <span class="prop-label">Portfolio</span>
+          <div class="prop-input-wrap">
+            <input type="text" id="portfolioUrl" value="" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="prop-row">
           <span class="prop-label">Experience</span>
           <div class="prop-input-wrap">
             <input type="number" id="experienceYears" value="8" min="0" max="50" style="width: 70px;">
             <span style="color:#777; font-size:10px;">years</span>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <span class="prop-label">Salary Range</span>
+          <div class="prop-input-wrap" style="gap: 4px;">
+            <input type="text" id="salaryMin" value="" placeholder="Min (e.g. $140k)" style="flex:1;">
+            <span style="color:#777; font-size:10px;">-</span>
+            <input type="text" id="salaryMax" value="" placeholder="Max (e.g. $200k)" style="flex:1;">
           </div>
         </div>
       </div>
@@ -560,6 +704,17 @@
           <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL..." style="flex:1;">
           <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">Browse</button>
           <button class="ps-btn ps-btn-blue ps-btn-sm" id="btnImportResume" title="Import & scan resume">Scan</button>
+        </div>
+
+        <!-- Scan Feature Callout (advertises scan feature when work history is empty) -->
+        <div id="scanCallout" class="scan-callout" style="display: none;">
+          <div class="scan-callout-icon">💡</div>
+          <div class="scan-callout-body">
+            <div class="scan-callout-title">Fast-Track Your Work History</div>
+            <div class="scan-callout-desc">
+              Instead of typing everything in manually, link or browse your resume above and click <strong>Scan</strong> to auto-fill your positions and achievements!
+            </div>
+          </div>
         </div>
 
         <!-- History cards expanding full height -->
@@ -591,11 +746,11 @@
           <table class="layers-table">
             <thead>
               <tr>
-                <th>Company</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Link</th>
-                <th></th>
+                <th style="min-width: 85px;">Company</th>
+                <th style="min-width: 90px;">Role</th>
+                <th style="min-width: 100px;">Status</th>
+                <th style="min-width: 80px;">Link</th>
+                <th style="min-width: 54px; text-align: right;"></th>
               </tr>
             </thead>
             <tbody id="prospectTableBody">
@@ -681,6 +836,23 @@
     </div>
   </div>
 
+  <!-- Photoshop-style Error Alert Modal Dialog -->
+  <div class="ps-modal-overlay" id="errorModal">
+    <div class="ps-modal-box">
+      <div style="font-size:12px; font-weight:700; color:#ff7878; margin-bottom:6px;" id="errorModalTitle">⚠️ Scan Error</div>
+      <p style="font-size:11px; color:#cccccc; line-height:1.45; word-break: break-word;" id="errorModalMessage">An error occurred while reading the file.</p>
+      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:14px;">
+        <button class="ps-btn ps-btn-primary ps-btn-sm" id="btnDismissError">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drag Overlay and Resizable Middle Divider between Control Panel and Browser -->
+  <div id="resizerOverlay" class="resizer-overlay"></div>
+  <div id="middleResizer" class="middle-resizer" title="Drag to resize Control Panel">
+    <div class="resizer-handle"></div>
+  </div>
+
   <script>
     // State Store
     let workHistory = [];
@@ -700,15 +872,85 @@
       drawer.classList.toggle('open');
     }
 
+    // --- Pronoun Helpers ---
+    function getPronouns() {
+      const sel = document.getElementById('pronounSelect');
+      if (sel && sel.value === 'custom') {
+        return (document.getElementById('pronounsCustom').value || '').trim();
+      }
+      return sel ? sel.value : '';
+    }
+
+    function setPronouns(val) {
+      const sel = document.getElementById('pronounSelect');
+      const customInput = document.getElementById('pronounsCustom');
+      const hidden = document.getElementById('pronouns');
+      if (!sel || !customInput || !hidden) return;
+
+      const v = (val || '').trim();
+      hidden.value = v;
+
+      if (!v) {
+        sel.value = '';
+        customInput.style.display = 'none';
+        customInput.value = '';
+        return;
+      }
+
+      let matchedOption = null;
+      for (const opt of sel.options) {
+        if (opt.value && opt.value.toLowerCase() === v.toLowerCase()) {
+          matchedOption = opt.value;
+          break;
+        }
+      }
+
+      if (matchedOption) {
+        sel.value = matchedOption;
+        customInput.style.display = 'none';
+        customInput.value = '';
+      } else {
+        sel.value = 'custom';
+        customInput.style.display = 'block';
+        customInput.value = v;
+      }
+    }
+
+    document.getElementById('pronounSelect').addEventListener('change', (e) => {
+      const customInput = document.getElementById('pronounsCustom');
+      if (e.target.value === 'custom') {
+        customInput.style.display = 'block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+      }
+      document.getElementById('pronouns').value = getPronouns();
+      saveAllData();
+    });
+
+    document.getElementById('pronounsCustom').addEventListener('input', () => {
+      document.getElementById('pronouns').value = getPronouns();
+    });
+    document.getElementById('pronounsCustom').addEventListener('change', () => {
+      document.getElementById('pronouns').value = getPronouns();
+      saveAllData();
+    });
+
     // --- Profile & Autofill ---
     document.getElementById('btnAutofill').addEventListener('click', () => {
       const data = {
         fullName: document.getElementById('fullName').value.trim(),
+        pronouns: getPronouns(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
+        location: document.getElementById('location').value.trim(),
+        currentCompany: document.getElementById('currentCompany').value.trim(),
         linkedin: document.getElementById('linkedin').value.trim(),
         github: document.getElementById('github').value.trim(),
-        experienceYears: document.getElementById('experienceYears').value.trim()
+        portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
+        experienceYears: document.getElementById('experienceYears').value.trim(),
+        salaryMin: document.getElementById('salaryMin').value.trim(),
+        salaryMax: document.getElementById('salaryMax').value.trim()
       };
       sendIpc('AUTOFILL', { data });
     });
@@ -730,7 +972,7 @@
     document.getElementById('btnImportResume').addEventListener('click', () => {
       const source = resumeSourceInput.value.trim();
       if (!source) {
-        alert('Please select a local resume file or paste a public Google Doc URL.');
+        showErrorAlert('Please select a local resume file or paste a public Google Doc URL.', 'No Resume Specified');
         return;
       }
 
@@ -778,8 +1020,27 @@
       return false;
     }
 
+    function isWorkHistoryEmpty() {
+      if (!Array.isArray(workHistory) || workHistory.length === 0) {
+        return true;
+      }
+      return !workHistory.some(entry => isPositionPopulated(entry));
+    }
+
+    function updateScanCalloutVisibility() {
+      const callout = document.getElementById('scanCallout');
+      if (!callout) return;
+      if (isWorkHistoryEmpty()) {
+        callout.style.display = 'flex';
+      } else {
+        callout.style.display = 'none';
+      }
+    }
+
     function renderWorkHistory() {
       workHistoryList.innerHTML = '';
+      updateScanCalloutVisibility();
+
       if (workHistory.length === 0) {
         workHistoryList.innerHTML = '<div style="color: var(--ps-text-muted); font-size: 10px; text-align: center; padding: 16px;">No work history loaded.<br>Click "Scan" or "+ Position".</div>';
         return;
@@ -794,22 +1055,39 @@
 
         card.innerHTML = `
           <div class="history-card-header">
-            <input type="text" value="${escapeHtml(entry.role || '')}" placeholder="Role / Title" style="font-weight:700; flex:1; height:22px;" onchange="updateHistory(${idx}, 'role', this.value)">
+            <input type="text" value="${escapeHtml(entry.role || '')}" placeholder="Role / Title" style="font-weight:700; flex:1; height:22px;" oninput="handleHistoryInput(${idx}, 'role', this.value)" onchange="updateHistory(${idx}, 'role', this.value)">
             <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding:1px 5px; height:20px;" onclick="deleteHistory(${idx})" title="Delete entry">✕</button>
           </div>
           <div style="display:flex; gap:4px;">
-            <input type="text" value="${escapeHtml(entry.company || '')}" placeholder="Company Name" style="flex:1; height:20px; font-size:10px;" onchange="updateHistory(${idx}, 'company', this.value)">
-            <input type="text" value="${escapeHtml(dateDisplay)}" placeholder="Dates" style="width:105px; height:20px; font-size:10px;" onchange="updateHistoryDates(${idx}, this.value)">
+            <input type="text" value="${escapeHtml(entry.company || '')}" placeholder="Company Name" style="flex:1; height:20px; font-size:10px;" oninput="handleHistoryInput(${idx}, 'company', this.value)" onchange="updateHistory(${idx}, 'company', this.value)">
+            <input type="text" value="${escapeHtml(dateDisplay)}" placeholder="Dates" style="width:105px; height:20px; font-size:10px;" oninput="handleHistoryDatesInput(${idx}, this.value)" onchange="updateHistoryDates(${idx}, this.value)">
           </div>
-          <textarea rows="2" placeholder="Responsibilities & highlights..." style="resize:vertical; font-size:10.5px; height:46px;" onchange="updateHistory(${idx}, 'summary', this.value)">${escapeHtml(entry.summary || '')}</textarea>
+          <textarea rows="2" placeholder="Responsibilities & highlights..." style="resize:vertical; font-size:10.5px; height:46px;" oninput="handleHistoryInput(${idx}, 'summary', this.value)" onchange="updateHistory(${idx}, 'summary', this.value)">${escapeHtml(entry.summary || '')}</textarea>
         `;
         workHistoryList.appendChild(card);
       });
     }
 
+    function handleHistoryInput(index, field, value) {
+      if (workHistory[index]) {
+        workHistory[index][field] = value;
+        updateScanCalloutVisibility();
+      }
+    }
+
+    function handleHistoryDatesInput(index, value) {
+      if (workHistory[index]) {
+        const parts = value.split('-');
+        workHistory[index].startDate = (parts[0] || '').trim();
+        workHistory[index].endDate = (parts[1] || 'Present').trim();
+        updateScanCalloutVisibility();
+      }
+    }
+
     function updateHistory(index, field, value) {
       if (workHistory[index]) {
         workHistory[index][field] = value;
+        updateScanCalloutVisibility();
         saveAllData();
       }
     }
@@ -819,6 +1097,7 @@
         const parts = value.split('-');
         workHistory[index].startDate = (parts[0] || '').trim();
         workHistory[index].endDate = (parts[1] || 'Present').trim();
+        updateScanCalloutVisibility();
         saveAllData();
       }
     }
@@ -878,6 +1157,32 @@
       }
     });
 
+    // --- Error Modal Logic ---
+    const errorModal = document.getElementById('errorModal');
+    const errorModalTitle = document.getElementById('errorModalTitle');
+    const errorModalMessage = document.getElementById('errorModalMessage');
+    const btnDismissError = document.getElementById('btnDismissError');
+
+    window.showErrorAlert = function(message, title = 'Scan Error') {
+      if (errorModalTitle) errorModalTitle.textContent = `⚠️ ${title}`;
+      if (errorModalMessage) errorModalMessage.textContent = message;
+      if (errorModal) errorModal.style.display = 'flex';
+    };
+
+    if (btnDismissError) {
+      btnDismissError.addEventListener('click', () => {
+        if (errorModal) errorModal.style.display = 'none';
+      });
+    }
+
+    if (errorModal) {
+      errorModal.addEventListener('click', (e) => {
+        if (e.target === errorModal) {
+          errorModal.style.display = 'none';
+        }
+      });
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (deleteHistoryModal && deleteHistoryModal.style.display === 'flex') {
@@ -886,6 +1191,9 @@
         }
         if (confirmModal && confirmModal.style.display === 'flex') {
           confirmModal.style.display = 'none';
+        }
+        if (errorModal && errorModal.style.display === 'flex') {
+          errorModal.style.display = 'none';
         }
       }
     });
@@ -920,7 +1228,7 @@
     window.addProspectRow = function(p) {
       const existing = prospects.find(item => item.url === p.url);
       if (existing) {
-        alert(`Already tracking position: ${existing.jobTitle} at ${existing.company}`);
+        showErrorAlert(`Already tracking position: ${existing.jobTitle} at ${existing.company}`, 'Duplicate Prospect');
         return;
       }
 
@@ -943,6 +1251,46 @@
       renderProspects();
     };
 
+    const editingProspects = new Set();
+
+    function startEditProspect(id) {
+      editingProspects.add(id);
+      renderProspects();
+      setTimeout(() => {
+        const input = document.getElementById(`edit-company-${id}`);
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 30);
+    }
+
+    function cancelEditProspect(id) {
+      editingProspects.delete(id);
+      renderProspects();
+    }
+
+    function saveEditProspect(id) {
+      const p = prospects.find(item => (item.id || '') === id);
+      if (!p) {
+        editingProspects.delete(id);
+        renderProspects();
+        return;
+      }
+
+      const compInput = document.getElementById(`edit-company-${id}`);
+      const roleInput = document.getElementById(`edit-role-${id}`);
+      const urlInput = document.getElementById(`edit-url-${id}`);
+
+      if (compInput) p.company = compInput.value.trim() || 'Unknown Co.';
+      if (roleInput) p.jobTitle = roleInput.value.trim() || 'Listing';
+      if (urlInput) p.url = urlInput.value.trim();
+
+      editingProspects.delete(id);
+      renderProspects();
+      saveAllData();
+    }
+
     function renderProspects() {
       prospectTableBody.innerHTML = '';
       prospectCountSpan.textContent = `(${prospects.length})`;
@@ -961,24 +1309,61 @@
 
       filtered.forEach((p, idx) => {
         const originalIndex = prospects.indexOf(p);
+        const pid = p.id || ('prospect-' + originalIndex);
+        const isEditing = editingProspects.has(pid);
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong style="color:#eee;">${escapeHtml(p.company)}</strong></td>
-          <td title="${escapeHtml(p.jobTitle)}">${escapeHtml(p.jobTitle)}</td>
-          <td>
-            <select style="background:#141414; color:#fff; border:1px solid #383838; font-size:9.5px; padding:1px 3px; border-radius:2px;" onchange="updateProspectStatus(${originalIndex}, this.value)">
-              <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
-              <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
-              <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
-              <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
-              <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
-              <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
-              <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-            </select>
-          </td>
-          <td><span class="prospect-link" onclick="openProspectUrl('${escapeHtml(p.url)}')">${escapeHtml(p.url)}</span></td>
-          <td><button class="ps-btn ps-btn-danger ps-btn-sm" style="padding:1px 4px;" onclick="deleteProspect(${originalIndex})">✕</button></td>
-        `;
+
+        if (isEditing) {
+          tr.className = 'prospect-row-editing';
+          tr.innerHTML = `
+            <td>
+              <input type="text" id="edit-company-${pid}" class="ps-table-input" value="${escapeHtml(p.company)}" placeholder="Company" onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
+            </td>
+            <td>
+              <input type="text" id="edit-role-${pid}" class="ps-table-input" value="${escapeHtml(p.jobTitle)}" placeholder="Role / Title" onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
+            </td>
+            <td>
+              <select class="prospect-status-select" onchange="updateProspectStatus(${originalIndex}, this.value)">
+                <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
+                <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
+                <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
+                <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
+                <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
+                <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
+                <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" id="edit-url-${pid}" class="ps-table-input" value="${escapeHtml(p.url)}" placeholder="https://..." onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="ps-btn ps-btn-blue ps-btn-sm" style="padding:1px 5px;" onclick="saveEditProspect('${pid}')" title="Save changes (Enter)">💾</button>
+              <button class="ps-btn ps-btn-sm" style="padding:1px 5px; margin-left:3px;" onclick="cancelEditProspect('${pid}')" title="Cancel edit (Esc)">✕</button>
+            </td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td><strong style="color:#eee;">${escapeHtml(p.company)}</strong></td>
+            <td title="${escapeHtml(p.jobTitle)}">${escapeHtml(p.jobTitle)}</td>
+            <td>
+              <select class="prospect-status-select" onchange="updateProspectStatus(${originalIndex}, this.value)">
+                <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
+                <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
+                <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
+                <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
+                <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
+                <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
+                <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+              </select>
+            </td>
+            <td><span class="prospect-link" onclick="openProspectUrl('${escapeHtml(p.url)}')">${escapeHtml(p.url)}</span></td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="ps-btn ps-btn-sm" style="padding:1px 5px;" onclick="startEditProspect('${pid}')" title="Edit row">✏️</button>
+              <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding:1px 5px; margin-left:3px;" onclick="deleteProspect(${originalIndex})" title="Delete prospect">✕</button>
+            </td>
+          `;
+        }
+
         prospectTableBody.appendChild(tr);
       });
     }
@@ -991,6 +1376,9 @@
     }
 
     function deleteProspect(index) {
+      if (prospects[index]) {
+        editingProspects.delete(prospects[index].id);
+      }
       prospects.splice(index, 1);
       renderProspects();
       saveAllData();
@@ -1005,7 +1393,7 @@
     // Export CSV
     document.getElementById('btnExportCsv').addEventListener('click', () => {
       if (prospects.length === 0) {
-        alert('No prospects to export.');
+        showErrorAlert('No prospects to export.', 'Export CSV');
         return;
       }
 
@@ -1054,11 +1442,17 @@
       // 1. Candidate Profile
       if (data.candidateProfile) {
         if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName;
+        if (data.candidateProfile.pronouns !== undefined) setPronouns(data.candidateProfile.pronouns);
         if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email;
         if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = data.candidateProfile.phone;
+        if (data.candidateProfile.location !== undefined) document.getElementById('location').value = data.candidateProfile.location;
+        if (data.candidateProfile.currentCompany !== undefined) document.getElementById('currentCompany').value = data.candidateProfile.currentCompany;
         if (data.candidateProfile.linkedin !== undefined) document.getElementById('linkedin').value = data.candidateProfile.linkedin;
         if (data.candidateProfile.github !== undefined) document.getElementById('github').value = data.candidateProfile.github;
+        if (data.candidateProfile.portfolioUrl !== undefined) document.getElementById('portfolioUrl').value = data.candidateProfile.portfolioUrl;
         if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears;
+        if (data.candidateProfile.salaryMin !== undefined) document.getElementById('salaryMin').value = data.candidateProfile.salaryMin;
+        if (data.candidateProfile.salaryMax !== undefined) document.getElementById('salaryMax').value = data.candidateProfile.salaryMax;
       }
 
       // 2. Resume Source
@@ -1120,11 +1514,17 @@
 
       const candidateProfile = {
         fullName: document.getElementById('fullName').value.trim(),
+        pronouns: getPronouns(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
+        location: document.getElementById('location').value.trim(),
+        currentCompany: document.getElementById('currentCompany').value.trim(),
         linkedin: document.getElementById('linkedin').value.trim(),
         github: document.getElementById('github').value.trim(),
-        experienceYears: document.getElementById('experienceYears').value.trim()
+        portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
+        experienceYears: document.getElementById('experienceYears').value.trim(),
+        salaryMin: document.getElementById('salaryMin').value.trim(),
+        salaryMax: document.getElementById('salaryMax').value.trim()
       };
 
       const searchCriteria = {
@@ -1147,7 +1547,7 @@
     }
 
     // Auto-save on input changes for profile and search builder
-    ['fullName', 'email', 'phone', 'linkedin', 'github', 'experienceYears'].forEach(id => {
+    ['fullName', 'pronouns', 'email', 'phone', 'location', 'currentCompany', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'salaryMin', 'salaryMax'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', () => saveAllData());
     });
@@ -1159,6 +1559,8 @@
     // Immediate check for window.__INITIAL_DATA__ injected by host
     if (window.__INITIAL_DATA__) {
       applyLoadedData(window.__INITIAL_DATA__);
+    } else {
+      updateScanCalloutVisibility();
     }
 
     // Also trigger LOAD_DATA via IPC with retry
@@ -1172,74 +1574,100 @@
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       triggerLoadData();
+      updateScanCalloutVisibility();
     } else {
-      window.addEventListener('DOMContentLoaded', triggerLoadData);
+      window.addEventListener('DOMContentLoaded', () => {
+        triggerLoadData();
+        updateScanCalloutVisibility();
+      });
     }
 
     // --- Middle Divider Resizing Logic ---
-    (function initResizer() {
+    function initResizer() {
       const resizer = document.getElementById('middleResizer');
+      const overlay = document.getElementById('resizerOverlay');
       if (!resizer) return;
 
       let isResizing = false;
-      let startX = 0;
+      let startScreenX = 0;
       let initialWidth = 0;
       let rafId = null;
-      let lastWidth = null;
+      let currentWidth = null;
 
-      resizer.addEventListener('pointerdown', (e) => {
-        isResizing = true;
-        resizer.classList.add('resizing');
-        document.body.classList.add('is-resizing');
-        resizer.setPointerCapture(e.pointerId);
-        startX = e.screenX;
-        initialWidth = window.innerWidth;
-        e.preventDefault();
-        e.stopPropagation();
-      });
-
-      resizer.addEventListener('pointermove', (e) => {
+      function onPointerMove(e) {
         if (!isResizing) return;
-        const deltaX = e.screenX - startX;
+        const currentX = (e.screenX !== undefined && e.screenX !== 0) ? e.screenX : e.clientX;
+        const deltaX = currentX - startScreenX;
         const newWidth = Math.round(initialWidth + deltaX);
-        if (newWidth < 200) return;
+        if (newWidth < 220) return;
 
-        lastWidth = newWidth;
+        currentWidth = newWidth;
         if (!rafId) {
           rafId = requestAnimationFrame(() => {
             rafId = null;
-            if (lastWidth !== null && window.ipc) {
-              window.ipc.postMessage(JSON.stringify({
-                action: 'SET_LEFT_WIDTH',
-                width: lastWidth
-              }));
+            if (currentWidth !== null) {
+              sendIpc('SET_LEFT_WIDTH', { width: currentWidth });
             }
           });
         }
-      });
+      }
 
       function onPointerEnd(e) {
         if (!isResizing) return;
         isResizing = false;
         resizer.classList.remove('resizing');
         document.body.classList.remove('is-resizing');
+        if (overlay) overlay.style.display = 'none';
+
         try {
           resizer.releasePointerCapture(e.pointerId);
         } catch (_) {}
 
-        if (lastWidth !== null && window.ipc) {
-          window.ipc.postMessage(JSON.stringify({
-            action: 'SET_LEFT_WIDTH',
-            width: lastWidth
-          }));
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerEnd);
+        window.removeEventListener('pointercancel', onPointerEnd);
+
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+
+        if (currentWidth !== null) {
+          sendIpc('SET_LEFT_WIDTH', { width: currentWidth });
           saveAllData();
         }
       }
 
-      resizer.addEventListener('pointerup', onPointerEnd);
-      resizer.addEventListener('pointercancel', onPointerEnd);
+      resizer.addEventListener('pointerdown', (e) => {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.classList.add('is-resizing');
+        if (overlay) overlay.style.display = 'block';
+
+        startScreenX = (e.screenX !== undefined && e.screenX !== 0) ? e.screenX : e.clientX;
+        initialWidth = currentWidth || window.innerWidth;
+        currentWidth = initialWidth;
+
+        try {
+          resizer.setPointerCapture(e.pointerId);
+        } catch (_) {}
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerEnd);
+        window.addEventListener('pointercancel', onPointerEnd);
+
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
       resizer.addEventListener('lostpointercapture', onPointerEnd);
-    })();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initResizer);
+    } else {
+      initResizer();
+    }
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -1251,10 +1679,5 @@
         .replace(/'/g, '&#039;');
     }
   </script>
-
-  <!-- Resizable Middle Divider between Control Panel and Browser -->
-  <div id="middleResizer" class="middle-resizer" title="Drag to resize Control Panel">
-    <div class="resizer-handle"></div>
-  </div>
 </body>
 </html>

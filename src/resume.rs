@@ -58,10 +58,154 @@ pub fn load_resume_text(source: &str) -> Result<String, String> {
 
         if ext == "pdf" {
             pdf_extract::extract_text(path).map_err(|e| format!("Failed to extract text from PDF: {}", e))
+        } else if ext == "docx" || ext == "doc" {
+            Err("Word documents (.docx / .doc) are binary formats that cannot be read as plain text. Please export or save your resume as PDF, TXT, or Markdown, or link a public Google Doc URL.".to_string())
         } else {
             std::fs::read_to_string(path).map_err(|e| format!("Failed to read text file: {}", e))
         }
     }
+}
+
+fn is_bullet_line(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    if trimmed.is_empty() {
+        return false;
+    }
+    let bullet_chars = ['•', '○', '●', '◦', '▪', '▫', '■', '*', '‣', '⁃', '►', '✓', '✔'];
+    if bullet_chars.iter().any(|&c| trimmed.starts_with(c)) {
+        return true;
+    }
+    if trimmed.starts_with('-') {
+        let after = trimmed.trim_start_matches('-');
+        if after.starts_with(' ') || after.starts_with('\t') {
+            return true;
+        }
+    }
+    false
+}
+
+fn clean_bullet(line: &str) -> String {
+    let mut s = line.trim();
+    while let Some(first_char) = s.chars().next() {
+        if ['•', '○', '●', '◦', '▪', '▫', '■', '*', '‣', '⁃', '►', '✓', '✔', ' ', '\t'].contains(&first_char) {
+            s = &s[first_char.len_utf8()..];
+        } else if s.starts_with("- ") {
+            s = &s[2..];
+        } else {
+            break;
+        }
+    }
+    s.trim().to_string()
+}
+
+fn has_4digit_year(s: &str) -> bool {
+    let bytes = s.as_bytes();
+    if bytes.len() < 4 {
+        return false;
+    }
+    for i in 0..=(bytes.len() - 4) {
+        if (bytes[i] == b'1' && bytes[i + 1] == b'9' && bytes[i + 2].is_ascii_digit() && bytes[i + 3].is_ascii_digit())
+            || (bytes[i] == b'2' && bytes[i + 1] == b'0' && bytes[i + 2].is_ascii_digit() && bytes[i + 3].is_ascii_digit())
+        {
+            let prev_digit = if i > 0 { bytes[i - 1].is_ascii_digit() } else { false };
+            let next_digit = if i + 4 < bytes.len() { bytes[i + 4].is_ascii_digit() } else { false };
+            if !prev_digit && !next_digit {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn has_month_name(s: &str) -> bool {
+    let lower = s.to_lowercase();
+    let months = [
+        "jan", "feb", "mar", "apr", "may", "jun",
+        "jul", "aug", "sep", "oct", "nov", "dec",
+        "january", "february", "march", "april", "june",
+        "july", "august", "september", "october", "november", "december"
+    ];
+    for word in lower.split(|c: char| !c.is_alphabetic()) {
+        if months.contains(&word) {
+            return true;
+        }
+    }
+    false
+}
+
+fn has_date_pattern(line: &str) -> bool {
+    if is_bullet_line(line) {
+        return false;
+    }
+    let lower = line.to_lowercase();
+    let has_present = lower.contains("present") || lower.contains("current");
+    let has_yr = has_4digit_year(line);
+    let has_mo = has_month_name(line);
+
+    if has_present && (has_yr || has_mo) {
+        return true;
+    }
+    if has_yr && (has_mo || lower.contains('-') || lower.contains('–') || lower.contains('—') || lower.contains("to")) {
+        return true;
+    }
+    false
+}
+
+fn parse_header_line(line: &str) -> (String, String, String) {
+    if line.contains('|') {
+        let parts: Vec<&str> = line.split('|').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+        if parts.len() >= 3 {
+            if has_date_pattern(parts[2]) {
+                return (parts[0].to_string(), parts[1].to_string(), parts[2].to_string());
+            } else if has_date_pattern(parts[0]) {
+                return (parts[1].to_string(), parts[2].to_string(), parts[0].to_string());
+            } else {
+                return (parts[0].to_string(), parts[1].to_string(), parts[2].to_string());
+            }
+        } else if parts.len() == 2 {
+            if has_date_pattern(parts[1]) {
+                let (r, c) = split_role_company(parts[0]);
+                return (r, c, parts[1].to_string());
+            } else if has_date_pattern(parts[0]) {
+                let (r, c) = split_role_company(parts[1]);
+                return (r, c, parts[0].to_string());
+            } else {
+                return (parts[0].to_string(), parts[1].to_string(), "Present".to_string());
+            }
+        }
+    }
+
+    for delim in &[" – ", " — ", " - "] {
+        if line.contains(delim) {
+            let parts: Vec<&str> = line.split(delim).map(|s| s.trim()).collect();
+            if parts.len() >= 3 && has_date_pattern(parts.last().unwrap_or(&"")) {
+                let dates = parts.last().unwrap_or(&"").to_string();
+                return (parts[0].to_string(), parts[1].to_string(), dates);
+            } else if parts.len() == 2 && has_date_pattern(parts[1]) {
+                let (r, c) = split_role_company(parts[0]);
+                return (r, c, parts[1].to_string());
+            }
+        }
+    }
+
+    (line.to_string(), String::new(), "Present".to_string())
+}
+
+fn split_role_company(s: &str) -> (String, String) {
+    if let Some(idx) = s.to_lowercase().find(" at ") {
+        let role = s[..idx].trim().to_string();
+        let company = s[idx + 4..].trim().to_string();
+        return (role, company);
+    }
+    if s.contains('@') {
+        let parts: Vec<&str> = s.split('@').collect();
+        return (parts[0].trim().to_string(), parts.get(1).unwrap_or(&"").trim().to_string());
+    }
+    if s.contains(',') {
+        let parts: Vec<&str> = s.split(',').collect();
+        return (parts[0].trim().to_string(), parts.get(1).unwrap_or(&"").trim().to_string());
+    }
+    (s.trim().to_string(), String::new())
 }
 
 /// Parses unstructured resume text into a structured list of work experience entries.
@@ -78,8 +222,15 @@ pub fn parse_work_history(text: &str) -> Vec<WorkHistoryEntry> {
         return json_entries;
     }
 
-    // Heuristic parser: Looks for sections like "EXPERIENCE", "WORK HISTORY", "EMPLOYMENT", etc.
-    let mut in_experience_section = false;
+    let exp_keywords = ["EXPERIENCE", "WORK HISTORY", "EMPLOYMENT", "WORK EXPERIENCE", "PROFESSIONAL EXPERIENCE"];
+    let end_keywords = ["EDUCATION", "SKILLS", "CERTIFICATIONS", "PROJECTS", "PUBLICATIONS", "AWARDS", "LANGUAGES"];
+
+    let has_exp_section = lines.iter().any(|l| {
+        let upper = l.to_uppercase();
+        exp_keywords.iter().any(|&k| upper == k || (upper.starts_with(k) && upper.len() < 35))
+    });
+
+    let mut in_experience = !has_exp_section;
     let mut current_company = String::new();
     let mut current_role = String::new();
     let mut current_dates = String::new();
@@ -101,61 +252,53 @@ pub fn parse_work_history(text: &str) -> Vec<WorkHistoryEntry> {
         }
     };
 
-    let exp_keywords = ["EXPERIENCE", "WORK HISTORY", "EMPLOYMENT", "WORK EXPERIENCE", "PROFESSIONAL EXPERIENCE"];
-    let end_keywords = ["EDUCATION", "SKILLS", "CERTIFICATIONS", "PROJECTS", "PUBLICATIONS", "AWARDS", "LANGUAGES"];
-
     for line in &lines {
         let upper = line.to_uppercase();
 
-        if exp_keywords.iter().any(|&k| upper == k || upper.starts_with(k) && upper.len() < 35) {
-            in_experience_section = true;
+        if exp_keywords.iter().any(|&k| upper == k || (upper.starts_with(k) && upper.len() < 35)) {
+            in_experience = true;
             continue;
         }
 
-        if in_experience_section && end_keywords.iter().any(|&k| upper == k || upper.starts_with(k) && upper.len() < 35) {
+        if in_experience && has_exp_section && end_keywords.iter().any(|&k| upper == k || (upper.starts_with(k) && upper.len() < 35)) {
             break;
         }
 
-        let contains_date = has_date_pattern(line);
+        if !in_experience {
+            continue;
+        }
 
-        if in_experience_section || entries.is_empty() {
-            if contains_date {
-                // Flush previous entry if we have one
-                flush_entry(&mut entries, &current_company, &current_role, &current_dates, &current_bullets, &mut entry_counter);
-                current_bullets.clear();
+        if has_date_pattern(line) {
+            flush_entry(&mut entries, &current_company, &current_role, &current_dates, &current_bullets, &mut entry_counter);
+            current_bullets.clear();
 
-                // If line contains date and text (e.g. "Google - Senior Engineer | 2021 - Present")
-                let parts: Vec<&str> = line.split(&['|', '•', '—', '-'][..]).collect();
-                if parts.len() >= 2 {
-                    current_dates = parts.last().unwrap_or(&"").trim().to_string();
-                    let prefix = parts[..parts.len() - 1].join(" - ");
-                    let title_parts: Vec<&str> = prefix.split(&['@', ',', '-'][..]).collect();
-                    if title_parts.len() >= 2 {
-                        current_role = title_parts[0].trim().to_string();
-                        current_company = title_parts[1].trim().to_string();
-                    } else {
-                        current_role = prefix.trim().to_string();
-                        current_company = "Company".to_string();
-                    }
-                } else {
-                    current_dates = line.to_string();
-                }
-            } else if line.starts_with('-') || line.starts_with('•') || line.starts_with('*') {
-                current_bullets.push(line.trim_start_matches(&['-', '•', '*', ' '][..]).to_string());
-            } else if current_role.is_empty() {
-                current_role = line.to_string();
-            } else if current_company.is_empty() {
-                current_company = line.to_string();
-            } else {
-                current_bullets.push(line.to_string());
+            let (r, c, d) = parse_header_line(line);
+            current_role = r;
+            current_company = c;
+            current_dates = d;
+        } else if is_bullet_line(line) {
+            let bullet = clean_bullet(line);
+            if !bullet.is_empty() {
+                current_bullets.push(bullet);
             }
+        } else if current_role.is_empty() {
+            current_role = line.to_string();
+        } else if current_company.is_empty() {
+            current_company = line.to_string();
+        } else if current_dates.is_empty() && (has_4digit_year(line) || has_month_name(line)) {
+            current_dates = line.to_string();
+        } else if let Some(last_bullet) = current_bullets.last_mut() {
+            last_bullet.push(' ');
+            last_bullet.push_str(line.trim());
+        } else {
+            current_bullets.push(line.to_string());
         }
     }
 
     // Flush last entry
     flush_entry(&mut entries, &current_company, &current_role, &current_dates, &current_bullets, &mut entry_counter);
 
-    // If heuristic parser found nothing (e.g. non-standard format), create sensible default entry from first non-empty lines
+    // Fallback if empty
     if entries.is_empty() && !lines.is_empty() {
         let preview = lines.iter().take(4).cloned().collect::<Vec<&str>>().join(" ");
         entries.push(WorkHistoryEntry {
@@ -171,14 +314,6 @@ pub fn parse_work_history(text: &str) -> Vec<WorkHistoryEntry> {
     entries
 }
 
-fn has_date_pattern(line: &str) -> bool {
-    let lower = line.to_lowercase();
-    lower.contains("present")
-        || lower.contains("current")
-        || (lower.contains("20") && (lower.contains('-') || lower.contains("to") || lower.contains('–')))
-        || (lower.contains("19") && (lower.contains('-') || lower.contains("to")))
-}
-
 fn parse_date_range(dates: &str) -> (String, String) {
     let parts: Vec<&str> = dates.split(&['-', '–', '—'][..]).collect();
     if parts.len() >= 2 {
@@ -187,3 +322,56 @@ fn parse_date_range(dates: &str) -> (String, String) {
         (dates.trim().to_string(), "Present".to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_work_history_sample() {
+        let resume_text = r#"
+JOEL STRANSKY
+Senior Software Engineer
+stranskydesign@gmail.com
+
+EXPERIENCE
+
+Frontend Web Developer | Vegas.com | September 2019 – March 2020
+○  Increased conversion rates through data-driven A/B testing of high-traffic pages.
+○  Established formal testing and component patterns improving code stability across React and legacy
+codebases.
+
+Frontend Developer III | Konami Gaming Inc. | June 2018 – September 2019
+○  Revolutionized 20-year-old Java interfaces by engineering a React-based thick client with embedded
+Chromium.
+○  Eliminated substantial Oracle licensing costs by researching and deploying an open-source Chromium
+integration framework for Java.
+○  Served as the resident React lead, standardizing production pipelines and DevOps best practices.
+
+Ed Tech Course Designer | 1Prospect Technologies | October 2017 – February 2018
+○  Designed mission-critical UI for instructional modules.
+
+EDUCATION
+
+Full Sail University - B.S. Game Art
+"#;
+
+        let entries = parse_work_history(resume_text);
+        assert_eq!(entries.len(), 3);
+
+        // Verify Konami entry
+        let konami = &entries[1];
+        assert_eq!(konami.role, "Frontend Developer III");
+        assert_eq!(konami.company, "Konami Gaming Inc.");
+        assert_eq!(konami.start_date, "June 2018");
+        assert_eq!(konami.end_date, "September 2019");
+
+        // Verify that the bullet point with "20-year-old" was NOT split into a new entry
+        assert!(konami.summary.contains("Revolutionized 20-year-old Java interfaces by engineering a React-based thick client with embedded Chromium."));
+        assert!(konami.summary.contains("Eliminated substantial Oracle licensing costs"));
+        assert!(konami.summary.contains("Served as the resident React lead"));
+    }
+}
+
+
+

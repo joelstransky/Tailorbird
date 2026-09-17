@@ -1045,13 +1045,135 @@
     });
 
     // --- Storage & Sync ---
+    let isDataLoaded = false;
+
+    function applyLoadedData(data) {
+      if (!data) return;
+      console.log('[Tailorbird UI] Loading data into Control Panel:', data);
+
+      // 1. Candidate Profile
+      if (data.candidateProfile) {
+        if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName;
+        if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email;
+        if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = data.candidateProfile.phone;
+        if (data.candidateProfile.linkedin !== undefined) document.getElementById('linkedin').value = data.candidateProfile.linkedin;
+        if (data.candidateProfile.github !== undefined) document.getElementById('github').value = data.candidateProfile.github;
+        if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears;
+      }
+
+      // 2. Resume Source
+      if (data.resumeSource !== undefined && data.resumeSource !== null && data.resumeSource !== '') {
+        resumeSourceInput.value = data.resumeSource;
+      }
+
+      // 3. Work History
+      if (Array.isArray(data.workHistory)) {
+        workHistory = data.workHistory;
+        renderWorkHistory();
+      }
+
+      // 4. Prospects
+      if (Array.isArray(data.prospects)) {
+        prospects = data.prospects;
+        renderProspects();
+      }
+
+      // 5. Search Criteria
+      if (data.searchCriteria) {
+        if (data.searchCriteria.title !== undefined) document.getElementById('searchTitle').value = data.searchCriteria.title;
+        if (data.searchCriteria.location !== undefined) document.getElementById('searchLocation').value = data.searchCriteria.location;
+        if (data.searchCriteria.greenhouse !== undefined) document.getElementById('chkGreenhouse').checked = data.searchCriteria.greenhouse;
+        if (data.searchCriteria.lever !== undefined) document.getElementById('chkLever').checked = data.searchCriteria.lever;
+        if (data.searchCriteria.linkedin !== undefined) document.getElementById('chkLinkedin').checked = data.searchCriteria.linkedin;
+        if (data.searchCriteria.indeed !== undefined) document.getElementById('chkIndeed').checked = data.searchCriteria.indeed;
+      }
+
+      isDataLoaded = true;
+    }
+
+    window.setAllData = function(data) {
+      applyLoadedData(data);
+    };
+
+    window.setResumePath = function(path) {
+      resumeSourceInput.value = path;
+      saveAllData();
+    };
+
+    window.setWorkHistory = function(entries) {
+      workHistory = entries || [];
+      renderWorkHistory();
+      saveAllData();
+    };
+
+    window.setProspects = function(p) {
+      prospects = p || [];
+      renderProspects();
+      saveAllData();
+    };
+
     function saveAllData() {
+      if (!isDataLoaded) {
+        console.warn('[Tailorbird UI] Skipping saveAllData because data is not yet loaded.');
+        return;
+      }
+
+      const candidateProfile = {
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        linkedin: document.getElementById('linkedin').value.trim(),
+        github: document.getElementById('github').value.trim(),
+        experienceYears: document.getElementById('experienceYears').value.trim()
+      };
+
+      const searchCriteria = {
+        title: document.getElementById('searchTitle').value.trim(),
+        location: document.getElementById('searchLocation').value.trim(),
+        greenhouse: document.getElementById('chkGreenhouse').checked,
+        lever: document.getElementById('chkLever').checked,
+        linkedin: document.getElementById('chkLinkedin').checked,
+        indeed: document.getElementById('chkIndeed').checked
+      };
+
       sendIpc('SAVE_DATA', {
+        candidateProfile,
         resumeSource: resumeSourceInput.value.trim(),
         workHistory,
         prospects,
+        searchCriteria,
         splitWidth: window.innerWidth
       });
+    }
+
+    // Auto-save on input changes for profile and search builder
+    ['fullName', 'email', 'phone', 'linkedin', 'github', 'experienceYears'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => saveAllData());
+    });
+    ['searchTitle', 'searchLocation', 'chkGreenhouse', 'chkLever', 'chkLinkedin', 'chkIndeed'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => saveAllData());
+    });
+
+    // Immediate check for window.__INITIAL_DATA__ injected by host
+    if (window.__INITIAL_DATA__) {
+      applyLoadedData(window.__INITIAL_DATA__);
+    }
+
+    // Also trigger LOAD_DATA via IPC with retry
+    function triggerLoadData() {
+      if (!isDataLoaded) {
+        if (!sendIpc('LOAD_DATA')) {
+          setTimeout(triggerLoadData, 80);
+        }
+      }
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      triggerLoadData();
+    } else {
+      window.addEventListener('DOMContentLoaded', triggerLoadData);
     }
 
     // --- Middle Divider Resizing Logic ---
@@ -1118,10 +1240,6 @@
       resizer.addEventListener('pointercancel', onPointerEnd);
       resizer.addEventListener('lostpointercapture', onPointerEnd);
     })();
-
-    window.onload = function() {
-      sendIpc('LOAD_DATA');
-    };
 
     function escapeHtml(str) {
       if (!str) return '';

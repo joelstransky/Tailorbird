@@ -12,7 +12,7 @@ use tao::{
 use wry::{PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows, WebViewExtWindows};
 
 use crate::autofill::{generate_autofill_script, CandidateProfile};
-use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect};
+use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 
 const LEFT_PANE_WIDTH: f64 = 420.0;
@@ -102,11 +102,15 @@ enum IpcMessage {
     SetLeftWidth { width: f64 },
     #[serde(rename = "SAVE_DATA")]
     SaveData {
+        #[serde(rename = "candidateProfile")]
+        candidate_profile: Option<CandidateProfile>,
         #[serde(rename = "resumeSource")]
         resume_source: String,
         #[serde(rename = "workHistory")]
         work_history: Vec<WorkHistoryEntry>,
         prospects: Vec<Prospect>,
+        #[serde(rename = "searchCriteria")]
+        search_criteria: Option<SearchCriteria>,
         #[serde(rename = "splitWidth")]
         split_width: Option<f64>,
     },
@@ -142,6 +146,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load persisted app data to restore split width if available
     let initial_app_data = load_stored_data();
     let initial_left_width = initial_app_data.split_width.unwrap_or(LEFT_PANE_WIDTH);
+    let initial_data_json = serde_json::to_string(&initial_app_data).unwrap_or_else(|_| "{}".to_string());
+    let init_script = format!("window.__INITIAL_DATA__ = {};", initial_data_json);
 
     // Shared references across IPC handlers and event loop
     let left_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
@@ -243,6 +249,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
             size: Size::Logical(LogicalSize::new(initial_left_width, DEFAULT_WINDOW_HEIGHT)),
         })
+        .with_initialization_script(&init_script)
         .with_devtools(true)
         .with_html(LEFT_PANE_HTML)
         .with_ipc_handler({
@@ -324,12 +331,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::SetLeftWidth { width }) => {
                         coord(Some(width));
                     }
-                    Ok(IpcMessage::SaveData { resume_source, work_history, prospects, split_width }) => {
+                    Ok(IpcMessage::SaveData {
+                        candidate_profile,
+                        resume_source,
+                        work_history,
+                        prospects,
+                        search_criteria,
+                        split_width,
+                    }) => {
                         let cur_w = split_width.unwrap_or_else(|| *left_w_holder.lock().unwrap());
                         let data = AppData {
+                            candidate_profile,
                             resume_source,
                             work_history,
                             prospects,
+                            search_criteria,
                             split_width: Some(cur_w),
                         };
                         if let Err(e) = save_stored_data(&data) {
@@ -338,20 +354,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     Ok(IpcMessage::LoadData) => {
                         let data = load_stored_data();
+                        let json_str = serde_json::to_string(&data).unwrap_or_else(|_| "{}".to_string());
                         if let Ok(guard) = left_holder.lock() {
                             if let Some(ref left_wv) = *guard {
-                                if !data.resume_source.is_empty() {
-                                    let js = format!("if (window.setResumePath) {{ window.setResumePath({}); }}", serde_json::to_string(&data.resume_source).unwrap_or_default());
-                                    let _ = left_wv.evaluate_script(&js);
-                                }
-                                if !data.work_history.is_empty() {
-                                    let js = format!("if (window.setWorkHistory) {{ window.setWorkHistory({}); }}", serde_json::to_string(&data.work_history).unwrap_or_default());
-                                    let _ = left_wv.evaluate_script(&js);
-                                }
-                                if !data.prospects.is_empty() {
-                                    let js = format!("if (window.setProspects) {{ window.setProspects({}); }}", serde_json::to_string(&data.prospects).unwrap_or_default());
-                                    let _ = left_wv.evaluate_script(&js);
-                                }
+                                let js = format!("if (window.setAllData) {{ window.setAllData({}); }}", json_str);
+                                let _ = left_wv.evaluate_script(&js);
                             }
                         }
                     }
@@ -459,6 +466,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     *left_wv_holder.lock().unwrap() = Some(left_webview);
     *toolbar_wv_holder.lock().unwrap() = Some(toolbar_webview);
     *target_wv_holder.lock().unwrap() = Some(target_webview);
+
+    if let Ok(guard) = left_wv_holder.lock() {
+        if let Some(ref wv) = *guard {
+            let js = format!("if (window.setAllData) {{ window.setAllData({}); }}", initial_data_json);
+            let _ = wv.evaluate_script(&js);
+        }
+    }
 
     println!("[Tailorbird] All panes and browser toolbar ready! Event loop running.");
 

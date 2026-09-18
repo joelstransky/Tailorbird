@@ -62,6 +62,12 @@ Applying for jobs today often requires jumping between multiple browser tabs, Li
 - Heuristic parser intelligently isolates dates, job titles, and employers without splitting lines on periods in company names or hyphens in bullet descriptions.
 - Full manual inline CRUD to add, modify, or delete past positions.
 
+### 📝 Special Fields & Snippet Manager (Tabbed View)
+- Segmented tab switcher inside the Work History panel: **Work History** and **Special Fields**.
+- Add, edit, and remove custom paragraphs for questions that frequently come up during applications (e.g. *"What makes you want to work here?"*, elevator pitches, cover snippets).
+- Dedicated **📋 Copy** button on each snippet with live confirmation feedback (`✓ Copied!`) for quick pasting.
+- 100% persisted in local storage across sessions.
+
 ### 📊 Integrated Prospect Sheet & Pipeline Tracker
 - **One-Click Recording (`➕ Record Current Page`)**: Scrapes the current page's job title, company name, and URL.
 - **Status Stages**: Track application lifecycle (`Interested`, `Screening`, `Interviewing`, `Responded`, `Applied`, `Offer`, `Rejected`).

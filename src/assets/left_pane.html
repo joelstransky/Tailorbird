@@ -423,6 +423,125 @@
       gap: 4px;
     }
 
+    /* Work History & Special Fields Tabs */
+    .wh-tabs-container {
+      display: flex;
+      background: #181818;
+      border: 1px solid #333333;
+      border-radius: 3px;
+      padding: 2px;
+      margin-bottom: 6px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .wh-tab-btn {
+      flex: 1;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ps-text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .wh-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .wh-tab-btn.active {
+      background: #333333;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .wh-tab-view {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Special Fields Area & Card */
+    .special-fields-scroll-area {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 2px;
+    }
+
+    .special-field-card {
+      background: #202020;
+      border: 1px solid #383838;
+      border-radius: 3px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.15s ease;
+    }
+
+    .special-field-card:hover {
+      border-color: #4a4a4a;
+    }
+
+    .special-field-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .special-field-label {
+      flex: 1;
+      height: 22px;
+      font-weight: 700;
+      font-size: 10.5px;
+    }
+
+    .special-field-textarea {
+      resize: vertical;
+      font-size: 10.5px;
+      min-height: 60px;
+      height: 72px;
+      line-height: 1.45;
+      background: #181818;
+      border: 1px solid #383838;
+      color: #e0e0e0;
+      padding: 5px 6px;
+      border-radius: 2px;
+      font-family: inherit;
+    }
+
+    .special-field-textarea:focus {
+      border-color: var(--ps-accent-blue);
+      outline: none;
+    }
+
+    .btn-copy-field {
+      padding: 2px 7px;
+      font-size: 10px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy-field.copied {
+      background: var(--ps-accent-green) !important;
+      border-color: #3b9c4f !important;
+      color: #ffffff !important;
+    }
+
     /* Prospect Spreadsheet (Photoshop Layers Panel Feel) */
     .layers-toolbar {
       display: flex;
@@ -691,35 +810,52 @@
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerResume')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
-          <span>Work History</span>
+          <span id="drawerWorkTitle">Work History</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
           <button class="ps-btn ps-btn-sm" id="btnAddPosition" title="Add Position">+ Position</button>
+          <button class="ps-btn ps-btn-sm" id="btnAddSpecialField" style="display: none;" title="Add Special Field">+ Field</button>
         </div>
       </div>
 
       <div class="panel-content">
-        <!-- Linked Resume source bar -->
-        <div style="display:flex; gap:4px; margin-bottom:4px; flex-shrink: 0;">
-          <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL..." style="flex:1;">
-          <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">Browse</button>
-          <button class="ps-btn ps-btn-blue ps-btn-sm" id="btnImportResume" title="Import & scan resume">Scan</button>
+        <!-- Work History / Special Fields Tab Bar -->
+        <div class="wh-tabs-container">
+          <button class="wh-tab-btn active" id="tabBtnHistory" type="button" onclick="switchWorkHistoryTab('history')">Work History</button>
+          <button class="wh-tab-btn" id="tabBtnSpecial" type="button" onclick="switchWorkHistoryTab('special')">Special Fields</button>
         </div>
 
-        <!-- Scan Feature Callout (advertises scan feature when work history is empty) -->
-        <div id="scanCallout" class="scan-callout" style="display: none;">
-          <div class="scan-callout-icon">💡</div>
-          <div class="scan-callout-body">
-            <div class="scan-callout-title">Fast-Track Your Work History</div>
-            <div class="scan-callout-desc">
-              Instead of typing everything in manually, link or browse your resume above and click <strong>Scan</strong> to auto-fill your positions and achievements!
+        <!-- Tab 1: Work History View -->
+        <div id="tabViewHistory" class="wh-tab-view">
+          <!-- Linked Resume source bar -->
+          <div style="display:flex; gap:4px; margin-bottom:4px; flex-shrink: 0;">
+            <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL..." style="flex:1;">
+            <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">Browse</button>
+            <button class="ps-btn ps-btn-blue ps-btn-sm" id="btnImportResume" title="Import & scan resume">Scan</button>
+          </div>
+
+          <!-- Scan Feature Callout (advertises scan feature when work history is empty) -->
+          <div id="scanCallout" class="scan-callout" style="display: none;">
+            <div class="scan-callout-icon">💡</div>
+            <div class="scan-callout-body">
+              <div class="scan-callout-title">Fast-Track Your Work History</div>
+              <div class="scan-callout-desc">
+                Instead of typing everything in manually, link or browse your resume above and click <strong>Scan</strong> to auto-fill your positions and achievements!
+              </div>
             </div>
+          </div>
+
+          <!-- History cards expanding full height -->
+          <div class="history-scroll-area" id="workHistoryList">
+            <!-- Position cards injected dynamically -->
           </div>
         </div>
 
-        <!-- History cards expanding full height -->
-        <div class="history-scroll-area" id="workHistoryList">
-          <!-- Position cards injected dynamically -->
+        <!-- Tab 2: Special Fields View -->
+        <div id="tabViewSpecial" class="wh-tab-view" style="display: none;">
+          <div class="special-fields-scroll-area" id="specialFieldsList">
+            <!-- Special field cards injected dynamically -->
+          </div>
         </div>
       </div>
     </div>
@@ -1211,6 +1347,164 @@
       saveAllData();
     });
 
+    // --- Special Fields & Tab Switching ---
+    let specialFields = [];
+    let currentWorkHistoryTab = 'history';
+
+    const specialFieldsList = document.getElementById('specialFieldsList');
+    const btnAddSpecialField = document.getElementById('btnAddSpecialField');
+    const btnAddPosition = document.getElementById('btnAddPosition');
+    const tabBtnHistory = document.getElementById('tabBtnHistory');
+    const tabBtnSpecial = document.getElementById('tabBtnSpecial');
+    const tabViewHistory = document.getElementById('tabViewHistory');
+    const tabViewSpecial = document.getElementById('tabViewSpecial');
+    const drawerWorkTitle = document.getElementById('drawerWorkTitle');
+
+    window.switchWorkHistoryTab = function(tab) {
+      currentWorkHistoryTab = tab;
+      if (tab === 'history') {
+        if (tabBtnHistory) tabBtnHistory.classList.add('active');
+        if (tabBtnSpecial) tabBtnSpecial.classList.remove('active');
+        if (tabViewHistory) tabViewHistory.style.display = 'flex';
+        if (tabViewSpecial) tabViewSpecial.style.display = 'none';
+        if (btnAddPosition) btnAddPosition.style.display = 'inline-flex';
+        if (btnAddSpecialField) btnAddSpecialField.style.display = 'none';
+        if (drawerWorkTitle) drawerWorkTitle.textContent = 'Work History';
+      } else {
+        if (tabBtnHistory) tabBtnHistory.classList.remove('active');
+        if (tabBtnSpecial) tabBtnSpecial.classList.add('active');
+        if (tabViewHistory) tabViewHistory.style.display = 'none';
+        if (tabViewSpecial) tabViewSpecial.style.display = 'flex';
+        if (btnAddPosition) btnAddPosition.style.display = 'none';
+        if (btnAddSpecialField) btnAddSpecialField.style.display = 'inline-flex';
+        if (drawerWorkTitle) drawerWorkTitle.textContent = 'Special Fields';
+      }
+    };
+
+    function renderSpecialFields() {
+      if (!specialFieldsList) return;
+      specialFieldsList.innerHTML = '';
+
+      if (!Array.isArray(specialFields) || specialFields.length === 0) {
+        specialFieldsList.innerHTML = `
+          <div style="color: var(--ps-text-muted); font-size: 10px; text-align: center; padding: 24px 10px; line-height: 1.5;">
+            No special fields yet.<br>
+            Click <strong>+ Field</strong> above to add custom paragraphs (e.g. <em>"What makes you want to work here?"</em>) for instant 1-click copy & paste.
+          </div>
+        `;
+        return;
+      }
+
+      specialFields.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'special-field-card';
+        card.id = `specialFieldCard_${idx}`;
+
+        card.innerHTML = `
+          <div class="special-field-header">
+            <input type="text" class="special-field-label" value="${escapeHtml(item.label || '')}" placeholder="Question / Label (e.g. What makes you want to work here?)" oninput="handleSpecialFieldInput(${idx}, 'label', this.value)" onchange="updateSpecialField(${idx}, 'label', this.value)">
+            <button class="ps-btn ps-btn-sm btn-copy-field" id="btnCopyField_${idx}" onclick="copySpecialField(${idx})" title="Copy text to clipboard">📋 Copy</button>
+            <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding: 1px 5px; height: 20px;" onclick="deleteSpecialField(${idx})" title="Delete special field">✕</button>
+          </div>
+          <textarea class="special-field-textarea" placeholder="Paste or type your custom paragraph here..." oninput="handleSpecialFieldInput(${idx}, 'content', this.value)" onchange="updateSpecialField(${idx}, 'content', this.value)">${escapeHtml(item.content || '')}</textarea>
+        `;
+        specialFieldsList.appendChild(card);
+      });
+    }
+
+    function handleSpecialFieldInput(index, field, value) {
+      if (specialFields[index]) {
+        specialFields[index][field] = value;
+      }
+    }
+
+    function updateSpecialField(index, field, value) {
+      if (specialFields[index]) {
+        specialFields[index][field] = value;
+        saveAllData();
+      }
+    }
+
+    function deleteSpecialField(index) {
+      if (index >= 0 && index < specialFields.length) {
+        specialFields.splice(index, 1);
+        renderSpecialFields();
+        saveAllData();
+      }
+    }
+
+    function addSpecialField() {
+      specialFields.unshift({
+        id: 'sf-' + Date.now(),
+        label: '',
+        content: ''
+      });
+      renderSpecialFields();
+      saveAllData();
+
+      setTimeout(() => {
+        const firstCard = document.getElementById('specialFieldCard_0');
+        if (firstCard) {
+          const input = firstCard.querySelector('input');
+          if (input) input.focus();
+        }
+      }, 50);
+    }
+
+    if (btnAddSpecialField) {
+      btnAddSpecialField.addEventListener('click', addSpecialField);
+    }
+
+    window.copySpecialField = function(idx) {
+      const item = specialFields[idx];
+      if (!item) return;
+      const text = item.content || '';
+
+      const btn = document.getElementById(`btnCopyField_${idx}`);
+      function markSuccess() {
+        if (btn) {
+          btn.classList.add('copied');
+          btn.innerHTML = '✓ Copied!';
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = '📋 Copy';
+          }, 1500);
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(markSuccess).catch(() => {
+          fallbackCopy(text, markSuccess);
+        });
+      } else {
+        fallbackCopy(text, markSuccess);
+      }
+    };
+
+    function fallbackCopy(text, onSuccess) {
+      try {
+        const tempArea = document.createElement('textarea');
+        tempArea.value = text;
+        tempArea.style.position = 'fixed';
+        tempArea.style.opacity = '0';
+        tempArea.style.pointerEvents = 'none';
+        document.body.appendChild(tempArea);
+        tempArea.focus();
+        tempArea.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(tempArea);
+        if (success && onSuccess) onSuccess();
+      } catch (e) {
+        console.error('Fallback copy failed:', e);
+      }
+    }
+
+    window.setSpecialFields = function(list) {
+      specialFields = list || [];
+      renderSpecialFields();
+      saveAllData();
+    };
+
     // --- Prospect Spreadsheet ---
     const prospectTableBody = document.getElementById('prospectTableBody');
     const prospectCountSpan = document.getElementById('prospectCount');
@@ -1466,6 +1760,15 @@
         renderWorkHistory();
       }
 
+      // 3.5 Special Fields
+      if (Array.isArray(data.specialFields)) {
+        specialFields = data.specialFields;
+        renderSpecialFields();
+      } else {
+        specialFields = [];
+        renderSpecialFields();
+      }
+
       // 4. Prospects
       if (Array.isArray(data.prospects)) {
         prospects = data.prospects;
@@ -1497,6 +1800,12 @@
     window.setWorkHistory = function(entries) {
       workHistory = entries || [];
       renderWorkHistory();
+      saveAllData();
+    };
+
+    window.setSpecialFields = function(list) {
+      specialFields = list || [];
+      renderSpecialFields();
       saveAllData();
     };
 
@@ -1540,6 +1849,7 @@
         candidateProfile,
         resumeSource: resumeSourceInput.value.trim(),
         workHistory,
+        specialFields,
         prospects,
         searchCriteria,
         splitWidth: window.innerWidth

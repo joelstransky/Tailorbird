@@ -108,6 +108,8 @@ enum IpcMessage {
         resume_source: String,
         #[serde(rename = "workHistory")]
         work_history: Vec<WorkHistoryEntry>,
+        #[serde(default, rename = "specialFields")]
+        special_fields: Vec<crate::prospect::SpecialField>,
         prospects: Vec<Prospect>,
         #[serde(rename = "searchCriteria")]
         search_criteria: Option<SearchCriteria>,
@@ -340,6 +342,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         candidate_profile,
                         resume_source,
                         work_history,
+                        special_fields,
                         prospects,
                         search_criteria,
                         split_width,
@@ -349,6 +352,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             candidate_profile,
                             resume_source,
                             work_history,
+                            special_fields,
                             prospects,
                             search_criteria,
                             split_width: Some(cur_w),

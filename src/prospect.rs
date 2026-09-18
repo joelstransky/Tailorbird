@@ -37,6 +37,17 @@ pub struct SearchCriteria {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
+pub struct SpecialField {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub content: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct AppData {
     #[serde(default)]
     pub candidate_profile: Option<CandidateProfile>,
@@ -44,6 +55,8 @@ pub struct AppData {
     pub resume_source: String,
     #[serde(default)]
     pub work_history: Vec<WorkHistoryEntry>,
+    #[serde(default)]
+    pub special_fields: Vec<SpecialField>,
     #[serde(default)]
     pub prospects: Vec<Prospect>,
     #[serde(default)]
@@ -80,8 +93,9 @@ pub fn load_stored_data() -> AppData {
             Ok(content) => match serde_json::from_str::<AppData>(&content) {
                 Ok(data) => {
                     println!(
-                        "[Tailorbird Storage] Loaded data successfully: {} history entries, {} prospects.",
+                        "[Tailorbird Storage] Loaded data successfully: {} history entries, {} special fields, {} prospects.",
                         data.work_history.len(),
+                        data.special_fields.len(),
                         data.prospects.len()
                     );
                     return data;
@@ -99,9 +113,10 @@ pub fn load_stored_data() -> AppData {
 pub fn save_stored_data(data: &AppData) -> Result<(), String> {
     let path = storage_file_path();
     println!(
-        "[Tailorbird Storage] Saving data to {:?}: {} history entries, {} prospects.",
+        "[Tailorbird Storage] Saving data to {:?}: {} history entries, {} special fields, {} prospects.",
         path,
         data.work_history.len(),
+        data.special_fields.len(),
         data.prospects.len()
     );
     let json = serde_json::to_string_pretty(data).map_err(|e| e.to_string())?;

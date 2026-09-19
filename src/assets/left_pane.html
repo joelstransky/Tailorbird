@@ -712,101 +712,179 @@
       </div>
 
       <div class="panel-content">
-        <div class="prop-row">
-          <span class="prop-label">Full Name</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
+        <!-- Profile Tab Bar -->
+        <div class="wh-tabs-container">
+          <button class="wh-tab-btn active" id="tabBtnProfileGeneral" type="button" onclick="switchProfileTab('general')">General</button>
+          <button class="wh-tab-btn" id="tabBtnProfileDemographics" type="button" onclick="switchProfileTab('demographics')">Demographics (EEO)</button>
+        </div>
+
+        <!-- Tab 1: General Info View -->
+        <div id="tabViewProfileGeneral" class="wh-tab-view">
+          <div class="prop-row">
+            <span class="prop-label">Full Name</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Email</span>
+            <div class="prop-input-wrap">
+              <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Phone</span>
+            <div class="prop-input-wrap">
+              <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Location</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="location" value="" placeholder="e.g. Las Vegas, NV or Remote">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Company</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="currentCompany" value="" placeholder="Current employer">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">LinkedIn</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">GitHub</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Portfolio</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="portfolioUrl" value="" placeholder="https://...">
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Experience</span>
+            <div class="prop-input-wrap">
+              <input type="number" id="experienceYears" value="8" min="0" max="50" style="width: 70px;">
+              <span style="color:#777; font-size:10px;">years</span>
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <span class="prop-label">Salary Range</span>
+            <div class="prop-input-wrap" style="gap: 4px;">
+              <input type="text" id="salaryMin" value="" placeholder="Min (e.g. $140k)" style="flex:1;">
+              <span style="color:#777; font-size:10px;">-</span>
+              <input type="text" id="salaryMax" value="" placeholder="Max (e.g. $200k)" style="flex:1;">
+            </div>
           </div>
         </div>
 
-        <div class="prop-row">
-          <span class="prop-label">Pronouns</span>
-          <div class="prop-input-wrap" style="display:flex; gap:4px;">
-            <select id="pronounSelect" style="flex:1;">
-              <option value="">-- Select --</option>
-              <option value="He/him">He/him</option>
-              <option value="She/her">She/her</option>
-              <option value="They/them">They/them</option>
-              <option value="He/they">He/they</option>
-              <option value="She/they">She/they</option>
-              <option value="Prefer not to say">Prefer not to say</option>
-              <option value="custom">Custom...</option>
-            </select>
-            <input type="text" id="pronounsCustom" placeholder="Write-in..." style="display:none; flex:1;">
-            <input type="hidden" id="pronouns" value="">
+        <!-- Tab 2: Demographics (EEO) View -->
+        <div id="tabViewProfileDemographics" class="wh-tab-view" style="display: none;">
+          <div class="prop-row">
+            <span class="prop-label">Gender</span>
+            <div class="prop-input-wrap" style="display:flex; gap:4px;">
+              <select id="genderSelect" style="flex:1;">
+                <option value="">-- Select --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-Binary">Non-Binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="text" id="genderCustom" placeholder="Write-in..." style="display:none; flex:1;">
+              <input type="hidden" id="gender" value="">
+            </div>
           </div>
-        </div>
 
-        <div class="prop-row">
-          <span class="prop-label">Email</span>
-          <div class="prop-input-wrap">
-            <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
+          <div class="prop-row">
+            <span class="prop-label">Pronouns</span>
+            <div class="prop-input-wrap" style="display:flex; gap:4px;">
+              <select id="pronounSelect" style="flex:1;">
+                <option value="">-- Select --</option>
+                <option value="He/him">He/him</option>
+                <option value="She/her">She/her</option>
+                <option value="They/them">They/them</option>
+                <option value="He/they">He/they</option>
+                <option value="She/they">She/they</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="text" id="pronounsCustom" placeholder="Write-in..." style="display:none; flex:1;">
+              <input type="hidden" id="pronouns" value="">
+            </div>
           </div>
-        </div>
 
-        <div class="prop-row">
-          <span class="prop-label">Phone</span>
-          <div class="prop-input-wrap">
-            <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+          <div class="prop-row">
+            <span class="prop-label">Race / Ethnicity</span>
+            <div class="prop-input-wrap" style="display:flex; gap:4px;">
+              <select id="raceSelect" style="flex:1;">
+                <option value="">-- Select --</option>
+                <option value="Hispanic or Latino">Hispanic or Latino</option>
+                <option value="White">White (Not Hispanic or Latino)</option>
+                <option value="Black or African American">Black or African American (Not Hispanic or Latino)</option>
+                <option value="Asian">Asian (Not Hispanic or Latino)</option>
+                <option value="Native Hawaiian or Other Pacific Islander">Native Hawaiian or Pacific Islander</option>
+                <option value="American Indian or Alaska Native">American Indian or Alaska Native</option>
+                <option value="Two or More Races">Two or More Races (Not Hispanic or Latino)</option>
+                <option value="Decline to self-identify">Decline to self-identify / Prefer not to say</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="text" id="raceCustom" placeholder="Write-in..." style="display:none; flex:1;">
+              <input type="hidden" id="race" value="">
+            </div>
           </div>
-        </div>
 
-        <div class="prop-row">
-          <span class="prop-label">Location</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="location" value="" placeholder="e.g. Las Vegas, NV or Remote">
+          <div class="prop-row">
+            <span class="prop-label">Veteran</span>
+            <div class="prop-input-wrap" style="display:flex; gap:4px;">
+              <select id="veteranSelect" style="flex:1;">
+                <option value="">-- Select --</option>
+                <option value="I am not a protected veteran">I am not a protected veteran</option>
+                <option value="I identify as one or more of the classifications of a protected veteran">I identify as a protected veteran</option>
+                <option value="I don't wish to answer">I don't wish to answer / Decline</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="text" id="veteranCustom" placeholder="Write-in..." style="display:none; flex:1;">
+              <input type="hidden" id="veteranStatus" value="">
+            </div>
           </div>
-        </div>
 
-        <div class="prop-row">
-          <span class="prop-label">Company</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="currentCompany" value="" placeholder="Current employer">
-          </div>
-        </div>
-
-        <div class="prop-row">
-          <span class="prop-label">LinkedIn</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
-          </div>
-        </div>
-
-        <div class="prop-row">
-          <span class="prop-label">GitHub</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
-          </div>
-        </div>
-
-        <div class="prop-row">
-          <span class="prop-label">Portfolio</span>
-          <div class="prop-input-wrap">
-            <input type="text" id="portfolioUrl" value="" placeholder="https://...">
-          </div>
-        </div>
-
-        <div class="prop-row">
-          <span class="prop-label">Experience</span>
-          <div class="prop-input-wrap">
-            <input type="number" id="experienceYears" value="8" min="0" max="50" style="width: 70px;">
-            <span style="color:#777; font-size:10px;">years</span>
-          </div>
-        </div>
-
-        <div class="prop-row">
-          <span class="prop-label">Salary Range</span>
-          <div class="prop-input-wrap" style="gap: 4px;">
-            <input type="text" id="salaryMin" value="" placeholder="Min (e.g. $140k)" style="flex:1;">
-            <span style="color:#777; font-size:10px;">-</span>
-            <input type="text" id="salaryMax" value="" placeholder="Max (e.g. $200k)" style="flex:1;">
+          <div class="prop-row">
+            <span class="prop-label">Disability</span>
+            <div class="prop-input-wrap" style="display:flex; gap:4px;">
+              <select id="disabilitySelect" style="flex:1;">
+                <option value="">-- Select --</option>
+                <option value="Yes, I have a disability (or previously had one)">Yes, I have a disability</option>
+                <option value="No, I don't have a disability">No, I don't have a disability</option>
+                <option value="I don't wish to answer">I don't wish to answer / Decline</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="text" id="disabilityCustom" placeholder="Write-in..." style="display:none; flex:1;">
+              <input type="hidden" id="disabilityStatus" value="">
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Drawer 2: Resume & Work History -->
-    <div class="panel-drawer open" id="drawerResume">
+    <div class="panel-drawer" id="drawerResume">
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerResume')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
@@ -906,7 +984,7 @@
     </div>
 
     <!-- Drawer 4: Prospect Spreadsheet -->
-    <div class="panel-drawer open" id="drawerProspects">
+    <div class="panel-drawer" id="drawerProspects">
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerProspects')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
@@ -1002,75 +1080,161 @@
       return false;
     }
 
-    // Toggle panel drawer (collapsible with full-height expansion)
+    // --- Profile Tabs Switching ---
+    let currentProfileTab = 'general';
+    const tabBtnProfileGeneral = document.getElementById('tabBtnProfileGeneral');
+    const tabBtnProfileDemographics = document.getElementById('tabBtnProfileDemographics');
+    const tabViewProfileGeneral = document.getElementById('tabViewProfileGeneral');
+    const tabViewProfileDemographics = document.getElementById('tabViewProfileDemographics');
+
+    window.switchProfileTab = function(tab) {
+      currentProfileTab = tab;
+      if (tab === 'general') {
+        if (tabBtnProfileGeneral) tabBtnProfileGeneral.classList.add('active');
+        if (tabBtnProfileDemographics) tabBtnProfileDemographics.classList.remove('active');
+        if (tabViewProfileGeneral) tabViewProfileGeneral.style.display = 'flex';
+        if (tabViewProfileDemographics) tabViewProfileDemographics.style.display = 'none';
+      } else {
+        if (tabBtnProfileGeneral) tabBtnProfileGeneral.classList.remove('active');
+        if (tabBtnProfileDemographics) tabBtnProfileDemographics.classList.add('active');
+        if (tabViewProfileGeneral) tabViewProfileGeneral.style.display = 'none';
+        if (tabViewProfileDemographics) tabViewProfileDemographics.style.display = 'flex';
+      }
+    };
+
+    // --- Drawer States & Toggling ---
+    const DRAWER_IDS = ['drawerProfile', 'drawerResume', 'drawerFinder', 'drawerProspects'];
+
+    function getDrawerStates() {
+      const states = {};
+      DRAWER_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          states[id] = el.classList.contains('open');
+        }
+      });
+      return states;
+    }
+
+    function applyDrawerStates(savedStates) {
+      if (savedStates && typeof savedStates === 'object' && Object.keys(savedStates).length > 0) {
+        DRAWER_IDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && savedStates[id] !== undefined) {
+            if (savedStates[id]) {
+              el.classList.add('open');
+            } else {
+              el.classList.remove('open');
+            }
+          }
+        });
+      } else {
+        // Collapse all but the first one if no history
+        DRAWER_IDS.forEach((id, idx) => {
+          const el = document.getElementById(id);
+          if (el) {
+            if (idx === 0) {
+              el.classList.add('open');
+            } else {
+              el.classList.remove('open');
+            }
+          }
+        });
+      }
+    }
+
+    // Toggle panel drawer (collapsible with full-height expansion and persistence)
     function toggleDrawer(drawerId) {
       const drawer = document.getElementById(drawerId);
-      drawer.classList.toggle('open');
+      if (drawer) {
+        drawer.classList.toggle('open');
+        saveAllData();
+      }
     }
 
-    // --- Pronoun Helpers ---
-    function getPronouns() {
-      const sel = document.getElementById('pronounSelect');
-      if (sel && sel.value === 'custom') {
-        return (document.getElementById('pronounsCustom').value || '').trim();
-      }
-      return sel ? sel.value : '';
-    }
+    // --- Generic Dropdown with Custom Write-In Helper ---
+    function bindCustomDropdown(selectId, customId, hiddenId) {
+      const sel = document.getElementById(selectId);
+      const custom = document.getElementById(customId);
+      const hidden = document.getElementById(hiddenId);
+      if (!sel || !custom || !hidden) return { getVal: () => '', setVal: () => {} };
 
-    function setPronouns(val) {
-      const sel = document.getElementById('pronounSelect');
-      const customInput = document.getElementById('pronounsCustom');
-      const hidden = document.getElementById('pronouns');
-      if (!sel || !customInput || !hidden) return;
-
-      const v = (val || '').trim();
-      hidden.value = v;
-
-      if (!v) {
-        sel.value = '';
-        customInput.style.display = 'none';
-        customInput.value = '';
-        return;
+      function getVal() {
+        if (sel.value === 'custom') {
+          return (custom.value || '').trim();
+        }
+        return sel.value;
       }
 
-      let matchedOption = null;
-      for (const opt of sel.options) {
-        if (opt.value && opt.value.toLowerCase() === v.toLowerCase()) {
-          matchedOption = opt.value;
-          break;
+      function setVal(v) {
+        const val = (v || '').trim();
+        hidden.value = val;
+        if (!val) {
+          sel.value = '';
+          custom.style.display = 'none';
+          custom.value = '';
+          return;
+        }
+        let matched = null;
+        for (const opt of sel.options) {
+          if (opt.value && opt.value.toLowerCase() === val.toLowerCase()) {
+            matched = opt.value;
+            break;
+          }
+        }
+        if (matched) {
+          sel.value = matched;
+          custom.style.display = 'none';
+          custom.value = '';
+        } else {
+          sel.value = 'custom';
+          custom.style.display = 'block';
+          custom.value = val;
         }
       }
 
-      if (matchedOption) {
-        sel.value = matchedOption;
-        customInput.style.display = 'none';
-        customInput.value = '';
-      } else {
-        sel.value = 'custom';
-        customInput.style.display = 'block';
-        customInput.value = v;
-      }
+      sel.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+          custom.style.display = 'block';
+          custom.focus();
+        } else {
+          custom.style.display = 'none';
+        }
+        hidden.value = getVal();
+        saveAllData();
+      });
+
+      custom.addEventListener('input', () => {
+        hidden.value = getVal();
+      });
+      custom.addEventListener('change', () => {
+        hidden.value = getVal();
+        saveAllData();
+      });
+
+      return { getVal, setVal };
     }
 
-    document.getElementById('pronounSelect').addEventListener('change', (e) => {
-      const customInput = document.getElementById('pronounsCustom');
-      if (e.target.value === 'custom') {
-        customInput.style.display = 'block';
-        customInput.focus();
-      } else {
-        customInput.style.display = 'none';
-      }
-      document.getElementById('pronouns').value = getPronouns();
-      saveAllData();
-    });
+    const pronounHandler = bindCustomDropdown('pronounSelect', 'pronounsCustom', 'pronouns');
+    const genderHandler = bindCustomDropdown('genderSelect', 'genderCustom', 'gender');
+    const raceHandler = bindCustomDropdown('raceSelect', 'raceCustom', 'race');
+    const veteranHandler = bindCustomDropdown('veteranSelect', 'veteranCustom', 'veteranStatus');
+    const disabilityHandler = bindCustomDropdown('disabilitySelect', 'disabilityCustom', 'disabilityStatus');
 
-    document.getElementById('pronounsCustom').addEventListener('input', () => {
-      document.getElementById('pronouns').value = getPronouns();
-    });
-    document.getElementById('pronounsCustom').addEventListener('change', () => {
-      document.getElementById('pronouns').value = getPronouns();
-      saveAllData();
-    });
+    function getPronouns() { return pronounHandler.getVal(); }
+    function setPronouns(val) { pronounHandler.setVal(val); }
+
+    function getGender() { return genderHandler.getVal(); }
+    function setGender(val) { genderHandler.setVal(val); }
+
+    function getRace() { return raceHandler.getVal(); }
+    function setRace(val) { raceHandler.setVal(val); }
+
+    function getVeteranStatus() { return veteranHandler.getVal(); }
+    function setVeteranStatus(val) { veteranHandler.setVal(val); }
+
+    function getDisabilityStatus() { return disabilityHandler.getVal(); }
+    function setDisabilityStatus(val) { disabilityHandler.setVal(val); }
 
     // --- Profile & Autofill ---
     document.getElementById('btnAutofill').addEventListener('click', () => {
@@ -1086,7 +1250,11 @@
         portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
         experienceYears: document.getElementById('experienceYears').value.trim(),
         salaryMin: document.getElementById('salaryMin').value.trim(),
-        salaryMax: document.getElementById('salaryMax').value.trim()
+        salaryMax: document.getElementById('salaryMax').value.trim(),
+        gender: getGender(),
+        race: getRace(),
+        veteranStatus: getVeteranStatus(),
+        disabilityStatus: getDisabilityStatus()
       };
       sendIpc('AUTOFILL', { data });
     });
@@ -1747,6 +1915,10 @@
         if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears;
         if (data.candidateProfile.salaryMin !== undefined) document.getElementById('salaryMin').value = data.candidateProfile.salaryMin;
         if (data.candidateProfile.salaryMax !== undefined) document.getElementById('salaryMax').value = data.candidateProfile.salaryMax;
+        if (data.candidateProfile.gender !== undefined) setGender(data.candidateProfile.gender);
+        if (data.candidateProfile.race !== undefined) setRace(data.candidateProfile.race);
+        if (data.candidateProfile.veteranStatus !== undefined) setVeteranStatus(data.candidateProfile.veteranStatus);
+        if (data.candidateProfile.disabilityStatus !== undefined) setDisabilityStatus(data.candidateProfile.disabilityStatus);
       }
 
       // 2. Resume Source
@@ -1784,6 +1956,9 @@
         if (data.searchCriteria.linkedin !== undefined) document.getElementById('chkLinkedin').checked = data.searchCriteria.linkedin;
         if (data.searchCriteria.indeed !== undefined) document.getElementById('chkIndeed').checked = data.searchCriteria.indeed;
       }
+
+      // 6. Drawer Collapse States
+      applyDrawerStates(data.drawerStates);
 
       isDataLoaded = true;
     }
@@ -1833,7 +2008,11 @@
         portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
         experienceYears: document.getElementById('experienceYears').value.trim(),
         salaryMin: document.getElementById('salaryMin').value.trim(),
-        salaryMax: document.getElementById('salaryMax').value.trim()
+        salaryMax: document.getElementById('salaryMax').value.trim(),
+        gender: getGender(),
+        race: getRace(),
+        veteranStatus: getVeteranStatus(),
+        disabilityStatus: getDisabilityStatus()
       };
 
       const searchCriteria = {
@@ -1852,12 +2031,13 @@
         specialFields,
         prospects,
         searchCriteria,
-        splitWidth: window.innerWidth
+        splitWidth: window.innerWidth,
+        drawerStates: getDrawerStates()
       });
     }
 
     // Auto-save on input changes for profile and search builder
-    ['fullName', 'pronouns', 'email', 'phone', 'location', 'currentCompany', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'salaryMin', 'salaryMax'].forEach(id => {
+    ['fullName', 'pronouns', 'email', 'phone', 'location', 'currentCompany', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'salaryMin', 'salaryMax', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', () => saveAllData());
     });
@@ -1870,6 +2050,7 @@
     if (window.__INITIAL_DATA__) {
       applyLoadedData(window.__INITIAL_DATA__);
     } else {
+      applyDrawerStates(null);
       updateScanCalloutVisibility();
     }
 

@@ -28,6 +28,14 @@ pub struct CandidateProfile {
     pub salary_min: String,
     #[serde(default)]
     pub salary_max: String,
+    #[serde(default)]
+    pub gender: String,
+    #[serde(default)]
+    pub race: String,
+    #[serde(default)]
+    pub veteran_status: String,
+    #[serde(default)]
+    pub disability_status: String,
 }
 
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
@@ -289,7 +297,87 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         tryFill('input[name*="salary" i], input[id*="salary" i], input[placeholder*="salary" i], input[name*="compensation" i], input[id*="compensation" i], input[name*="pay" i]', salText);
     }}
 
-    // 12. Highlight remaining unfilled form fields
+    // Helper for dropdown/radio/text selection fields (e.g. Demographics, EEO)
+    const fillChoiceField = (fieldPattern, targetVal) => {{
+        if (!targetVal) return;
+        const cleanTarget = targetVal.toLowerCase().trim();
+        let matched = false;
+
+        // A. Radio / Checkbox
+        const inputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+        for (const input of inputs) {{
+            const nameOrId = ((input.name || '') + ' ' + (input.id || '')).toLowerCase();
+            if (fieldPattern.test(nameOrId)) {{
+                const inputVal = (input.value || '').toLowerCase();
+                const parentText = (input.closest('label')?.textContent || input.parentElement?.textContent || '').toLowerCase();
+                if (inputVal.includes(cleanTarget) || parentText.includes(cleanTarget) || (cleanTarget.length > 2 && (cleanTarget.includes(inputVal) || cleanTarget.includes(parentText)))) {{
+                    input.checked = true;
+                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    filledElements.add(input);
+                    filledCount++;
+                    matched = true;
+                    break;
+                }}
+            }}
+        }}
+
+        // B. Select dropdown
+        if (!matched) {{
+            const selects = document.querySelectorAll('select');
+            for (const sel of selects) {{
+                const nameOrId = ((sel.name || '') + ' ' + (sel.id || '')).toLowerCase();
+                if (fieldPattern.test(nameOrId) && !filledElements.has(sel)) {{
+                    for (const opt of sel.options) {{
+                        const optText = (opt.text || '').toLowerCase();
+                        const optVal = (opt.value || '').toLowerCase();
+                        if (optText.includes(cleanTarget) || (optVal && optVal.includes(cleanTarget)) || (cleanTarget.length > 2 && optText.length > 2 && (cleanTarget.includes(optText) || optText.includes(cleanTarget)))) {{
+                            sel.value = opt.value;
+                            sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                            filledElements.add(sel);
+                            filledCount++;
+                            matched = true;
+                            break;
+                        }}
+                    }}
+                    if (matched) break;
+                }}
+            }}
+        }}
+
+        // C. Text input
+        if (!matched) {{
+            const textInputs = document.querySelectorAll('input[type="text"], input:not([type])');
+            for (const input of textInputs) {{
+                const nameOrId = ((input.name || '') + ' ' + (input.id || '') + ' ' + (input.placeholder || '')).toLowerCase();
+                if (fieldPattern.test(nameOrId) && !filledElements.has(input)) {{
+                    input.value = targetVal;
+                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    input.classList.add('tailorbird-filled');
+                    filledElements.add(input);
+                    filledCount++;
+                    break;
+                }}
+            }}
+        }}
+    }};
+
+    // 12. Demographics / EEO Self-Identification
+    if (profile.gender) {{
+        fillChoiceField(/gender|sex\b/i, profile.gender);
+    }}
+    if (profile.race) {{
+        fillChoiceField(/race|ethnic/i, profile.race);
+    }}
+    if (profile.veteranStatus) {{
+        fillChoiceField(/veteran|military/i, profile.veteranStatus);
+    }}
+    if (profile.disabilityStatus) {{
+        fillChoiceField(/disabilit/i, profile.disabilityStatus);
+    }}
+
+    // 13. Highlight remaining unfilled form fields
     const allFormControls = Array.from(document.querySelectorAll('input, select, textarea'));
     let unfilledCount = 0;
 
@@ -672,6 +760,10 @@ pub fn generate_context_menu_script(
                 {{ label: 'Years Experience', value: profile.experienceYears }},
                 {{ label: 'Salary Min', value: profile.salaryMin }},
                 {{ label: 'Salary Max', value: profile.salaryMax }},
+                {{ label: 'Gender', value: profile.gender }},
+                {{ label: 'Race / Ethnicity', value: profile.race }},
+                {{ label: 'Veteran Status', value: profile.veteranStatus }},
+                {{ label: 'Disability Status', value: profile.disabilityStatus }},
             ];
 
             if (profile.salaryMin && profile.salaryMax) {{

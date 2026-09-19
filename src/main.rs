@@ -6,17 +6,20 @@ use std::sync::{Arc, Mutex};
 use tao::{
     dpi::{LogicalPosition, LogicalSize, Position, Size},
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy},
     window::WindowBuilder,
 };
-use wry::{PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows, WebViewExtWindows};
+use wry::{
+    NewWindowResponse, PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows,
+    WebViewExtWindows,
+};
 
 use crate::autofill::{generate_autofill_script, generate_context_menu_script, CandidateProfile};
 use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 
 const LEFT_PANE_WIDTH: f64 = 420.0;
-const TOOLBAR_HEIGHT: f64 = 44.0;
+const TOOLBAR_HEIGHT: f64 = 74.0;
 const DEFAULT_WINDOW_WIDTH: f64 = 1280.0;
 const DEFAULT_WINDOW_HEIGHT: f64 = 750.0;
 
@@ -48,11 +51,14 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
                 company = title.split(' at ')[1].split(/[-–|]/)[0].trim();
             } else if (title.includes(' - ')) {
                 const parts = title.split(' - ');
-                if (parts.length > 1) company = parts[1].trim();
-            } else {
-                const host = window.location.hostname.replace('www.', '');
-                company = host.split('.')[0];
-                if (company) company = company.charAt(0).toUpperCase() + company.slice(1);
+                if (parts.length > 1) {
+                    company = parts[parts.length - 1].split('|')[0].trim();
+                }
+            } else if (title.includes(' | ')) {
+                const parts = title.split(' | ');
+                if (parts.length > 1) {
+                    company = parts[parts.length - 1].trim();
+                }
             }
         }
 
@@ -74,6 +80,34 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
         console.error("Tailorbird scrape error:", e);
     }
 })();"#;
+
+#[derive(Debug)]
+enum AppEvent {
+    CreateTab { url: String, activate: bool },
+    SwitchTab { id: usize },
+    CloseTab { id: usize },
+    TabTitleChanged { id: usize, title: String },
+    TabPageLoaded { id: usize, url: String },
+    NavigateActiveTab { url: String },
+    Back,
+    Forward,
+    Reload,
+    Home,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct TabInfo {
+    id: usize,
+    title: String,
+    url: String,
+}
+
+struct BrowserTab {
+    id: usize,
+    title: String,
+    url: String,
+    webview: WebView,
+}
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(tag = "action")]
@@ -100,6 +134,15 @@ enum IpcMessage {
     RecordPageData { data: ScrapedData },
     #[serde(rename = "SET_LEFT_WIDTH")]
     SetLeftWidth { width: f64 },
+    #[serde(rename = "SWITCH_TAB")]
+    SwitchTab { id: usize },
+    #[serde(rename = "CLOSE_TAB")]
+    CloseTab { id: usize },
+    #[serde(rename = "NEW_TAB")]
+    NewTab {
+        #[serde(default)]
+        url: Option<String>,
+    },
     #[serde(rename = "SAVE_DATA")]
     SaveData {
         #[serde(rename = "candidateProfile")]
@@ -115,6 +158,8 @@ enum IpcMessage {
         search_criteria: Option<SearchCriteria>,
         #[serde(rename = "splitWidth")]
         split_width: Option<f64>,
+        #[serde(default, rename = "drawerStates")]
+        drawer_states: Option<std::collections::HashMap<String, bool>>,
     },
     #[serde(rename = "LOAD_DATA")]
     LoadData,
@@ -128,12 +173,47 @@ struct ScrapedData {
     company: String,
 }
 
+fn sync_tabs(toolbar_holder: &Arc<Mutex<Option<WebView>>>, tabs: &[BrowserTab], active_id: usize) {
+    let info_list: Vec<TabInfo> = tabs
+        .iter()
+        .map(|t| TabInfo {
+            id: t.id,
+            title: t.title.clone(),
+            url: t.url.clone(),
+        })
+        .collect();
+    if let Ok(guard) = toolbar_holder.lock() {
+        if let Some(ref tb) = *guard {
+            let js = format!(
+                "if (window.setTabs) {{ window.setTabs({}, {}); }}",
+                serde_json::to_string(&info_list).unwrap_or_else(|_| "[]".to_string()),
+                active_id
+            );
+            let _ = tb.evaluate_script(&js);
+        }
+    }
+}
+
+fn sync_url(toolbar_holder: &Arc<Mutex<Option<WebView>>>, url: &str) {
+    if let Ok(guard) = toolbar_holder.lock() {
+        if let Some(ref tb) = *guard {
+            let js = format!(
+                "if (window.setUrl) {{ window.setUrl({}); }}",
+                serde_json::to_string(url).unwrap_or_default()
+            );
+            let _ = tb.evaluate_script(&js);
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============================================================");
     println!("  Tailorbird — Dual-Pane Specialized Job-Search Browser");
     println!("============================================================");
 
-    let event_loop = EventLoop::new();
+    let mut event_loop_builder = EventLoopBuilder::<AppEvent>::with_user_event();
+    let event_loop = event_loop_builder.build();
+    let proxy: EventLoopProxy<AppEvent> = event_loop.create_proxy();
 
     let window = WindowBuilder::new()
         .with_title("Tailorbird — Specialized Job Search Browser")
@@ -155,24 +235,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &initial_app_data.special_fields,
     );
 
-    // Shared references across IPC handlers and event loop
+    // Shared references
     let left_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     let toolbar_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
-    let target_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
+    let tabs_holder: Arc<Mutex<Vec<BrowserTab>>> = Arc::new(Mutex::new(Vec::new()));
+    let active_tab_id_holder = Arc::new(Mutex::new(1usize));
+    let next_tab_id_holder = Arc::new(Mutex::new(2usize));
 
     let left_width_holder = Arc::new(Mutex::new(initial_left_width));
     let window_size_holder = Arc::new(Mutex::new((DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)));
 
     let left_for_ipc = left_wv_holder.clone();
-    let toolbar_for_ipc = toolbar_wv_holder.clone();
-    let target_for_ipc = target_wv_holder.clone();
     let left_width_for_ipc = left_width_holder.clone();
+    let tabs_for_left = tabs_holder.clone();
+    let active_id_for_left = active_tab_id_holder.clone();
+    let proxy_for_left = proxy.clone();
 
-    // Reusable layout coordinator to update all 3 webview bounds seamlessly
+    // Reusable layout coordinator to update all webview bounds seamlessly
     let layout_coordinator = Arc::new({
         let left_h = left_wv_holder.clone();
         let toolbar_h = toolbar_wv_holder.clone();
-        let target_h = target_wv_holder.clone();
+        let tabs_h = tabs_holder.clone();
+        let active_id_h = active_tab_id_holder.clone();
         let left_w_h = left_width_holder.clone();
         let win_sz_h = window_size_holder.clone();
 
@@ -207,9 +291,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     });
                 }
             }
-            if let Ok(guard) = target_h.lock() {
-                if let Some(ref wv) = *guard {
-                    let _ = wv.set_bounds(Rect {
+            if let Ok(guard) = tabs_h.lock() {
+                let active_id = *active_id_h.lock().unwrap();
+                if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
+                    let _ = tab.webview.set_bounds(Rect {
                         position: Position::Logical(LogicalPosition::new(clamped_lw, TOOLBAR_HEIGHT)),
                         size: Size::Logical(LogicalSize::new(right_width, target_height)),
                     });
@@ -220,42 +305,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let coordinator_for_ipc = layout_coordinator.clone();
 
-    // Helper to perform navigation on the target webview and update the toolbar UI
-    let do_navigate = {
-        let target_holder = target_for_ipc.clone();
-        let toolbar_holder = toolbar_for_ipc.clone();
-
-        move |input: &str| {
-            let formatted_url = format_input_to_url(input);
-            println!("[Tailorbird Host] Navigating to: {} (from input: '{}')", formatted_url, input);
-
-            if let Ok(guard) = target_holder.lock() {
-                if let Some(ref target_wv) = *guard {
-                    if formatted_url == "local://mock" {
-                        let _ = target_wv.load_html(MOCK_JOB_HTML);
-                        let stored = load_stored_data();
-                        let context_data = serde_json::json!({
-                            "candidateProfile": stored.candidate_profile,
-                            "specialFields": stored.special_fields,
-                        });
-                        let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
-                        let _ = target_wv.evaluate_script(&js);
-                    } else {
-                        let _ = target_wv.load_url(&formatted_url);
-                    }
-                }
-            }
-
-            // Sync URL to Toolbar
-            if let Ok(guard) = toolbar_holder.lock() {
-                if let Some(ref tb_wv) = *guard {
-                    let js = format!("if (window.setUrl) {{ window.setUrl({}); }}", serde_json::to_string(&formatted_url).unwrap_or_default());
-                    let _ = tb_wv.evaluate_script(&js);
-                }
-            }
-        }
-    };
-
     // 1. Initialize Left Pane (Control Panel: Profile, Resume/Work History, Prospects, Finder)
     let left_webview = WebViewBuilder::new()
         .with_bounds(Rect {
@@ -264,11 +313,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .with_initialization_script(&init_script)
         .with_devtools(true)
+        .with_new_window_req_handler({
+            let proxy_left = proxy.clone();
+            move |url, _features| {
+                println!("[Tailorbird Left Pane] New window requested for URL: {}", url);
+                if !url.is_empty() && url != "about:blank" {
+                    let _ = proxy_left.send_event(AppEvent::CreateTab {
+                        url,
+                        activate: true,
+                    });
+                }
+                NewWindowResponse::Deny
+            }
+        })
         .with_html(LEFT_PANE_HTML)
         .with_ipc_handler({
-            let target_holder = target_for_ipc.clone();
             let left_holder = left_for_ipc.clone();
-            let do_nav = do_navigate.clone();
+            let tabs_holder = tabs_for_left.clone();
+            let active_id_holder = active_id_for_left.clone();
+            let proxy_ipc = proxy_for_left.clone();
             let coord = coordinator_for_ipc.clone();
             let left_w_holder = left_width_for_ipc.clone();
 
@@ -279,18 +342,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("[Tailorbird Host] Triggering AUTOFILL for: {}", data.full_name);
                         let injection_script = generate_autofill_script(&data);
 
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
-                                if let Err(e) = target_wv.evaluate_script(&injection_script) {
+                        if let Ok(guard) = tabs_holder.lock() {
+                            let active_id = *active_id_holder.lock().unwrap();
+                            if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
+                                if let Err(e) = tab.webview.evaluate_script(&injection_script) {
                                     eprintln!("[Tailorbird Host] Script injection error: {:?}", e);
                                 } else {
-                                    println!("[Tailorbird Host] Autofill script injected into target pane.");
+                                    println!("[Tailorbird Host] Autofill script injected into active tab pane.");
                                 }
                             }
                         }
                     }
                     Ok(IpcMessage::Navigate { url }) => {
-                        do_nav(&url);
+                        let _ = proxy_ipc.send_event(AppEvent::NavigateActiveTab { url });
                     }
                     Ok(IpcMessage::PickResumeFile) => {
                         if let Some(file) = rfd::FileDialog::new()
@@ -338,10 +402,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Ok(IpcMessage::ScrapeCurrentPage) => {
-                        println!("[Tailorbird Host] Triggering page scraper on target webview...");
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
-                                let _ = target_wv.evaluate_script(SCRAPE_PAGE_SCRIPT);
+                        println!("[Tailorbird Host] Triggering page scraper on active tab...");
+                        if let Ok(guard) = tabs_holder.lock() {
+                            let active_id = *active_id_holder.lock().unwrap();
+                            if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
+                                let _ = tab.webview.evaluate_script(SCRAPE_PAGE_SCRIPT);
                             }
                         }
                     }
@@ -357,6 +422,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         prospects,
                         search_criteria,
                         split_width,
+                        drawer_states,
                     }) => {
                         let cur_w = split_width.unwrap_or_else(|| *left_w_holder.lock().unwrap());
                         let data = AppData {
@@ -367,20 +433,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             prospects,
                             search_criteria,
                             split_width: Some(cur_w),
+                            drawer_states,
                         };
                         if let Err(e) = save_stored_data(&data) {
                             eprintln!("[Tailorbird Host] Error saving app data: {}", e);
                         }
 
-                        // Also push updated profile & special_fields to target webview context menu
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
+                        // Push updated profile & special_fields to active tab context menu
+                        if let Ok(guard) = tabs_holder.lock() {
+                            let active_id = *active_id_holder.lock().unwrap();
+                            if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
                                 let context_data = serde_json::json!({
                                     "candidateProfile": data.candidate_profile,
                                     "specialFields": data.special_fields,
                                 });
                                 let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
-                                let _ = target_wv.evaluate_script(&js);
+                                let _ = tab.webview.evaluate_script(&js);
                             }
                         }
                     }
@@ -405,7 +473,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let initial_right_width = (DEFAULT_WINDOW_WIDTH - initial_left_width).max(0.0);
 
-    // 2. Initialize Browser Toolbar (Back, Forward, Reload, Home, Omnibar)
+    // 2. Initialize Browser Toolbar (Tabs Strip, Back, Forward, Reload, Home, Omnibar)
     let toolbar_webview = WebViewBuilder::new()
         .with_environment(shared_env.clone())
         .with_bounds(Rect {
@@ -415,38 +483,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_devtools(true)
         .with_html(TOOLBAR_HTML)
         .with_ipc_handler({
-            let target_holder = target_for_ipc.clone();
-            let do_nav = do_navigate.clone();
-
+            let proxy_tb = proxy.clone();
             move |req| {
                 let body = req.body();
                 match serde_json::from_str::<IpcMessage>(body) {
                     Ok(IpcMessage::Back) => {
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
-                                let _ = target_wv.go_back();
-                            }
-                        }
+                        let _ = proxy_tb.send_event(AppEvent::Back);
                     }
                     Ok(IpcMessage::Forward) => {
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
-                                let _ = target_wv.go_forward();
-                            }
-                        }
+                        let _ = proxy_tb.send_event(AppEvent::Forward);
                     }
                     Ok(IpcMessage::Reload) => {
-                        if let Ok(guard) = target_holder.lock() {
-                            if let Some(ref target_wv) = *guard {
-                                let _ = target_wv.reload();
-                            }
-                        }
+                        let _ = proxy_tb.send_event(AppEvent::Reload);
                     }
                     Ok(IpcMessage::Home) => {
-                        do_nav("local://mock");
+                        let _ = proxy_tb.send_event(AppEvent::Home);
                     }
                     Ok(IpcMessage::Navigate { url }) => {
-                        do_nav(&url);
+                        let _ = proxy_tb.send_event(AppEvent::NavigateActiveTab { url });
+                    }
+                    Ok(IpcMessage::SwitchTab { id }) => {
+                        let _ = proxy_tb.send_event(AppEvent::SwitchTab { id });
+                    }
+                    Ok(IpcMessage::CloseTab { id }) => {
+                        let _ = proxy_tb.send_event(AppEvent::CloseTab { id });
+                    }
+                    Ok(IpcMessage::NewTab { url }) => {
+                        let target_url = url.unwrap_or_else(|| "local://mock".to_string());
+                        let _ = proxy_tb.send_event(AppEvent::CreateTab {
+                            url: target_url,
+                            activate: true,
+                        });
                     }
                     _ => {}
                 }
@@ -454,65 +521,113 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .build_as_child(&window)?;
 
-    // 3. Initialize Right Target Pane (The job site / mock application form)
-    let initial_target_height = (DEFAULT_WINDOW_HEIGHT - TOOLBAR_HEIGHT).max(0.0);
-    let target_webview = WebViewBuilder::new()
-        .with_environment(shared_env)
-        .with_bounds(Rect {
-            position: Position::Logical(LogicalPosition::new(initial_left_width, TOOLBAR_HEIGHT)),
-            size: Size::Logical(LogicalSize::new(initial_right_width, initial_target_height)),
-        })
-        .with_devtools(true)
-        .with_initialization_script(&initial_context_script)
-        .with_html(MOCK_JOB_HTML)
-        .with_ipc_handler({
-            let left_holder = left_for_ipc.clone();
-            move |req| {
-                let body = req.body();
-                if let Ok(IpcMessage::RecordPageData { data }) = serde_json::from_str::<IpcMessage>(body) {
-                    println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
-                    if let Ok(guard) = left_holder.lock() {
-                        if let Some(ref left_wv) = *guard {
-                            let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
-                            let _ = left_wv.evaluate_script(&js);
-                        }
-                    }
-                }
-            }
-        })
-        .with_on_page_load_handler({
-            let toolbar_holder = toolbar_wv_holder.clone();
-            let target_holder = target_for_ipc.clone();
-            move |event, url| {
-                if let PageLoadEvent::Finished = event {
-                    if let Ok(guard) = toolbar_holder.lock() {
-                        if let Some(ref tb_wv) = *guard {
-                            let js = format!("if (window.setUrl) {{ window.setUrl({}); }}", serde_json::to_string(&url).unwrap_or_default());
-                            let _ = tb_wv.evaluate_script(&js);
-                        }
-                    }
+    // 3. Tab WebView Factory Closure
+    let make_tab_webview = {
+        let shared_env = shared_env.clone();
+        let initial_context_script = initial_context_script.clone();
+        let proxy = proxy.clone();
+        let left_holder = left_for_ipc.clone();
 
-                    // Sync latest context menu data on page navigation
-                    if let Ok(guard) = target_holder.lock() {
-                        if let Some(ref target_wv) = *guard {
-                            let stored = load_stored_data();
-                            let context_data = serde_json::json!({
-                                "candidateProfile": stored.candidate_profile,
-                                "specialFields": stored.special_fields,
+        move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
+            let is_mock = url == "local://mock";
+            let proxy_title = proxy.clone();
+            let proxy_load = proxy.clone();
+            let proxy_new_win = proxy.clone();
+            let left_h = left_holder.clone();
+
+            let builder = WebViewBuilder::new()
+                .with_environment(shared_env.clone())
+                .with_bounds(bounds)
+                .with_visible(visible)
+                .with_devtools(true)
+                .with_initialization_script(&initial_context_script)
+                .with_new_window_req_handler({
+                    let proxy_new_win = proxy_new_win.clone();
+                    move |target_url, _features| {
+                        println!("[Tailorbird Tab #{}] New window requested for URL: {}", tab_id, target_url);
+                        if !target_url.is_empty() && target_url != "about:blank" {
+                            let _ = proxy_new_win.send_event(AppEvent::CreateTab {
+                                url: target_url,
+                                activate: true,
                             });
-                            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
-                            let _ = target_wv.evaluate_script(&js);
+                        }
+                        NewWindowResponse::Deny
+                    }
+                })
+                .with_document_title_changed_handler({
+                    let proxy_title = proxy_title.clone();
+                    move |title| {
+                        let _ = proxy_title.send_event(AppEvent::TabTitleChanged {
+                            id: tab_id,
+                            title,
+                        });
+                    }
+                })
+                .with_on_page_load_handler({
+                    let proxy_load = proxy_load.clone();
+                    move |event, page_url| {
+                        if let PageLoadEvent::Finished = event {
+                            let _ = proxy_load.send_event(AppEvent::TabPageLoaded {
+                                id: tab_id,
+                                url: page_url,
+                            });
                         }
                     }
-                }
-            }
-        })
-        .build_as_child(&window)?;
+                })
+                .with_ipc_handler({
+                    let left_h = left_h.clone();
+                    move |req| {
+                        let body = req.body();
+                        if let Ok(IpcMessage::RecordPageData { data }) = serde_json::from_str::<IpcMessage>(body) {
+                            println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
+                            if let Ok(guard) = left_h.lock() {
+                                if let Some(ref left_wv) = *guard {
+                                    let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                            }
+                        }
+                    }
+                });
 
-    // Store holders
+            let webview = if is_mock {
+                builder.with_html(MOCK_JOB_HTML).build_as_child(win)?
+            } else {
+                builder.with_url(url).build_as_child(win)?
+            };
+
+            if is_mock {
+                let stored = load_stored_data();
+                let context_data = serde_json::json!({
+                    "candidateProfile": stored.candidate_profile,
+                    "specialFields": stored.special_fields,
+                });
+                let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                let _ = webview.evaluate_script(&js);
+            }
+
+            Ok(webview)
+        }
+    };
+
+    // 4. Create Initial Tab (Mock Job Page)
+    let initial_target_height = (DEFAULT_WINDOW_HEIGHT - TOOLBAR_HEIGHT).max(0.0);
+    let initial_bounds = Rect {
+        position: Position::Logical(LogicalPosition::new(initial_left_width, TOOLBAR_HEIGHT)),
+        size: Size::Logical(LogicalSize::new(initial_right_width, initial_target_height)),
+    };
+
+    let initial_tab_wv = make_tab_webview(&window, 1, "local://mock", initial_bounds, true)?;
+    let initial_tab = BrowserTab {
+        id: 1,
+        title: "Tailorbird Mock Job Listing".to_string(),
+        url: "local://mock".to_string(),
+        webview: initial_tab_wv,
+    };
+
+    tabs_holder.lock().unwrap().push(initial_tab);
     *left_wv_holder.lock().unwrap() = Some(left_webview);
     *toolbar_wv_holder.lock().unwrap() = Some(toolbar_webview);
-    *target_wv_holder.lock().unwrap() = Some(target_webview);
 
     if let Ok(guard) = left_wv_holder.lock() {
         if let Some(ref wv) = *guard {
@@ -521,18 +636,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if let Ok(guard) = target_wv_holder.lock() {
-        if let Some(ref wv) = *guard {
-            let context_data = serde_json::json!({
-                "candidateProfile": initial_app_data.candidate_profile,
-                "specialFields": initial_app_data.special_fields,
-            });
-            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
-            let _ = wv.evaluate_script(&js);
-        }
-    }
+    // Sync initial tabs & omnibar to toolbar
+    sync_tabs(&toolbar_wv_holder, &tabs_holder.lock().unwrap(), 1);
+    sync_url(&toolbar_wv_holder, "local://mock");
 
-    println!("[Tailorbird] All panes and browser toolbar ready! Event loop running.");
+    println!("[Tailorbird] All panes, multi-tab manager, and browser toolbar ready! Event loop running.");
 
     let coordinator_for_loop = layout_coordinator.clone();
 
@@ -541,6 +649,229 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         *control_flow = ControlFlow::Wait;
 
         match event {
+            Event::UserEvent(app_event) => match app_event {
+                AppEvent::CreateTab { url, activate } => {
+                    let formatted_url = format_input_to_url(&url);
+                    let (win_width, win_height) = *window_size_holder.lock().unwrap();
+                    let cur_lw = *left_width_holder.lock().unwrap();
+                    let right_width = (win_width - cur_lw).max(0.0);
+                    let target_height = (win_height - TOOLBAR_HEIGHT).max(0.0);
+
+                    let bounds = Rect {
+                        position: Position::Logical(LogicalPosition::new(cur_lw, TOOLBAR_HEIGHT)),
+                        size: Size::Logical(LogicalSize::new(right_width, target_height)),
+                    };
+
+                    let new_id = {
+                        let mut nid = next_tab_id_holder.lock().unwrap();
+                        let id = *nid;
+                        *nid += 1;
+                        id
+                    };
+
+                    println!("[Tailorbird Host] Creating tab #{} with URL: {}", new_id, formatted_url);
+
+                    match make_tab_webview(&window, new_id, &formatted_url, bounds, activate) {
+                        Ok(wv) => {
+                            let initial_title = if formatted_url == "local://mock" {
+                                "Tailorbird Mock Job Listing".to_string()
+                            } else {
+                                "New Tab".to_string()
+                            };
+
+                            let new_tab = BrowserTab {
+                                id: new_id,
+                                title: initial_title,
+                                url: formatted_url.clone(),
+                                webview: wv,
+                            };
+
+                            let mut tabs = tabs_holder.lock().unwrap();
+                            tabs.push(new_tab);
+
+                            if activate {
+                                for t in tabs.iter_mut() {
+                                    if t.id != new_id {
+                                        let _ = t.webview.set_visible(false);
+                                    }
+                                }
+                                *active_tab_id_holder.lock().unwrap() = new_id;
+                                sync_url(&toolbar_wv_holder, &formatted_url);
+                            }
+
+                            let cur_active = *active_tab_id_holder.lock().unwrap();
+                            sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                        }
+                        Err(e) => {
+                            eprintln!("[Tailorbird Host] Error creating tab #{}: {:?}", new_id, e);
+                        }
+                    }
+                }
+                AppEvent::SwitchTab { id } => {
+                    let (win_width, win_height) = *window_size_holder.lock().unwrap();
+                    let cur_lw = *left_width_holder.lock().unwrap();
+                    let right_width = (win_width - cur_lw).max(0.0);
+                    let target_height = (win_height - TOOLBAR_HEIGHT).max(0.0);
+                    let bounds = Rect {
+                        position: Position::Logical(LogicalPosition::new(cur_lw, TOOLBAR_HEIGHT)),
+                        size: Size::Logical(LogicalSize::new(right_width, target_height)),
+                    };
+
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    let mut active_url = String::new();
+                    for t in tabs.iter_mut() {
+                        if t.id == id {
+                            let _ = t.webview.set_bounds(bounds);
+                            let _ = t.webview.set_visible(true);
+                            let _ = t.webview.focus();
+                            active_url = t.url.clone();
+                        } else {
+                            let _ = t.webview.set_visible(false);
+                        }
+                    }
+                    *active_tab_id_holder.lock().unwrap() = id;
+                    sync_url(&toolbar_wv_holder, &active_url);
+                    sync_tabs(&toolbar_wv_holder, &tabs, id);
+                }
+                AppEvent::CloseTab { id } => {
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    if tabs.len() <= 1 {
+                        let single_id = if let Some(t) = tabs.first_mut() {
+                            let _ = t.webview.load_html(MOCK_JOB_HTML);
+                            t.url = "local://mock".to_string();
+                            t.title = "Tailorbird Mock Job Listing".to_string();
+                            t.id
+                        } else {
+                            1
+                        };
+                        sync_url(&toolbar_wv_holder, "local://mock");
+                        sync_tabs(&toolbar_wv_holder, &tabs, single_id);
+                        return;
+                    }
+
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let pos = tabs.iter().position(|t| t.id == id);
+                    if let Some(idx) = pos {
+                        let _ = tabs[idx].webview.set_visible(false);
+                        tabs.remove(idx);
+
+                        if cur_active == id {
+                            let new_idx = idx.min(tabs.len() - 1);
+                            let next_id = tabs[new_idx].id;
+                            let (win_width, win_height) = *window_size_holder.lock().unwrap();
+                            let cur_lw = *left_width_holder.lock().unwrap();
+                            let right_width = (win_width - cur_lw).max(0.0);
+                            let target_height = (win_height - TOOLBAR_HEIGHT).max(0.0);
+                            let bounds = Rect {
+                                position: Position::Logical(LogicalPosition::new(cur_lw, TOOLBAR_HEIGHT)),
+                                size: Size::Logical(LogicalSize::new(right_width, target_height)),
+                            };
+
+                            let active_url = tabs[new_idx].url.clone();
+                            let _ = tabs[new_idx].webview.set_bounds(bounds);
+                            let _ = tabs[new_idx].webview.set_visible(true);
+                            let _ = tabs[new_idx].webview.focus();
+
+                            *active_tab_id_holder.lock().unwrap() = next_id;
+                            sync_url(&toolbar_wv_holder, &active_url);
+                            sync_tabs(&toolbar_wv_holder, &tabs, next_id);
+                        } else {
+                            sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                        }
+                    }
+                }
+                AppEvent::TabTitleChanged { id, title } => {
+                    if !title.is_empty() {
+                        let mut tabs = tabs_holder.lock().unwrap();
+                        if let Some(tab) = tabs.iter_mut().find(|t| t.id == id) {
+                            tab.title = title;
+                        }
+                        let cur_active = *active_tab_id_holder.lock().unwrap();
+                        sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                    }
+                }
+                AppEvent::TabPageLoaded { id, url } => {
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter_mut().find(|t| t.id == id) {
+                        tab.url = url.clone();
+                        if id == cur_active {
+                            sync_url(&toolbar_wv_holder, &url);
+                            let stored = load_stored_data();
+                            let context_data = serde_json::json!({
+                                "candidateProfile": stored.candidate_profile,
+                                "specialFields": stored.special_fields,
+                            });
+                            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                            let _ = tab.webview.evaluate_script(&js);
+                        }
+                    }
+                    sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+                AppEvent::NavigateActiveTab { url } => {
+                    let formatted = format_input_to_url(&url);
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter_mut().find(|t| t.id == cur_active) {
+                        if formatted == "local://mock" {
+                            let _ = tab.webview.load_html(MOCK_JOB_HTML);
+                            tab.url = "local://mock".to_string();
+                            tab.title = "Tailorbird Mock Job Listing".to_string();
+                            let stored = load_stored_data();
+                            let context_data = serde_json::json!({
+                                "candidateProfile": stored.candidate_profile,
+                                "specialFields": stored.special_fields,
+                            });
+                            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                            let _ = tab.webview.evaluate_script(&js);
+                        } else {
+                            let _ = tab.webview.load_url(&formatted);
+                            tab.url = formatted.clone();
+                        }
+                        sync_url(&toolbar_wv_holder, &formatted);
+                    }
+                    sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+                AppEvent::Back => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter().find(|t| t.id == cur_active) {
+                        let _ = tab.webview.go_back();
+                    }
+                }
+                AppEvent::Forward => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter().find(|t| t.id == cur_active) {
+                        let _ = tab.webview.go_forward();
+                    }
+                }
+                AppEvent::Reload => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter().find(|t| t.id == cur_active) {
+                        let _ = tab.webview.reload();
+                    }
+                }
+                AppEvent::Home => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter_mut().find(|t| t.id == cur_active) {
+                        let _ = tab.webview.load_html(MOCK_JOB_HTML);
+                        tab.url = "local://mock".to_string();
+                        tab.title = "Tailorbird Mock Job Listing".to_string();
+                        sync_url(&toolbar_wv_holder, "local://mock");
+                    }
+                    sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+            },
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                println!("[Tailorbird] Window close requested, exiting application cleanly.");
+                *control_flow = ControlFlow::Exit;
+            }
             Event::WindowEvent {
                 event: WindowEvent::Resized(physical_size),
                 ..
@@ -552,16 +883,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 coordinator_for_loop(None);
             }
-
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => {
-                println!("[Tailorbird] Close requested. Exiting.");
-                *control_flow = ControlFlow::Exit;
-            }
-
-            _ => ()
+            _ => {}
         }
     });
 }

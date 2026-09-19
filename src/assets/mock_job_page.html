@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acme Systems - Staff Systems Engineer</title>
+  <title>Acme Systems - Staff Distributed Systems Engineer</title>
   <style>
     :root {
       --bg: #f8fafc;
@@ -29,31 +29,88 @@
       color: var(--text);
       font-family: var(--font);
       line-height: 1.5;
-      padding: 32px;
+      padding: 32px 24px;
       overflow-y: auto;
     }
 
     .container {
-      max-width: 820px;
+      max-width: 860px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
 
+    /* Feature Tour Callout Bar */
+    .tour-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #f8fafc;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      border: 1px solid #334155;
+    }
+
+    .tour-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .tour-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tour-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tour-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tour-chip strong {
+      color: #ffffff;
+    }
+
+    /* Job Header Card */
     .job-header {
       background: var(--card-bg);
-      padding: 28px 32px;
+      padding: 24px 28px;
       border-radius: 12px;
       border: 1px solid var(--border);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .company-logo-row {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
-      margin-bottom: 8px;
     }
 
     .company-badge {
@@ -65,31 +122,53 @@
       border-radius: 6px;
     }
 
+    .btn-external-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      color: #334155;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      transition: all 0.15s ease;
+    }
+
+    .btn-external-link:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+
     .job-title {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: #0f172a;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
+      letter-spacing: -0.4px;
     }
 
     .job-meta {
       display: flex;
+      flex-wrap: wrap;
       gap: 16px;
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
+    /* Main Form Card */
     .card {
       background: var(--card-bg);
-      padding: 32px;
+      padding: 28px;
       border-radius: 12px;
       border: 1px solid var(--border);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .card-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
       color: #0f172a;
       margin-bottom: 20px;
@@ -110,10 +189,35 @@
       font-weight: 600;
     }
 
+    .section-divider {
+      grid-column: span 2;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 18px;
+      margin-top: 6px;
+    }
+
+    .section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .section-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 18px;
     }
 
     .col-span-2 {
@@ -127,7 +231,7 @@
     }
 
     label {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       color: #334155;
     }
@@ -144,10 +248,10 @@
     select,
     textarea {
       width: 100%;
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 9px 12px;
+      border-radius: 7px;
       border: 1.5px solid #cbd5e1;
-      font-size: 14px;
+      font-size: 13.5px;
       color: #0f172a;
       background-color: #ffffff;
       transition: all 0.2s ease;
@@ -159,36 +263,43 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
-    /* Autofill highlight animation */
-    .field-autofilled {
-      animation: pulseHighlight 1.5s ease;
+    .radio-checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      min-height: 38px;
     }
 
-    @keyframes pulseHighlight {
-      0% {
-        background-color: #ecfdf5;
-        border-color: #10b981;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
-      }
-      100% {
-        background-color: #ffffff;
-        border-color: #cbd5e1;
-        box-shadow: none;
-      }
+    .radio-checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      font-size: 13px;
+      color: #334155;
+      cursor: pointer;
     }
 
+    .hint-text {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* State Inspector */
     .state-inspector {
       background: #0f172a;
       border-radius: 10px;
       padding: 18px 20px;
       color: #e2e8f0;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 11.5px;
       margin-top: 24px;
     }
 
     .state-inspector-title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: #38bdf8;
       text-transform: uppercase;
@@ -210,7 +321,7 @@
 
     .state-table .key {
       color: #94a3b8;
-      width: 160px;
+      width: 200px;
     }
 
     .state-table .val {
@@ -231,9 +342,9 @@
       background: var(--primary);
       color: white;
       border: none;
-      padding: 10px 24px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 9px 22px;
+      border-radius: 7px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s ease;
@@ -247,9 +358,9 @@
       background: transparent;
       color: var(--text-muted);
       border: 1px solid var(--border);
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 9px 16px;
+      border-radius: 7px;
+      font-size: 13.5px;
       cursor: pointer;
     }
 
@@ -263,16 +374,36 @@
 
   <div class="container">
     
+    <!-- Feature Tour Callout -->
+    <div class="tour-banner">
+      <div class="tour-header">
+        <span class="tour-title">⚡ Tailorbird Feature Test Bench</span>
+        <span style="font-size: 11px; color: #94a3b8;">Interactive Sandbox</span>
+      </div>
+      <div class="tour-chips">
+        <span class="tour-chip">⚡ <strong>Autofill:</strong> Click "⚡ Fill Form" in toolbar or dock to populate fields</span>
+        <span class="tour-chip">🖱️ <strong>Context Menu:</strong> Right-click any input to pick profile / special snippets</span>
+        <span class="tour-chip">📑 <strong>Multi-Tab:</strong> Click the partner portal button below to test new tabs</span>
+        <span class="tour-chip">➕ <strong>Record Prospect:</strong> Click "+ Record" to track this listing</span>
+      </div>
+    </div>
+
     <!-- Job Header -->
     <div class="job-header">
       <div class="company-logo-row">
-        <span class="company-badge">Acme Systems, Inc.</span>
-        <span style="color: var(--text-muted); font-size: 13px;">Engineering & Infrastructure</span>
+        <div>
+          <span class="company-badge">Acme Systems, Inc.</span>
+          <span style="color: var(--text-muted); font-size: 12.5px; margin-left: 8px;">Engineering & Platform Services</span>
+        </div>
+        <!-- Multi-Tab Test Trigger: Target _blank link -->
+        <a href="https://jobs.lever.co" target="_blank" class="btn-external-link" title="Click to test multi-tab browser link opening">
+          <span>↗ Open Partner Portal in New Tab</span>
+        </a>
       </div>
-      <h1 class="job-title">Staff Systems & Distributed Platforms Engineer</h1>
+      <h1 class="job-title">Staff Distributed Systems Engineer</h1>
       <div class="job-meta">
-        <span>📍 San Francisco, CA (or Remote)</span>
-        <span>💼 Full-time</span>
+        <span>📍 San Francisco, CA (or Remote USA)</span>
+        <span>💼 Full-Time</span>
         <span>💵 $185,000 - $240,000</span>
       </div>
     </div>
@@ -280,51 +411,47 @@
     <!-- Application Form -->
     <div class="card">
       <div class="card-title">
-        <span>Submit Your Application</span>
-        <span class="badge-sim">ATS Framework Simulator Active</span>
+        <span>Job Application Form</span>
+        <span class="badge-sim">ATS Simulator Ready</span>
       </div>
 
-      <form id="jobForm" onsubmit="event.preventDefault(); alert('Application submitted successfully (mock)!');">
+      <form id="jobForm" onsubmit="event.preventDefault(); alert('Application submitted successfully (mock test)!');">
         <div class="form-grid">
           
+          <!-- SECTION 1: CANDIDATE PROFILE (GENERAL) -->
+          <div class="section-divider" style="border-top: none; padding-top: 0; margin-top: 0;">
+            <div class="section-heading">👤 Candidate Profile (General Info)</div>
+            <div class="section-desc">Populated from Properties &rarr; General tab or right-click context menu</div>
+          </div>
+
           <div class="field-group">
             <label for="fullName">Full Name <span class="required-star">*</span></label>
-            <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="First and last name" required>
+            <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="Alex Rivera" required>
           </div>
 
           <div class="field-group">
-            <label for="email">Email <span class="required-star">*</span></label>
-            <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+            <label for="email">Email Address <span class="required-star">*</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" placeholder="alex@example.com" required>
           </div>
 
           <div class="field-group">
-            <label for="phone">Phone <span class="required-star">*</span></label>
-            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000" required>
+            <label for="phone">Phone Number <span class="required-star">*</span></label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 019-9283" required>
           </div>
 
           <div class="field-group">
             <label for="location">Current Location <span class="required-star">*</span></label>
-            <input type="text" id="location" name="location" placeholder="City, State / Region" required>
+            <input type="text" id="location" name="location" placeholder="City, State or Remote" required>
           </div>
 
           <div class="field-group">
-            <label for="org">Current Company</label>
-            <input type="text" id="org" name="org" placeholder="Current employer or Organization">
+            <label for="company">Current Company / Employer</label>
+            <input type="text" id="company" name="company" placeholder="Current employer">
           </div>
 
           <div class="field-group">
-            <label>Pronouns</label>
-            <div style="display: flex; gap: 12px; align-items: center; height: 42px;">
-              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
-                <input type="checkbox" name="pronouns" value="He/him" style="width:auto;"> He/him
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
-                <input type="checkbox" name="pronouns" value="She/her" style="width:auto;"> She/her
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; font-weight:normal; cursor:pointer;">
-                <input type="checkbox" name="pronouns" value="They/them" style="width:auto;"> They/them
-              </label>
-            </div>
+            <label for="experienceYears">Years of Experience</label>
+            <input type="number" id="experienceYears" name="experience" placeholder="e.g. 8" min="0" max="50">
           </div>
 
           <div class="field-group">
@@ -333,27 +460,133 @@
           </div>
 
           <div class="field-group">
-            <label for="github">GitHub URL</label>
+            <label for="github">GitHub Profile URL</label>
             <input type="text" id="github" name="urls[GitHub]" placeholder="https://github.com/username">
           </div>
 
           <div class="field-group">
-            <label for="portfolio">Portfolio / Other URL</label>
+            <label for="portfolio">Portfolio / Personal Website</label>
             <input type="text" id="portfolio" name="urls[Portfolio]" placeholder="https://portfolio.dev">
           </div>
 
           <div class="field-group">
-            <label for="experienceYears">Years of Relevant Experience</label>
-            <input type="number" id="experienceYears" name="years_experience" placeholder="e.g. 5" min="0" max="40">
+            <label for="desiredSalary">Desired Annual Compensation / Salary</label>
+            <input type="text" id="desiredSalary" name="salary" placeholder="e.g. $140k - $200k">
           </div>
 
-          <!-- Lever-style Custom Survey Questions (Fields that remain unfilled) -->
-          <div class="col-span-2" style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px;">
-            <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Additional Questions (Visual Highlighting Demo)</div>
+          <!-- SECTION 2: DEMOGRAPHICS & EEO (PROPERTIES TAB 2) -->
+          <div class="section-divider">
+            <div class="section-heading">🌐 Demographics & Equal Opportunity (EEO)</div>
+            <div class="section-desc">Populated from Properties &rarr; Demographics (EEO) tab or right-click context menu</div>
           </div>
 
           <div class="field-group">
-            <label for="noticePeriod">Notice Period</label>
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">-- Please select --</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Non-Binary">Non-Binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Pronouns</label>
+            <div class="radio-checkbox-group">
+              <label>
+                <input type="checkbox" name="pronouns" value="He/him" style="width:auto;"> He/him
+              </label>
+              <label>
+                <input type="checkbox" name="pronouns" value="She/her" style="width:auto;"> She/her
+              </label>
+              <label>
+                <input type="checkbox" name="pronouns" value="They/them" style="width:auto;"> They/them
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="race">Race / Ethnicity</label>
+            <select id="race" name="race">
+              <option value="">-- Please select --</option>
+              <option value="Hispanic or Latino">Hispanic or Latino</option>
+              <option value="White">White (Not Hispanic or Latino)</option>
+              <option value="Black or African American">Black or African American (Not Hispanic or Latino)</option>
+              <option value="Asian">Asian (Not Hispanic or Latino)</option>
+              <option value="Native Hawaiian or Other Pacific Islander">Native Hawaiian or Pacific Islander</option>
+              <option value="American Indian or Alaska Native">American Indian or Alaska Native</option>
+              <option value="Two or More Races">Two or More Races</option>
+              <option value="Decline to self-identify">Decline to self-identify / Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="veteranStatus">Veteran Status</label>
+            <select id="veteranStatus" name="veteranStatus">
+              <option value="">-- Please select --</option>
+              <option value="I am not a protected veteran">I am not a protected veteran</option>
+              <option value="I identify as one or more of the classifications of a protected veteran">I identify as a protected veteran</option>
+              <option value="I don't wish to answer">I don't wish to answer / Decline</option>
+            </select>
+          </div>
+
+          <div class="field-group col-span-2">
+            <label for="disabilityStatus">Disability Status</label>
+            <select id="disabilityStatus" name="disabilityStatus">
+              <option value="">-- Please select --</option>
+              <option value="Yes, I have a disability (or previously had one)">Yes, I have a disability (or previously had one)</option>
+              <option value="No, I don't have a disability">No, I don't have a disability</option>
+              <option value="I don't wish to answer">I don't wish to answer / Decline</option>
+            </select>
+          </div>
+
+          <!-- SECTION 3: WORK HISTORY / EXPERIENCE -->
+          <div class="section-divider">
+            <div class="section-heading">💼 Work History & Experience</div>
+            <div class="section-desc">Simulated ATS work history fields</div>
+          </div>
+
+          <div class="field-group">
+            <label for="recentTitle">Most Recent Role / Title</label>
+            <input type="text" id="recentTitle" name="recent_role" placeholder="e.g. Senior Software Developer">
+          </div>
+
+          <div class="field-group">
+            <label for="recentCompany">Most Recent Organization</label>
+            <input type="text" id="recentCompany" name="recent_company" placeholder="e.g. Acme Tech Labs">
+          </div>
+
+          <div class="col-span-2 field-group">
+            <label for="recentSummary">Key Achievements & Responsibilities</label>
+            <textarea id="recentSummary" name="recent_summary" rows="2" placeholder="Brief summary of your responsibilities, metrics, and contributions..."></textarea>
+          </div>
+
+          <!-- SECTION 4: SPECIAL FIELDS & ESSAYS (CONTEXT MENU TEST) -->
+          <div class="section-divider">
+            <div class="section-heading">📝 Special Fields / Essay Questions (Right-Click Menu Test)</div>
+            <div class="section-desc">Right-click these textareas to quickly insert your saved Special Fields paragraphs!</div>
+          </div>
+
+          <div class="col-span-2 field-group">
+            <label for="whyCompany">Why do you want to work at Acme Systems?</label>
+            <textarea id="whyCompany" name="why_company" rows="3" placeholder="Right-click here to insert your saved Special Field answer..."></textarea>
+            <span class="hint-text">💡 Tip: Right-click inside this box to open the Tailorbird contextual menu and choose a saved snippet.</span>
+          </div>
+
+          <div class="col-span-2 field-group">
+            <label for="techChallenge">Describe a challenging technical project or architecture you engineered</label>
+            <textarea id="techChallenge" name="technical_challenge" rows="3" placeholder="Right-click here to insert your saved technical paragraph..."></textarea>
+          </div>
+
+          <!-- SECTION 5: UNFILLED HIGHLIGHT TEST -->
+          <div class="section-divider">
+            <div class="section-heading">⚠️ Visual Attention Fields (Unfilled Highlight Demo)</div>
+            <div class="section-desc">Fields that remain unfilled after running Autofill will be highlighted with amber dashed borders</div>
+          </div>
+
+          <div class="field-group">
+            <label for="noticePeriod">Notice Period / Start Date</label>
             <select id="noticePeriod" name="notice_period">
               <option value="">-- Please select --</option>
               <option value="immediate">Immediately</option>
@@ -363,13 +596,13 @@
           </div>
 
           <div class="field-group">
-            <label for="desiredSalary">Desired Annual Compensation</label>
-            <input type="text" id="desiredSalary" name="desired_salary" placeholder="e.g. $160,000">
-          </div>
-
-          <div class="col-span-2 field-group">
-            <label for="customComments">Additional Notes / Cover Note</label>
-            <textarea id="customComments" name="comments" rows="2" placeholder="Tell us anything else you'd like us to know..."></textarea>
+            <label for="workAuth">Are you authorized to work in the United States?</label>
+            <select id="workAuth" name="work_auth">
+              <option value="">-- Please select --</option>
+              <option value="yes">Yes, unrestricted</option>
+              <option value="visa">Yes, requires sponsorship</option>
+              <option value="no">No</option>
+            </select>
           </div>
 
         </div>
@@ -383,15 +616,18 @@
           <table class="state-table">
             <tbody>
               <tr><td class="key">state.fullName</td><td class="val" id="stateFullName">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.email</td><td class="val" id="stateEmail">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.phone</td><td class="val" id="statePhone">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.location</td><td class="val" id="stateLocation">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.company</td><td class="val" id="stateOrg">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.linkedin</td><td class="val" id="stateLinkedin">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.github</td><td class="val" id="stateGithub">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.portfolio</td><td class="val" id="statePortfolio">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.company</td><td class="val" id="stateCompany">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.yearsExperience</td><td class="val" id="stateExperience">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.salary</td><td class="val" id="stateSalary">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.gender</td><td class="val" id="stateGender">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.race</td><td class="val" id="stateRace">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.veteranStatus</td><td class="val" id="stateVeteran">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.disabilityStatus</td><td class="val" id="stateDisability">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.whyCompany</td><td class="val" id="stateWhyCompany">&lt;empty&gt;</td></tr>
             </tbody>
           </table>
         </div>
@@ -415,28 +651,26 @@
       eventCount++;
       eventCountSpan.textContent = `${eventCount} events captured`;
 
-      const fn = document.getElementById('fullName').value;
-      const em = document.getElementById('email').value;
-      const ph = document.getElementById('phone').value;
-      const loc = document.getElementById('location').value;
-      const org = document.getElementById('org').value;
-      const li = document.getElementById('linkedin').value;
-      const gh = document.getElementById('github').value;
-      const pf = document.getElementById('portfolio').value;
-      const ex = document.getElementById('experienceYears').value;
+      const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value : '';
+      };
 
       const checkedPronouns = Array.from(document.querySelectorAll('input[name="pronouns"]:checked')).map(cb => cb.value).join(', ');
 
-      document.getElementById('stateFullName').textContent = fn || '<empty>';
+      document.getElementById('stateFullName').textContent = getVal('fullName') || '<empty>';
+      document.getElementById('stateEmail').textContent = getVal('email') || '<empty>';
+      document.getElementById('statePhone').textContent = getVal('phone') || '<empty>';
+      document.getElementById('stateLocation').textContent = getVal('location') || '<empty>';
+      document.getElementById('stateCompany').textContent = getVal('company') || '<empty>';
+      document.getElementById('stateExperience').textContent = getVal('experienceYears') || '<empty>';
+      document.getElementById('stateSalary').textContent = getVal('desiredSalary') || '<empty>';
+      document.getElementById('stateGender').textContent = getVal('gender') || '<empty>';
       document.getElementById('statePronouns').textContent = checkedPronouns || '<empty>';
-      document.getElementById('stateEmail').textContent = em || '<empty>';
-      document.getElementById('statePhone').textContent = ph || '<empty>';
-      document.getElementById('stateLocation').textContent = loc || '<empty>';
-      document.getElementById('stateOrg').textContent = org || '<empty>';
-      document.getElementById('stateLinkedin').textContent = li || '<empty>';
-      document.getElementById('stateGithub').textContent = gh || '<empty>';
-      document.getElementById('statePortfolio').textContent = pf || '<empty>';
-      document.getElementById('stateExperience').textContent = ex || '<empty>';
+      document.getElementById('stateRace').textContent = getVal('race') || '<empty>';
+      document.getElementById('stateVeteran').textContent = getVal('veteranStatus') || '<empty>';
+      document.getElementById('stateDisability').textContent = getVal('disabilityStatus') || '<empty>';
+      document.getElementById('stateWhyCompany').textContent = getVal('whyCompany') || '<empty>';
     }
 
     // Attach listeners to test bubbling input/change events
@@ -447,11 +681,17 @@
     });
 
     document.getElementById('btnClearForm').addEventListener('click', () => {
-      inputs.forEach(input => {
-        input.value = '';
+      allFormInputs.forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+        input.classList.remove('tailorbird-filled', 'tailorbird-unfilled');
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       });
+      syncState();
     });
   </script>
 </body>

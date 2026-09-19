@@ -7,13 +7,16 @@
   <style>
     :root {
       --bg: #161b22;
+      --strip-bg: #0d1117;
       --border: #30363d;
       --text: #c9d1d9;
       --text-bright: #f0f6fc;
       --text-muted: #8b949e;
       --accent: #238636;
+      --accent-blue: #388bfd;
       --input-bg: #0d1117;
       --hover-bg: #21262d;
+      --active-tab-bg: #161b22;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     }
@@ -29,14 +32,149 @@
       color: var(--text);
       font-family: var(--font-sans);
       font-size: 13px;
-      height: 44px;
+      height: 74px;
       overflow: hidden;
       display: flex;
-      align-items: center;
-      padding: 0 12px;
-      border-bottom: 1px solid var(--border);
+      flex-direction: column;
       user-select: none;
+    }
+
+    /* Top Tier: Tab Strip */
+    .tab-strip {
+      height: 34px;
+      background: var(--strip-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 8px;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .tab-list {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex: 1;
+      height: 100%;
+    }
+
+    .tab-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-chip {
+      height: 29px;
+      max-width: 190px;
+      min-width: 100px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px 0 8px;
+      border-radius: 6px 6px 0 0;
+      background: #15191f;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      user-select: none;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .tab-chip:hover {
+      background: var(--hover-bg);
+      color: var(--text-bright);
+    }
+
+    .tab-chip.active {
+      background: var(--active-tab-bg);
+      color: var(--text-bright);
+      border-color: var(--border);
+      border-top: 2px solid var(--accent-blue);
+      font-weight: 500;
+      z-index: 2;
+    }
+
+    .tab-icon {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+
+    .tab-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      opacity: 0.6;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .tab-chip:hover .tab-close,
+    .tab-chip.active .tab-close {
+      opacity: 1;
+    }
+
+    .tab-close:hover {
+      background: rgba(248, 81, 73, 0.25);
+      color: #f85149;
+    }
+
+    .new-tab-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      margin-bottom: 2px;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .new-tab-btn:hover {
+      background: var(--hover-bg);
+      color: var(--text-bright);
+      border-color: var(--border);
+    }
+
+    .new-tab-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Bottom Tier: Navigation & Omnibar Controls */
+    .controls-row {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
       gap: 8px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg);
     }
 
     .nav-buttons {
@@ -49,14 +187,14 @@
       background: transparent;
       border: 1px solid transparent;
       color: var(--text);
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 13px;
       transition: all 0.15s ease;
     }
 
@@ -77,14 +215,14 @@
       background: var(--input-bg);
       border: 1px solid var(--border);
       border-radius: 6px;
-      height: 30px;
-      padding: 0 10px;
+      height: 28px;
+      padding: 0 8px;
       gap: 8px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .url-bar-container:focus-within {
-      border-color: #388bfd;
+      border-color: var(--accent-blue);
       box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.25);
     }
 
@@ -109,7 +247,7 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       padding: 2px 6px;
       border-radius: 4px;
       font-weight: 600;
@@ -141,35 +279,48 @@
     .pill:hover {
       background: #30363d;
       color: var(--text-bright);
-      border-color: #388bfd;
+      border-color: var(--accent-blue);
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Controls -->
-  <div class="nav-buttons">
-    <button class="nav-btn" id="btnBack" title="Back" type="button">◀</button>
-    <button class="nav-btn" id="btnForward" title="Forward" type="button">▶</button>
-    <button class="nav-btn" id="btnReload" title="Reload Page" type="button">🔄</button>
-    <button class="nav-btn" id="btnHome" title="Home (Built-in Mock ATS)" type="button">🏠</button>
+  <!-- Top Tier: Tab Strip -->
+  <div class="tab-strip">
+    <div class="tab-list" id="tabList">
+      <!-- Dynamic Tabs Injected Here -->
+    </div>
+    <button class="new-tab-btn" id="btnNewTab" title="New Tab (+)" type="button">+</button>
   </div>
 
-  <!-- Omnibar / URL Input -->
-  <div class="url-bar-container">
-    <span class="url-icon" id="urlIcon">📄</span>
-    <input type="text" id="urlInput" placeholder="Search Google or enter job URL..." value="local://mock">
-    <button class="url-go-btn" id="btnGo" type="button">Go</button>
-  </div>
+  <!-- Bottom Tier: Navigation Controls & Omnibar -->
+  <div class="controls-row">
+    <div class="nav-buttons">
+      <button class="nav-btn" id="btnBack" title="Back" type="button">◀</button>
+      <button class="nav-btn" id="btnForward" title="Forward" type="button">▶</button>
+      <button class="nav-btn" id="btnReload" title="Reload Page" type="button">🔄</button>
+      <button class="nav-btn" id="btnHome" title="Home (Built-in Mock ATS)" type="button">🏠</button>
+    </div>
 
-  <!-- Quick Presets -->
-  <div class="preset-pills">
-    <span class="pill" data-url="local://mock">📄 Test Form</span>
+    <div class="url-bar-container">
+      <span class="url-icon" id="urlIcon">📄</span>
+      <input type="text" id="urlInput" placeholder="Search Google or enter job URL..." value="local://mock">
+      <button class="url-go-btn" id="btnGo" type="button">Go</button>
+    </div>
+
+    <div class="preset-pills">
+      <span class="pill" data-url="local://mock">📄 Test Form</span>
+    </div>
   </div>
 
   <script>
     const urlInput = document.getElementById('urlInput');
     const urlIcon = document.getElementById('urlIcon');
+    const tabList = document.getElementById('tabList');
+    const btnNewTab = document.getElementById('btnNewTab');
+
+    let currentTabs = [];
+    let currentActiveId = null;
 
     function sendIpc(action, payload = {}) {
       if (window.ipc && typeof window.ipc.postMessage === 'function') {
@@ -177,7 +328,84 @@
       }
     }
 
-    // Window global to receive current URL updates from target webview
+    // Set and render all open tabs
+    window.setTabs = function(tabs, activeId) {
+      currentTabs = tabs || [];
+      currentActiveId = activeId;
+      renderTabs();
+    };
+
+    function renderTabs() {
+      tabList.innerHTML = '';
+
+      currentTabs.forEach(tab => {
+        const chip = document.createElement('div');
+        const isActive = (tab.id === currentActiveId);
+        chip.className = 'tab-chip' + (isActive ? ' active' : '');
+        
+        let displayTitle = (tab.title || '').trim();
+        if (!displayTitle || displayTitle === 'New Tab') {
+          if (tab.url === 'local://mock') {
+            displayTitle = 'Mock ATS Form';
+          } else if (tab.url) {
+            try {
+              displayTitle = new URL(tab.url).hostname;
+            } catch (_) {
+              displayTitle = tab.url;
+            }
+          } else {
+            displayTitle = 'New Tab';
+          }
+        }
+        chip.title = `${displayTitle}\n${tab.url || ''}`;
+
+        // Determine icon based on URL
+        let icon = '📄';
+        if ((tab.url || '').includes('google.com/search')) icon = '🔍';
+        else if ((tab.url || '').startsWith('https://')) icon = '🔒';
+        else if (tab.url !== 'local://mock') icon = '🌐';
+
+        chip.innerHTML = `
+          <span class="tab-icon">${icon}</span>
+          <span class="tab-title">${escapeHtml(displayTitle)}</span>
+          <span class="tab-close" title="Close tab" data-id="${tab.id}">✕</span>
+        `;
+
+        chip.addEventListener('click', (e) => {
+          if (e.target.classList.contains('tab-close')) {
+            e.stopPropagation();
+            sendIpc('CLOSE_TAB', { id: tab.id });
+          } else {
+            if (tab.id !== currentActiveId) {
+              sendIpc('SWITCH_TAB', { id: tab.id });
+            }
+          }
+        });
+
+        tabList.appendChild(chip);
+      });
+
+      // Scroll active tab into view
+      const activeEl = tabList.querySelector('.tab-chip.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, function(m) {
+        switch (m) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#039;';
+          default: return m;
+        }
+      });
+    }
+
+    // Window global to receive current URL updates for active tab
     window.setUrl = function(url) {
       if (url) {
         urlInput.value = url;
@@ -198,6 +426,10 @@
       if (!url) return;
       sendIpc('NAVIGATE', { url: url });
     }
+
+    btnNewTab.addEventListener('click', () => {
+      sendIpc('NEW_TAB');
+    });
 
     document.getElementById('btnBack').addEventListener('click', () => sendIpc('BACK'));
     document.getElementById('btnForward').addEventListener('click', () => sendIpc('FORWARD'));

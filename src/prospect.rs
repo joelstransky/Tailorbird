@@ -63,6 +63,8 @@ pub struct AppData {
     pub search_criteria: Option<SearchCriteria>,
     #[serde(default)]
     pub split_width: Option<f64>,
+    #[serde(default)]
+    pub drawer_states: Option<std::collections::HashMap<String, bool>>,
 }
 
 fn storage_file_path() -> PathBuf {

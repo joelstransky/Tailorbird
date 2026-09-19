@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::prospect::SpecialField;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -438,6 +439,343 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
 
     console.log(`[Tailorbird] Completed autofill: ${{filledCount}} populated, ${{unfilledCount}} unfilled highlighted.`);
     return filledCount;
+}})();"#
+    )
+}
+
+/// Generates the self-contained contextual menu script that runs in the target webview.
+/// Allows right-clicking any input/textarea to insert saved profile fields or special fields.
+pub fn generate_context_menu_script(
+    profile: Option<&CandidateProfile>,
+    special_fields: &[SpecialField],
+) -> String {
+    let profile_json = serde_json::to_string(&profile).unwrap_or_else(|_| "null".to_string());
+    let special_fields_json =
+        serde_json::to_string(special_fields).unwrap_or_else(|_| "[]".to_string());
+
+    format!(
+        r#"(function() {{
+    window.__TAILORBIRD_CONTEXT_DATA__ = window.__TAILORBIRD_CONTEXT_DATA__ || {{}};
+    window.__TAILORBIRD_CONTEXT_DATA__.candidateProfile = {profile_json};
+    window.__TAILORBIRD_CONTEXT_DATA__.specialFields = {special_fields_json};
+
+    window.__UPDATE_TAILORBIRD_CONTEXT_MENU__ = function(data) {{
+        if (!data) return;
+        if (data.candidateProfile !== undefined) {{
+            window.__TAILORBIRD_CONTEXT_DATA__.candidateProfile = data.candidateProfile;
+        }}
+        if (data.specialFields !== undefined) {{
+            window.__TAILORBIRD_CONTEXT_DATA__.specialFields = data.specialFields;
+        }}
+    }};
+
+    if (window.__TAILORBIRD_CM_INITIALIZED__) return;
+    window.__TAILORBIRD_CM_INITIALIZED__ = true;
+
+    function initContextMenu() {{
+        const styleId = 'tailorbird-context-menu-styles';
+        if (!document.getElementById(styleId)) {{
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                #tailorbird-context-menu {{
+                    position: fixed !important;
+                    z-index: 2147483647 !important;
+                    background: #1c2128 !important;
+                    border: 1px solid #444c56 !important;
+                    border-radius: 6px !important;
+                    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+                    color: #e6edf3 !important;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+                    font-size: 11.5px !important;
+                    min-width: 220px !important;
+                    max-width: 320px !important;
+                    max-height: 420px !important;
+                    overflow-y: auto !important;
+                    overflow-x: hidden !important;
+                    padding: 4px 0 !important;
+                    display: none;
+                    user-select: none !important;
+                    -webkit-user-select: none !important;
+                }}
+                #tailorbird-context-menu::-webkit-scrollbar {{
+                    width: 5px;
+                }}
+                #tailorbird-context-menu::-webkit-scrollbar-thumb {{
+                    background: #444c56;
+                    border-radius: 3px;
+                }}
+                .tb-cm-header {{
+                    font-size: 9.5px !important;
+                    font-weight: 700 !important;
+                    color: #768390 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.06em !important;
+                    padding: 6px 12px 3px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 5px !important;
+                }}
+                .tb-cm-divider {{
+                    height: 1px !important;
+                    background: #2d333b !important;
+                    margin: 4px 0 !important;
+                }}
+                .tb-cm-item {{
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                    padding: 5px 12px !important;
+                    cursor: pointer !important;
+                    gap: 8px !important;
+                    transition: background 0.1s ease, color 0.1s ease !important;
+                }}
+                .tb-cm-item:hover:not(.tb-cm-disabled) {{
+                    background: #1f6feb !important;
+                    color: #ffffff !important;
+                }}
+                .tb-cm-item:hover:not(.tb-cm-disabled) .tb-cm-val {{
+                    color: rgba(255, 255, 255, 0.85) !important;
+                }}
+                .tb-cm-item.tb-cm-disabled {{
+                    opacity: 0.38 !important;
+                    cursor: not-allowed !important;
+                }}
+                .tb-cm-label {{
+                    font-weight: 500 !important;
+                    white-space: nowrap !important;
+                    flex-shrink: 0 !important;
+                }}
+                .tb-cm-val {{
+                    font-size: 10.5px !important;
+                    color: #768390 !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                    white-space: nowrap !important;
+                    text-align: right !important;
+                    max-width: 135px !important;
+                }}
+            `;
+            (document.head || document.documentElement).appendChild(style);
+        }}
+
+        let menu = document.getElementById('tailorbird-context-menu');
+        if (!menu) {{
+            menu = document.createElement('div');
+            menu.id = 'tailorbird-context-menu';
+            (document.body || document.documentElement).appendChild(menu);
+        }}
+
+        let activeTargetElement = null;
+
+        function isEditableInput(el) {{
+            if (!el) return false;
+            const tag = el.tagName ? el.tagName.toLowerCase() : '';
+            if (tag === 'textarea') return true;
+            if (tag === 'input') {{
+                const type = (el.type || 'text').toLowerCase();
+                const nonTextTypes = ['checkbox', 'radio', 'submit', 'button', 'reset', 'file', 'image', 'hidden', 'range', 'color'];
+                return !nonTextTypes.includes(type);
+            }}
+            if (el.isContentEditable) return true;
+            return false;
+        }}
+
+        function closeContextMenu() {{
+            if (menu) {{
+                menu.style.display = 'none';
+                menu.innerHTML = '';
+            }}
+            activeTargetElement = null;
+        }}
+
+        function insertValue(val) {{
+            if (!activeTargetElement || val === undefined || val === null) {{
+                closeContextMenu();
+                return;
+            }}
+
+            const el = activeTargetElement;
+            el.focus();
+
+            if (el.isContentEditable) {{
+                el.innerText = val;
+                el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }} else {{
+                const proto = el.tagName.toLowerCase() === 'textarea' 
+                    ? window.HTMLTextAreaElement.prototype 
+                    : window.HTMLInputElement.prototype;
+                const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+                if (nativeSetter) {{
+                    nativeSetter.call(el, val);
+                }} else {{
+                    el.value = val;
+                }}
+                el.selectionStart = el.selectionEnd = el.value.length;
+                el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}
+
+            // Visual feedback pulse
+            const prevTransition = el.style.transition;
+            const prevOutline = el.style.outline;
+            const prevBoxShadow = el.style.boxShadow;
+            el.style.transition = 'outline 0.2s ease, box-shadow 0.2s ease';
+            el.style.outline = '2px solid #10b981';
+            el.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.3)';
+
+            if (el.classList.contains('tailorbird-unfilled')) {{
+                el.classList.remove('tailorbird-unfilled');
+                if (window.__TAILORBIRD_UPDATE_TOAST__) {{
+                    window.__TAILORBIRD_UPDATE_TOAST__();
+                }}
+            }}
+
+            setTimeout(() => {{
+                el.style.transition = prevTransition;
+                el.style.outline = prevOutline;
+                el.style.boxShadow = prevBoxShadow;
+            }}, 1200);
+
+            closeContextMenu();
+        }}
+
+        document.addEventListener('contextmenu', function(e) {{
+            let target = e.target;
+            while (target && target !== document.body && target !== document.documentElement && !isEditableInput(target)) {{
+                target = target.parentElement;
+            }}
+
+            if (!isEditableInput(target)) {{
+                closeContextMenu();
+                return;
+            }}
+
+            e.preventDefault();
+            activeTargetElement = target;
+
+            const data = window.__TAILORBIRD_CONTEXT_DATA__ || {{}};
+            const profile = data.candidateProfile || {{}};
+            const specialFields = Array.isArray(data.specialFields) ? data.specialFields : [];
+
+            const profileItems = [
+                {{ label: 'Full Name', value: profile.fullName }},
+                {{ label: 'Pronouns', value: profile.pronouns }},
+                {{ label: 'Email', value: profile.email }},
+                {{ label: 'Phone', value: profile.phone }},
+                {{ label: 'Location', value: profile.location }},
+                {{ label: 'Current Company', value: profile.currentCompany }},
+                {{ label: 'LinkedIn URL', value: profile.linkedin }},
+                {{ label: 'GitHub URL', value: profile.github }},
+                {{ label: 'Portfolio URL', value: profile.portfolioUrl }},
+                {{ label: 'Years Experience', value: profile.experienceYears }},
+                {{ label: 'Salary Min', value: profile.salaryMin }},
+                {{ label: 'Salary Max', value: profile.salaryMax }},
+            ];
+
+            if (profile.salaryMin && profile.salaryMax) {{
+                profileItems.push({{ label: 'Salary Range', value: `${{profile.salaryMin}} - ${{profile.salaryMax}}` }});
+            }}
+
+            menu.innerHTML = '';
+
+            const profileHeader = document.createElement('div');
+            profileHeader.className = 'tb-cm-header';
+            profileHeader.innerHTML = '<span>👤</span><span>Profile Fields</span>';
+            menu.appendChild(profileHeader);
+
+            profileItems.forEach(item => {{
+                const hasVal = item.value !== undefined && item.value !== null && item.value.toString().trim().length > 0;
+                const div = document.createElement('div');
+                div.className = 'tb-cm-item' + (hasVal ? '' : ' tb-cm-disabled');
+                div.innerHTML = `
+                    <span class="tb-cm-label">${{item.label}}</span>
+                    <span class="tb-cm-val" title="${{hasVal ? item.value : ''}}">${{hasVal ? item.value : '—'}}</span>
+                `;
+                if (hasVal) {{
+                    div.addEventListener('click', (ev) => {{
+                        ev.stopPropagation();
+                        insertValue(item.value);
+                    }});
+                }}
+                menu.appendChild(div);
+            }});
+
+            if (specialFields.length > 0) {{
+                const divider = document.createElement('div');
+                divider.className = 'tb-cm-divider';
+                menu.appendChild(divider);
+
+                const sfHeader = document.createElement('div');
+                sfHeader.className = 'tb-cm-header';
+                sfHeader.innerHTML = '<span>📝</span><span>Special Fields</span>';
+                menu.appendChild(sfHeader);
+
+                specialFields.forEach((sf, idx) => {{
+                    const labelText = (sf.label || '').trim() || `Snippet #${{idx + 1}}`;
+                    const contentText = (sf.content || '').trim();
+                    const hasVal = contentText.length > 0;
+
+                    const div = document.createElement('div');
+                    div.className = 'tb-cm-item' + (hasVal ? '' : ' tb-cm-disabled');
+                    div.innerHTML = `
+                        <span class="tb-cm-label">${{labelText}}</span>
+                        <span class="tb-cm-val" title="${{hasVal ? contentText : ''}}">${{hasVal ? contentText : '—'}}</span>
+                    `;
+                    if (hasVal) {{
+                        div.addEventListener('click', (ev) => {{
+                            ev.stopPropagation();
+                            insertValue(sf.content);
+                        }});
+                    }}
+                    menu.appendChild(div);
+                }});
+            }}
+
+            menu.style.display = 'block';
+            menu.style.visibility = 'hidden';
+
+            requestAnimationFrame(() => {{
+                const menuWidth = menu.offsetWidth || 240;
+                const menuHeight = menu.offsetHeight || 300;
+                let posX = e.clientX;
+                let posY = e.clientY;
+
+                if (posX + menuWidth > window.innerWidth) {{
+                    posX = Math.max(10, window.innerWidth - menuWidth - 10);
+                }}
+                if (posY + menuHeight > window.innerHeight) {{
+                    posY = Math.max(10, window.innerHeight - menuHeight - 10);
+                }}
+
+                menu.style.left = posX + 'px';
+                menu.style.top = posY + 'px';
+                menu.style.visibility = 'visible';
+            }});
+        }}, true);
+
+        document.addEventListener('click', function(e) {{
+            if (menu && menu.style.display === 'block' && !menu.contains(e.target)) {{
+                closeContextMenu();
+            }}
+        }}, true);
+
+        document.addEventListener('keydown', function(e) {{
+            if (e.key === 'Escape') {{
+                closeContextMenu();
+            }}
+        }});
+
+        window.addEventListener('blur', closeContextMenu);
+        window.addEventListener('scroll', closeContextMenu, true);
+    }}
+
+    if (document.readyState === 'loading') {{
+        document.addEventListener('DOMContentLoaded', initContextMenu);
+    }} else {{
+        initContextMenu();
+    }}
 }})();"#
     )
 }

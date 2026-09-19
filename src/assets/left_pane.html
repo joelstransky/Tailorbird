@@ -860,48 +860,7 @@
       </div>
     </div>
 
-    <!-- Drawer 3: Prospect Spreadsheet -->
-    <div class="panel-drawer open" id="drawerProspects">
-      <div class="panel-drawer-header" onclick="toggleDrawer('drawerProspects')">
-        <span class="panel-title">
-          <span class="panel-chevron">▶</span>
-          <span>Prospects <span id="prospectCount" style="color: #888; font-weight: normal;">(0)</span></span>
-        </span>
-        <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="ps-btn ps-btn-primary ps-btn-sm" id="btnRecordPage" title="Record current listing into sheet">➕ Record</button>
-        </div>
-      </div>
-
-      <div class="panel-content" style="padding: 6px;">
-        <div class="layers-toolbar">
-          <input type="text" id="prospectFilter" placeholder="Filter company / title..." style="height: 22px; font-size: 10px; flex: 1;">
-          <button class="ps-btn ps-btn-sm" id="btnExportCsv" title="Export to CSV">CSV</button>
-        </div>
-
-        <div class="layers-table-wrap">
-          <table class="layers-table">
-            <thead>
-              <tr>
-                <th style="min-width: 85px;">Company</th>
-                <th style="min-width: 90px;">Role</th>
-                <th style="min-width: 100px;">Status</th>
-                <th style="min-width: 80px;">Link</th>
-                <th style="min-width: 54px; text-align: right;"></th>
-              </tr>
-            </thead>
-            <tbody id="prospectTableBody">
-              <!-- Dynamically populated prospect rows -->
-            </tbody>
-          </table>
-        </div>
-
-        <div class="layers-footer-bar">
-          <span style="font-size: 10px; color: #777; margin-right: auto;" id="prospectStatusSummary">0 positions tracked</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Drawer 4: Job Finder -->
+    <!-- Drawer 3: Job Finder -->
     <div class="panel-drawer" id="drawerFinder">
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerFinder')">
         <span class="panel-title">
@@ -942,6 +901,47 @@
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:#ccc;">
             <input type="checkbox" id="chkIndeed" style="width:auto;"> Indeed (indeed.com)
           </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer 4: Prospect Spreadsheet -->
+    <div class="panel-drawer open" id="drawerProspects">
+      <div class="panel-drawer-header" onclick="toggleDrawer('drawerProspects')">
+        <span class="panel-title">
+          <span class="panel-chevron">▶</span>
+          <span>Prospects <span id="prospectCount" style="color: #888; font-weight: normal;">(0)</span></span>
+        </span>
+        <div class="panel-header-actions" onclick="event.stopPropagation();">
+          <button class="ps-btn ps-btn-primary ps-btn-sm" id="btnRecordPage" title="Record current listing into sheet">➕ Record</button>
+        </div>
+      </div>
+
+      <div class="panel-content" style="padding: 6px;">
+        <div class="layers-toolbar">
+          <input type="text" id="prospectFilter" placeholder="Filter company / title..." style="height: 22px; font-size: 10px; flex: 1;">
+          <button class="ps-btn ps-btn-sm" id="btnExportCsv" title="Export to CSV">CSV</button>
+        </div>
+
+        <div class="layers-table-wrap">
+          <table class="layers-table">
+            <thead>
+              <tr>
+                <th style="min-width: 85px;">Company</th>
+                <th style="min-width: 90px;">Role</th>
+                <th style="min-width: 100px;">Status</th>
+                <th style="min-width: 80px;">Link</th>
+                <th style="min-width: 54px; text-align: right;"></th>
+              </tr>
+            </thead>
+            <tbody id="prospectTableBody">
+              <!-- Dynamically populated prospect rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="layers-footer-bar">
+          <span style="font-size: 10px; color: #777; margin-right: auto;" id="prospectStatusSummary">0 positions tracked</span>
         </div>
       </div>
     </div>

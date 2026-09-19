@@ -11,7 +11,7 @@ use tao::{
 };
 use wry::{PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows, WebViewExtWindows};
 
-use crate::autofill::{generate_autofill_script, CandidateProfile};
+use crate::autofill::{generate_autofill_script, generate_context_menu_script, CandidateProfile};
 use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 
@@ -150,6 +150,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let initial_left_width = initial_app_data.split_width.unwrap_or(LEFT_PANE_WIDTH);
     let initial_data_json = serde_json::to_string(&initial_app_data).unwrap_or_else(|_| "{}".to_string());
     let init_script = format!("window.__INITIAL_DATA__ = {};", initial_data_json);
+    let initial_context_script = generate_context_menu_script(
+        initial_app_data.candidate_profile.as_ref(),
+        &initial_app_data.special_fields,
+    );
 
     // Shared references across IPC handlers and event loop
     let left_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
@@ -229,6 +233,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if let Some(ref target_wv) = *guard {
                     if formatted_url == "local://mock" {
                         let _ = target_wv.load_html(MOCK_JOB_HTML);
+                        let stored = load_stored_data();
+                        let context_data = serde_json::json!({
+                            "candidateProfile": stored.candidate_profile,
+                            "specialFields": stored.special_fields,
+                        });
+                        let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                        let _ = target_wv.evaluate_script(&js);
                     } else {
                         let _ = target_wv.load_url(&formatted_url);
                     }
@@ -360,6 +371,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if let Err(e) = save_stored_data(&data) {
                             eprintln!("[Tailorbird Host] Error saving app data: {}", e);
                         }
+
+                        // Also push updated profile & special_fields to target webview context menu
+                        if let Ok(guard) = target_holder.lock() {
+                            if let Some(ref target_wv) = *guard {
+                                let context_data = serde_json::json!({
+                                    "candidateProfile": data.candidate_profile,
+                                    "specialFields": data.special_fields,
+                                });
+                                let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                                let _ = target_wv.evaluate_script(&js);
+                            }
+                        }
                     }
                     Ok(IpcMessage::LoadData) => {
                         let data = load_stored_data();
@@ -440,6 +463,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             size: Size::Logical(LogicalSize::new(initial_right_width, initial_target_height)),
         })
         .with_devtools(true)
+        .with_initialization_script(&initial_context_script)
         .with_html(MOCK_JOB_HTML)
         .with_ipc_handler({
             let left_holder = left_for_ipc.clone();
@@ -458,12 +482,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .with_on_page_load_handler({
             let toolbar_holder = toolbar_wv_holder.clone();
+            let target_holder = target_for_ipc.clone();
             move |event, url| {
                 if let PageLoadEvent::Finished = event {
                     if let Ok(guard) = toolbar_holder.lock() {
                         if let Some(ref tb_wv) = *guard {
                             let js = format!("if (window.setUrl) {{ window.setUrl({}); }}", serde_json::to_string(&url).unwrap_or_default());
                             let _ = tb_wv.evaluate_script(&js);
+                        }
+                    }
+
+                    // Sync latest context menu data on page navigation
+                    if let Ok(guard) = target_holder.lock() {
+                        if let Some(ref target_wv) = *guard {
+                            let stored = load_stored_data();
+                            let context_data = serde_json::json!({
+                                "candidateProfile": stored.candidate_profile,
+                                "specialFields": stored.special_fields,
+                            });
+                            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                            let _ = target_wv.evaluate_script(&js);
                         }
                     }
                 }
@@ -479,6 +517,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(guard) = left_wv_holder.lock() {
         if let Some(ref wv) = *guard {
             let js = format!("if (window.setAllData) {{ window.setAllData({}); }}", initial_data_json);
+            let _ = wv.evaluate_script(&js);
+        }
+    }
+
+    if let Ok(guard) = target_wv_holder.lock() {
+        if let Some(ref wv) = *guard {
+            let context_data = serde_json::json!({
+                "candidateProfile": initial_app_data.candidate_profile,
+                "specialFields": initial_app_data.special_fields,
+            });
+            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
             let _ = wv.evaluate_script(&js);
         }
     }

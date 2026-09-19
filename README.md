@@ -32,14 +32,15 @@ Applying for jobs today often requires jumping between multiple browser tabs, Li
 | | - Linked PDF / GDoc     | | - Persistent Autofill Live Countdown Toast                         | |
 | | - Import & Scan         | |                                                                    | |
 | | - Work History CRUD     | |                                                                    | |
+| | - Special Fields Snippet| |                                                                    | |
+| |                         | |                                                                    | |
+| | [▶ Job Finder]          | |                                                                    | |
+| | - Boolean Synthesizer   | |                                                                    | |
 | |                         | |                                                                    | |
 | | [▼ Prospect Sheet]      | |                                                                    | |
 | | - Record Current Page   | |                                                                    | |
 | | - Status Pipeline Table | |                                                                    | |
 | | - Inline Row Edit / CSV | |                                                                    | |
-| |                         | |                                                                    | |
-| | [▶ Job Finder]          | |                                                                    | |
-| | - Boolean Synthesizer   | |                                                                    | |
 | +-------------------------+ +--------------------------------------------------------------------+ |
 +----------------------------------------------------------------------------------------------------+
 ```
@@ -67,6 +68,12 @@ Applying for jobs today often requires jumping between multiple browser tabs, Li
 - Add, edit, and remove custom paragraphs for questions that frequently come up during applications (e.g. *"What makes you want to work here?"*, elevator pitches, cover snippets).
 - Dedicated **📋 Copy** button on each snippet with live confirmation feedback (`✓ Copied!`) for quick pasting.
 - 100% persisted in local storage across sessions.
+
+### 🖱️ Right-Click Contextual Insertion Menu
+- Right-click any editable `<input>`, `<textarea>`, or contenteditable field in the job application pane.
+- A custom dark-themed contextual menu lists all saved **Profile Fields** and **Special Fields** with live value previews.
+- 1-click insertion with framework-compatible input dispatching (`input`/`change`) and subtle green pulse feedback.
+- Automatically clears amber unfilled highlights and decrements the active countdown toast.
 
 ### 📊 Integrated Prospect Sheet & Pipeline Tracker
 - **One-Click Recording (`➕ Record Current Page`)**: Scrapes the current page's job title, company name, and URL.

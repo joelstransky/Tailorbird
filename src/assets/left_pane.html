@@ -508,6 +508,14 @@
       color: #FFFFFF;
     }
 
+    .header-action-btn svg,
+    .ps-btn svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
     .header-action-primary {
       background: #4F46E5 !important;
       border: none !important;
@@ -1160,7 +1168,12 @@
           <span>Properties (Candidate Profile)</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnAutofill" title="Autofill Application Form">⚡ Autofill</button>
+          <button class="header-action-btn header-action-primary" id="btnAutofill" title="Autofill Application Form">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Autofill</span>
+          </button>
         </div>
       </div>
 
@@ -1356,7 +1369,13 @@
           <span id="drawerWorkTitle">Work History</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn" id="btnAddSpecialField" style="display: none;" title="Add Special Field">+ Field</button>
+          <button class="header-action-btn" id="btnAddSpecialField" style="display: none;" title="Add Special Field">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Field</span>
+          </button>
         </div>
       </div>
 
@@ -1372,8 +1391,22 @@
           <!-- Linked Resume source bar -->
           <div style="display:flex; gap:4px; margin-bottom:4px; flex-shrink: 0;">
             <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL..." style="flex:1;">
-            <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">Browse</button>
-            <button class="header-action-btn header-action-primary" id="btnImportResume" title="Import & scan resume">Scan</button>
+            <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Browse</span>
+            </button>
+            <button class="header-action-btn header-action-primary" id="btnImportResume" title="Import & scan resume">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+              </svg>
+              <span>Scan</span>
+            </button>
           </div>
 
           <!-- Scan Feature Callout (advertises scan feature when work history is empty) -->
@@ -1390,7 +1423,13 @@
           <!-- Action bar placed directly above the first work history item -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 6px 0; flex-shrink: 0;">
             <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Positions</span>
-            <button class="header-action-btn" id="btnAddPosition" title="Add Position">+ Position</button>
+            <button class="header-action-btn" id="btnAddPosition" title="Add Position">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Position</span>
+            </button>
           </div>
 
           <!-- History cards expanding full height -->
@@ -1420,7 +1459,13 @@
           <span>Job Finder</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnRunSearch">🔍 Search</button>
+          <button class="header-action-btn header-action-primary" id="btnRunSearch" title="Search Job Listings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Search</span>
+          </button>
         </div>
       </div>
 
@@ -1471,14 +1516,27 @@
           <span>Prospects <span id="prospectCount" style="color: var(--app-text-muted); font-weight: normal;">(0)</span></span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnRecordPage" title="Record current listing into sheet">➕ Record</button>
+          <button class="header-action-btn header-action-primary" id="btnRecordPage" title="Record current listing into sheet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Record</span>
+          </button>
         </div>
       </div>
 
       <div class="panel-content" style="padding: 6px;">
         <div class="layers-toolbar">
           <input type="text" id="prospectFilter" placeholder="Filter company / title..." style="height: 22px; font-size: 10px; flex: 1;">
-          <button class="ps-btn ps-btn-sm" id="btnExportCsv" title="Export to CSV">CSV</button>
+          <button class="ps-btn ps-btn-sm" id="btnExportCsv" title="Export to CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>CSV</span>
+          </button>
         </div>
 
         <div class="layers-table-wrap">
@@ -2068,7 +2126,13 @@
         card.innerHTML = `
           <div class="special-field-header">
             <input type="text" class="special-field-label" value="${escapeHtml(item.label || '')}" placeholder="Question / Label (e.g. What makes you want to work here?)" oninput="handleSpecialFieldInput(${idx}, 'label', this.value)" onchange="updateSpecialField(${idx}, 'label', this.value)">
-            <button class="ps-btn ps-btn-sm btn-copy-field" id="btnCopyField_${idx}" onclick="copySpecialField(${idx})" title="Copy text to clipboard">📋 Copy</button>
+            <button class="ps-btn ps-btn-sm btn-copy-field" id="btnCopyField_${idx}" onclick="copySpecialField(${idx})" title="Copy text to clipboard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+              <span>Copy</span>
+            </button>
             <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding: 1px 5px; height: 20px;" onclick="deleteSpecialField(${idx})" title="Delete special field">✕</button>
           </div>
           <textarea class="special-field-textarea" placeholder="Paste or type your custom paragraph here..." oninput="handleSpecialFieldInput(${idx}, 'content', this.value)" onchange="updateSpecialField(${idx}, 'content', this.value)">${escapeHtml(item.content || '')}</textarea>
@@ -2129,10 +2193,10 @@
       function markSuccess() {
         if (btn) {
           btn.classList.add('copied');
-          btn.innerHTML = '✓ Copied!';
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied!</span>';
           setTimeout(() => {
             btn.classList.remove('copied');
-            btn.innerHTML = '📋 Copy';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg><span>Copy</span>';
           }, 1500);
         }
       }
@@ -2296,7 +2360,7 @@
               <input type="text" id="edit-url-${pid}" class="ps-table-input" value="${escapeHtml(p.url)}" placeholder="https://..." onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
             </td>
             <td style="text-align:right; white-space:nowrap;">
-              <button class="ps-btn ps-btn-blue ps-btn-sm" style="padding:1px 5px;" onclick="saveEditProspect('${pid}')" title="Save changes (Enter)">💾</button>
+              <button class="ps-btn ps-btn-blue ps-btn-sm" style="padding:1px 5px;" onclick="saveEditProspect('${pid}')" title="Save changes (Enter)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px; height:11px;"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
               <button class="ps-btn ps-btn-sm" style="padding:1px 5px; margin-left:3px;" onclick="cancelEditProspect('${pid}')" title="Cancel edit (Esc)">✕</button>
             </td>
           `;
@@ -2317,7 +2381,7 @@
             </td>
             <td><span class="prospect-link" onclick="openProspectUrl('${escapeHtml(p.url)}')">${escapeHtml(p.url)}</span></td>
             <td style="text-align:right; white-space:nowrap;">
-              <button class="ps-btn ps-btn-sm" style="padding:1px 5px;" onclick="startEditProspect('${pid}')" title="Edit row">✏️</button>
+              <button class="ps-btn ps-btn-sm" style="padding:1px 5px;" onclick="startEditProspect('${pid}')" title="Edit row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px; height:11px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
               <button class="ps-btn ps-btn-danger ps-btn-sm" style="padding:1px 5px; margin-left:3px;" onclick="deleteProspect(${originalIndex})" title="Delete prospect">✕</button>
             </td>
           `;

@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Hit List & Outreach Roster</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --surface: #171a21;
+      --card-bg: #1e222b;
+      --card-hover: #242934;
+      --border: #2d3340;
+      --border-focus: #388bfd;
+      --text: #c9d1d9;
+      --text-bright: #ffffff;
+      --text-muted: #8b949e;
+      --accent-blue: #388bfd;
+      --accent-green: #2ea043;
+      --accent-purple: #a371f7;
+      --accent-amber: #d29922;
+      --accent-red: #f85149;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header Bar */
+    .header-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon {
+      font-size: 26px;
+      background: rgba(56, 139, 253, 0.15);
+      border: 1px solid rgba(56, 139, 253, 0.3);
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-title-wrap h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -0.3px;
+    }
+
+    .header-title-wrap p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: #2b77db;
+    }
+
+    .btn-primary:hover {
+      background: #2b77db;
+    }
+
+    .btn-secondary {
+      background: #21262d;
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #30363d;
+      color: var(--text-bright);
+      border-color: #8b949e;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11.5px;
+      border-radius: 4px;
+    }
+
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.1);
+      color: #ff7b72;
+      border-color: rgba(248, 81, 73, 0.4);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 81, 73, 0.25);
+    }
+
+    /* Metrics & Filter Row */
+    .controls-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .metrics-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .metric-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-pill strong {
+      color: var(--text-bright);
+      font-weight: 700;
+    }
+
+    .filter-search-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px;
+      gap: 2px;
+      overflow-x: auto;
+    }
+
+    .filter-tab {
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s ease;
+    }
+
+    .filter-tab:hover {
+      color: var(--text-bright);
+    }
+
+    .filter-tab.active {
+      background: #21262d;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      max-width: 320px;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px 6px 28px;
+      font-size: 12px;
+      color: var(--text-bright);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    /* Individual Contact Card */
+    .contact-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+    }
+
+    .contact-card:hover {
+      border-color: #444c5e;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+
+    /* Card Top: Company & Status */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .company-ident {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .company-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(31, 111, 235, 0.35);
+    }
+
+    .company-names {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .company-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-bright);
+      line-height: 1.2;
+    }
+
+    .company-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-select {
+      background: #14171d;
+      color: var(--text-bright);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 6px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .status-select:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Persona Block (Contact Details) */
+    .persona-box {
+      background: #15181f;
+      border: 1px solid #272c37;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .persona-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #2b313e;
+      border: 1.5px solid #3c4456;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .persona-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .persona-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-bright);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .persona-title {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .persona-links {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .persona-link-btn {
+      background: #212630;
+      border: 1px solid #303746;
+      color: #94a0b2;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+    }
+
+    .persona-link-btn:hover {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    /* Angle Callout Box */
+    .angle-box {
+      background: rgba(56, 139, 253, 0.08);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 0 6px 6px 0;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #dbeafe;
+    }
+
+    .angle-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Draft Message Box */
+    .message-box {
+      background: #14171e;
+      border: 1px solid #282e3c;
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .message-text {
+      font-size: 12px;
+      color: #e6edf3;
+      line-height: 1.45;
+      max-height: 80px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--font);
+    }
+
+    .message-text.expanded {
+      max-height: none;
+    }
+
+    .message-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #202531;
+      padding-top: 6px;
+    }
+
+    .btn-copy-msg {
+      background: #212630;
+      border: 1px solid #363d4e;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy-msg:hover {
+      background: #2ea043;
+      color: #ffffff;
+      border-color: #2ea043;
+    }
+
+    .btn-copy-msg.copied {
+      background: #2ea043 !important;
+      color: #ffffff !important;
+      border-color: #2ea043 !important;
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+      border-top: 1px solid #252a36;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 48px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .empty-icon {
+      font-size: 36px;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-bright);
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 440px;
+      line-height: 1.5;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: #1c2029;
+      border: 1px solid #373e4f;
+      border-radius: 10px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2d3443;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-bright);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid #2a3140;
+      padding-bottom: 4px;
+      margin-top: 4px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-col label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      background: #13161c;
+      border: 1px solid #2d3443;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 12.5px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #2d3443;
+      background: #171b23;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-radius: 0 0 10px 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Header Bar -->
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-icon">🎯</div>
+        <div class="header-title-wrap">
+          <h1>Target Hit List & Outreach Roster</h1>
+          <p>High-conviction networking: Align your background to specific engineering leaders</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btnLoadExamples" type="button" title="Load sample cards">💡 Sample Cards</button>
+        <button class="btn btn-primary" id="btnOpenAddModal" type="button">➕ Add Target Company</button>
+      </div>
+    </div>
+
+    <!-- Metrics & Search/Filter Bar -->
+    <div class="controls-bar">
+      <div class="metrics-pills">
+        <span class="metric-pill">🏢 Total Targets: <strong id="metricTotal">0</strong></span>
+        <span class="metric-pill">📝 Messages Drafted: <strong id="metricDrafted">0</strong></span>
+        <span class="metric-pill">📨 Contacted: <strong id="metricContacted">0</strong></span>
+        <span class="metric-pill">💬 In Conversation: <strong id="metricConversations">0</strong></span>
+      </div>
+
+      <div class="filter-search-row">
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-tab active" data-filter="all" type="button">All Targets</button>
+          <button class="filter-tab" data-filter="Targeted" type="button">Targeted</button>
+          <button class="filter-tab" data-filter="Contact Identified" type="button">Contact Identified</button>
+          <button class="filter-tab" data-filter="Drafted" type="button">Drafted</button>
+          <button class="filter-tab" data-filter="Contacted" type="button">Contacted</button>
+          <button class="filter-tab" data-filter="In Conversation" type="button">In Conversation</button>
+        </div>
+
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search company, contact, or title...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Cards Grid -->
+    <div class="cards-grid" id="cardsGrid">
+      <!-- Injected dynamically -->
+    </div>
+
+  </div>
+
+  <!-- Add / Edit Target Modal -->
+  <div class="modal-overlay" id="targetModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">➕ Add Target Company & Contact</div>
+        <button class="modal-close" id="btnCloseModal" type="button">&times;</button>
+      </div>
+
+      <form id="targetForm" onsubmit="event.preventDefault(); saveTargetForm();">
+        <div class="modal-body">
+          <input type="hidden" id="editTargetId" value="">
+
+          <!-- Section 1: Company Info -->
+          <div class="modal-section-title">1. Company Profile</div>
+          <div class="form-row">
+            <div class="form-col" style="flex: 2;">
+              <label for="modalCompany">Company Name *</label>
+              <input type="text" class="form-input" id="modalCompany" placeholder="e.g. Vercel, Stripe, Konami" required>
+            </div>
+            <div class="form-col">
+              <label for="modalIndustry">Industry / Focus</label>
+              <input type="text" class="form-input" id="modalIndustry" placeholder="e.g. Cloud, DevTools, FinTech">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="modalWebsite">Company Website / Careers URL</label>
+              <input type="text" class="form-input" id="modalWebsite" placeholder="https://example.com">
+            </div>
+            <div class="form-col">
+              <label for="modalStatus">Outreach Status</label>
+              <select class="form-select" id="modalStatus">
+                <option value="Targeted">Targeted</option>
+                <option value="Contact Identified">Contact Identified</option>
+                <option value="Drafted">Drafted</option>
+                <option value="Contacted">Contacted</option>
+                <option value="In Conversation">In Conversation</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 2: Contact Info -->
+          <div class="modal-section-title">2. Key Decision Maker / Contact</div>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="modalContactName">Contact Name</label>
+              <input type="text" class="form-input" id="modalContactName" placeholder="e.g. Sarah Chen">
+            </div>
+            <div class="form-col">
+              <label for="modalContactTitle">Role / Title</label>
+              <input type="text" class="form-input" id="modalContactTitle" placeholder="e.g. VP of Engineering">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="modalContactLinkedin">LinkedIn Profile URL</label>
+              <input type="text" class="form-input" id="modalContactLinkedin" placeholder="https://linkedin.com/in/username">
+            </div>
+            <div class="form-col">
+              <label for="modalContactEmail">Email Address</label>
+              <input type="email" class="form-input" id="modalContactEmail" placeholder="contact@company.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-col">
+              <label for="modalContactGithub">GitHub Profile</label>
+              <input type="text" class="form-input" id="modalContactGithub" placeholder="https://github.com/username">
+            </div>
+            <div class="form-col">
+              <label for="modalContactTwitter">X / Twitter</label>
+              <input type="text" class="form-input" id="modalContactTwitter" placeholder="https://x.com/username">
+            </div>
+          </div>
+
+          <!-- Section 3: Outreach Message -->
+          <div class="modal-section-title">3. Outreach Message (Alignment Angle & Note)</div>
+          <div class="form-col">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label for="modalMessage">Strategic Hook, Value Alignment & Outreach Note</label>
+              <span id="charCounter" style="font-size:11px; color:var(--text-muted);">0 words · 0 chars</span>
+            </div>
+            <textarea class="form-textarea" id="modalMessage" rows="5" placeholder="Draft your message showing how your background aligns with their initiatives and provides value..."></textarea>
+          </div>
+
+          <!-- Section 4: Notes -->
+          <div class="modal-section-title">4. Research & Follow-Up Notes</div>
+          <div class="form-col">
+            <textarea class="form-textarea" id="modalNotes" rows="2" placeholder="Internal notes, mutual connections, tech stack clues, interview dates..."></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btnCancelModal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save Target Card</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let hitList = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    function sendIpc(action, payload = {}) {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(JSON.stringify({ action, ...payload }));
+        return true;
+      }
+      return false;
+    }
+
+    function openTab(url) {
+      if (!url) return;
+      sendIpc('OPEN_NEW_TAB', { url });
+    }
+
+    // Modal elements
+    const modal = document.getElementById('targetModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const editTargetId = document.getElementById('editTargetId');
+    const modalCompany = document.getElementById('modalCompany');
+    const modalIndustry = document.getElementById('modalIndustry');
+    const modalWebsite = document.getElementById('modalWebsite');
+    const modalStatus = document.getElementById('modalStatus');
+    const modalContactName = document.getElementById('modalContactName');
+    const modalContactTitle = document.getElementById('modalContactTitle');
+    const modalContactLinkedin = document.getElementById('modalContactLinkedin');
+    const modalContactEmail = document.getElementById('modalContactEmail');
+    const modalContactGithub = document.getElementById('modalContactGithub');
+    const modalContactTwitter = document.getElementById('modalContactTwitter');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalNotes = document.getElementById('modalNotes');
+    const charCounter = document.getElementById('charCounter');
+
+    modalMessage.addEventListener('input', updateCharCount);
+    function updateCharCount() {
+      const text = modalMessage.value || '';
+      const chars = text.length;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      charCounter.textContent = `${words} words · ${chars} chars`;
+    }
+
+    function openAddModal() {
+      editTargetId.value = '';
+      modalTitle.textContent = '➕ Add Target Company & Contact';
+      modalCompany.value = '';
+      modalIndustry.value = '';
+      modalWebsite.value = '';
+      modalStatus.value = 'Targeted';
+      modalContactName.value = '';
+      modalContactTitle.value = '';
+      modalContactLinkedin.value = '';
+      modalContactEmail.value = '';
+      modalContactGithub.value = '';
+      modalContactTwitter.value = '';
+      modalMessage.value = '';
+      modalNotes.value = '';
+      updateCharCount();
+      modal.style.display = 'flex';
+      modalCompany.focus();
+    }
+
+    function openEditModal(id) {
+      const target = hitList.find(t => t.id === id);
+      if (!target) return;
+
+      editTargetId.value = target.id;
+      modalTitle.textContent = `✏️ Edit Card: ${target.companyName}`;
+      modalCompany.value = target.companyName || '';
+      modalIndustry.value = target.industry || '';
+      modalWebsite.value = target.websiteUrl || '';
+      modalStatus.value = (target.status === 'Angle Drafted') ? 'Drafted' : (target.status || 'Targeted');
+
+      const c = target.contact || {};
+      modalContactName.value = c.name || '';
+      modalContactTitle.value = c.title || '';
+      modalContactLinkedin.value = c.linkedinUrl || '';
+      modalContactEmail.value = c.email || '';
+      modalContactGithub.value = c.githubUrl || '';
+      modalContactTwitter.value = c.twitterUrl || '';
+
+      // Populate unified message field from draftMessage or valueAngle
+      modalMessage.value = target.draftMessage || target.valueAngle || '';
+      modalNotes.value = target.notes || '';
+      updateCharCount();
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+    }
+
+    document.getElementById('btnOpenAddModal').addEventListener('click', openAddModal);
+    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+    document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+
+    function saveTargetForm() {
+      const company = modalCompany.value.trim();
+      if (!company) return;
+
+      const id = editTargetId.value.trim() || `hit-${Date.now()}`;
+      const existingIdx = hitList.findIndex(t => t.id === id);
+
+      const msg = modalMessage.value.trim();
+      const targetData = {
+        id,
+        companyName: company,
+        industry: modalIndustry.value.trim(),
+        websiteUrl: modalWebsite.value.trim(),
+        status: modalStatus.value,
+        contact: {
+          name: modalContactName.value.trim(),
+          title: modalContactTitle.value.trim(),
+          linkedinUrl: modalContactLinkedin.value.trim(),
+          email: modalContactEmail.value.trim(),
+          githubUrl: modalContactGithub.value.trim(),
+          twitterUrl: modalContactTwitter.value.trim()
+        },
+        valueAngle: '',
+        draftMessage: msg,
+        notes: modalNotes.value.trim(),
+        dateAdded: existingIdx >= 0 ? hitList[existingIdx].dateAdded : new Date().toLocaleDateString(),
+        lastContacted: existingIdx >= 0 ? (hitList[existingIdx].lastContacted || '') : ''
+      };
+
+      if (existingIdx >= 0) {
+        hitList[existingIdx] = targetData;
+      } else {
+        hitList.unshift(targetData);
+      }
+
+      closeModal();
+      persistData();
+      renderCards();
+    }
+
+    function deleteTarget(id) {
+      const target = hitList.find(t => t.id === id);
+      if (!target) return;
+      if (confirm(`Remove "${target.companyName}" from your hit list?`)) {
+        hitList = hitList.filter(t => t.id !== id);
+        persistData();
+        renderCards();
+      }
+    }
+
+    function updateTargetStatus(id, newStatus) {
+      const target = hitList.find(t => t.id === id);
+      if (target) {
+        target.status = newStatus;
+        if (newStatus === 'Contacted' && !target.lastContacted) {
+          target.lastContacted = new Date().toLocaleDateString();
+        }
+        persistData();
+        updateMetrics();
+      }
+    }
+
+    function copyMessage(id, btn) {
+      const target = hitList.find(t => t.id === id);
+      if (!target || !target.draftMessage) return;
+
+      navigator.clipboard.writeText(target.draftMessage).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    }
+
+    function toggleMessageExpand(id) {
+      const el = document.getElementById(`msgText-${id}`);
+      if (el) {
+        el.classList.toggle('expanded');
+      }
+    }
+
+    // Filter and search
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      searchQuery = (e.target.value || '').toLowerCase().trim();
+      renderCards();
+    });
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.getAttribute('data-filter');
+        renderCards();
+      });
+    });
+
+    function updateMetrics() {
+      document.getElementById('metricTotal').textContent = hitList.length;
+      document.getElementById('metricDrafted').textContent = hitList.filter(t => (t.draftMessage || '').trim().length > 0).length;
+      document.getElementById('metricContacted').textContent = hitList.filter(t => t.status === 'Contacted').length;
+      document.getElementById('metricConversations').textContent = hitList.filter(t => t.status === 'In Conversation').length;
+    }
+
+    function getInitials(name) {
+      if (!name) return '??';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
+      updateMetrics();
+
+      const filtered = hitList.filter(t => {
+        if (currentFilter !== 'all') {
+          if (currentFilter === 'Drafted') {
+            if (t.status !== 'Drafted' && t.status !== 'Angle Drafted') return false;
+          } else if (t.status !== currentFilter) {
+            return false;
+          }
+        }
+        if (searchQuery) {
+          const comp = (t.companyName || '').toLowerCase();
+          const ind = (t.industry || '').toLowerCase();
+          const cname = (t.contact?.name || '').toLowerCase();
+          const ctitle = (t.contact?.title || '').toLowerCase();
+          const angle = (t.valueAngle || '').toLowerCase();
+          const msg = (t.draftMessage || '').toLowerCase();
+          return comp.includes(searchQuery) || ind.includes(searchQuery) || cname.includes(searchQuery) || ctitle.includes(searchQuery) || angle.includes(searchQuery) || msg.includes(searchQuery);
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🎯</div>
+            <div class="empty-title">${hitList.length === 0 ? 'Your Hit List is Empty' : 'No Matching Targets'}</div>
+            <div class="empty-desc">
+              ${hitList.length === 0 
+                ? 'Target companies and specific engineering leaders to build relationships, align your background to their tech stack, and craft bespoke outreach notes.' 
+                : 'Try adjusting your search keywords or filter status.'}
+            </div>
+            ${hitList.length === 0 ? '<button class="btn btn-primary" onclick="openAddModal()">➕ Add Your First Target Company</button>' : ''}
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(target => {
+        const c = target.contact || {};
+        const companyInitial = (target.companyName || 'C')[0].toUpperCase();
+        const contactInitials = getInitials(c.name || target.companyName);
+
+        const card = document.createElement('div');
+        card.className = 'contact-card';
+        card.id = `card-${target.id}`;
+
+        card.innerHTML = `
+          <!-- Card Top -->
+          <div class="card-top">
+            <div class="company-ident">
+              <div class="company-avatar">${companyInitial}</div>
+              <div class="company-names">
+                <div class="company-title">${escapeHtml(target.companyName)}</div>
+                <div class="company-sub">
+                  ${target.industry ? `<span>${escapeHtml(target.industry)}</span>` : ''}
+                  ${target.websiteUrl ? `<span>&bull;</span> <a href="#" onclick="openTab('${escapeAttr(target.websiteUrl)}'); return false;" style="color:var(--accent-blue); text-decoration:none;">🌐 Site</a>` : ''}
+                </div>
+              </div>
+            </div>
+            <div>
+              <select class="status-select" onchange="updateTargetStatus('${target.id}', this.value)">
+                <option value="Targeted" ${target.status === 'Targeted' ? 'selected' : ''}>Targeted</option>
+                <option value="Contact Identified" ${target.status === 'Contact Identified' ? 'selected' : ''}>Contact Identified</option>
+                <option value="Drafted" ${target.status === 'Drafted' || target.status === 'Angle Drafted' ? 'selected' : ''}>Drafted</option>
+                <option value="Contacted" ${target.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
+                <option value="In Conversation" ${target.status === 'In Conversation' ? 'selected' : ''}>In Conversation</option>
+                <option value="Archived" ${target.status === 'Archived' ? 'selected' : ''}>Archived</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Persona Box -->
+          <div class="persona-box">
+            <div class="persona-avatar">${contactInitials}</div>
+            <div class="persona-info">
+              <div class="persona-name">${c.name ? escapeHtml(c.name) : '<span style="color:#6e7681; font-weight:normal; font-style:italic;">No contact identified yet</span>'}</div>
+              <div class="persona-title">${c.title ? escapeHtml(c.title) : 'Target Role'}</div>
+              <div class="persona-links">
+                ${c.linkedinUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.linkedinUrl)}'); return false;">in LinkedIn</a>` : ''}
+                ${c.githubUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.githubUrl)}'); return false;">gh GitHub</a>` : ''}
+                ${c.twitterUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.twitterUrl)}'); return false;">𝕏 X</a>` : ''}
+                ${c.email ? `<a class="persona-link-btn" href="mailto:${escapeAttr(c.email)}">@ Email</a>` : ''}
+                ${!c.linkedinUrl && !c.githubUrl && !c.twitterUrl && !c.email ? '<span style="font-size:10.5px; color:#6e7681;">No links saved</span>' : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Combined Outreach Message & Value Alignment Box -->
+          ${(target.draftMessage || target.valueAngle) ? `
+            <div class="message-box">
+              <div class="message-header">
+                <span style="font-weight:600; color:#60a5fa; display:flex; align-items:center; gap:4px;">🎯 <span>Outreach Message & Value Alignment</span></span>
+                <button class="btn-copy-msg" onclick="copyMessage('${target.id}', this)" type="button">📋 Copy</button>
+              </div>
+              <div class="message-text" id="msgText-${target.id}" onclick="toggleMessageExpand('${target.id}')" title="Click to expand/collapse">${escapeHtml(target.draftMessage || target.valueAngle)}</div>
+            </div>
+          ` : `
+            <div class="angle-box" style="border-left-color:#484f58; background:rgba(255,255,255,0.03); color:#8b949e;">
+              <div class="angle-label" style="color:#8b949e;">🎯 Outreach Message</div>
+              <span style="font-style:italic;">No outreach message or alignment angle drafted yet. Click Edit to craft how your background provides value.</span>
+            </div>
+          `}
+
+          <!-- Footer -->
+          <div class="card-footer">
+            <span>${target.lastContacted ? `Contacted ${target.lastContacted}` : `Added ${target.dateAdded || 'recently'}`}</span>
+            <div class="card-actions">
+              <button class="btn btn-secondary btn-sm" onclick="openEditModal('${target.id}')" type="button">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteTarget('${target.id}')" type="button">🗑️</button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function persistData() {
+      sendIpc('SAVE_HIT_LIST', { hitList });
+    }
+
+    window.setHitListData = function(data) {
+      if (Array.isArray(data)) {
+        hitList = data;
+        renderCards();
+      }
+    };
+
+    // Load sample cards for immediate exploration
+    document.getElementById('btnLoadExamples').addEventListener('click', () => {
+      if (hitList.length > 0 && !confirm('Add sample cards alongside your existing targets?')) {
+        return;
+      }
+      const samples = [
+        {
+          id: `sample-1`,
+          companyName: 'Linear',
+          industry: 'Developer Tools / Issue Tracking',
+          websiteUrl: 'https://linear.app',
+          status: 'Drafted',
+          contact: {
+            name: 'Tuomas Artman',
+            title: 'Co-founder & CTO',
+            linkedinUrl: 'https://linkedin.com',
+            email: '',
+            githubUrl: 'https://github.com',
+            twitterUrl: 'https://x.com'
+          },
+          valueAngle: 'High-performance sync engine & desktop web architecture. My work with thick client WebView integration at Konami aligns with Linear\'s local-first sync and client performance goals.',
+          draftMessage: 'Hi Tuomas — huge admirer of Linear\'s local-first sync architecture and uncompromising client-side speed. At College Loan and Konami Gaming, I led similar performance initiatives—modernizing legacy thick clients with embedded Chromium and engineering monorepo pipelines that slashed reload times. Would love to share some insights on desktop runtime performance if you\'re ever open to a brief chat.',
+          notes: 'Researched via their blog post on synced SQLite state. Reached out on LinkedIn.',
+          dateAdded: new Date().toLocaleDateString(),
+          lastContacted: ''
+        },
+        {
+          id: `sample-2`,
+          companyName: 'Vercel',
+          industry: 'Cloud Infrastructure / Next.js',
+          websiteUrl: 'https://vercel.com',
+          status: 'Contact Identified',
+          contact: {
+            name: 'Lee Robinson',
+            title: 'VP of Product / Developer Experience',
+            linkedinUrl: 'https://linkedin.com',
+            email: '',
+            githubUrl: 'https://github.com',
+            twitterUrl: 'https://x.com'
+          },
+          valueAngle: 'Lighthouse accessibility audits & large-scale frontend monorepo architecture. Directly addresses enterprise enterprise performance optimization needs.',
+          draftMessage: 'Hi Lee — loved your breakdown of Next.js caching architecture. Having brought company-wide Lighthouse scores from C to A across high-traffic platforms and consolidated multiple apps into streamlined monorepos, I\'m deeply tuned into the dev-experience challenges enterprise teams face as they scale.',
+          notes: 'Connected on X, drafting InMail note.',
+          dateAdded: new Date().toLocaleDateString(),
+          lastContacted: ''
+        }
+      ];
+
+      hitList = [...samples, ...hitList];
+      persistData();
+      renderCards();
+    });
+
+    // Request data on load
+    sendIpc('LOAD_HIT_LIST');
+
+    // Apply primary accent color if saved
+    const savedColor = localStorage.getItem('tailorbird_primary_color');
+    if (savedColor) {
+      document.documentElement.style.setProperty('--accent-blue', savedColor);
+      document.documentElement.style.setProperty('--border-focus', savedColor);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

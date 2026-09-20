@@ -19,7 +19,7 @@ use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, Sea
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 
 const LEFT_PANE_WIDTH: f64 = 420.0;
-const TOOLBAR_HEIGHT: f64 = 74.0;
+const TOOLBAR_HEIGHT: f64 = 78.0;
 const DEFAULT_WINDOW_WIDTH: f64 = 1280.0;
 const DEFAULT_WINDOW_HEIGHT: f64 = 750.0;
 
@@ -27,6 +27,8 @@ const DEFAULT_WINDOW_HEIGHT: f64 = 750.0;
 const LEFT_PANE_HTML: &str = include_str!("assets/left_pane.html");
 const TOOLBAR_HTML: &str = include_str!("assets/toolbar.html");
 const MOCK_JOB_HTML: &str = include_str!("assets/mock_job_page.html");
+const HITLIST_HTML: &str = include_str!("assets/hitlist.html");
+const SETTINGS_HTML: &str = include_str!("assets/settings.html");
 
 const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
     try {
@@ -160,9 +162,26 @@ enum IpcMessage {
         split_width: Option<f64>,
         #[serde(default, rename = "drawerStates")]
         drawer_states: Option<std::collections::HashMap<String, bool>>,
+        #[serde(default, rename = "primaryColor")]
+        primary_color: Option<String>,
+    },
+    #[serde(rename = "SET_PRIMARY_COLOR")]
+    SetPrimaryColor {
+        color: String,
     },
     #[serde(rename = "LOAD_DATA")]
     LoadData,
+    #[serde(rename = "LOAD_HIT_LIST")]
+    LoadHitList,
+    #[serde(rename = "SAVE_HIT_LIST")]
+    SaveHitList {
+        #[serde(rename = "hitList")]
+        hit_list: Vec<crate::prospect::HitListTarget>,
+    },
+    #[serde(rename = "OPEN_NEW_TAB")]
+    OpenNewTab {
+        url: String,
+    },
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -250,6 +269,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tabs_for_left = tabs_holder.clone();
     let active_id_for_left = active_tab_id_holder.clone();
     let proxy_for_left = proxy.clone();
+    let toolbar_for_left_ipc = toolbar_wv_holder.clone();
+
+    let initial_primary_color = initial_app_data.primary_color.clone().unwrap_or_else(|| "#818CF8".to_string());
+    let tb_init_script = format!("window.__INITIAL_PRIMARY_COLOR__ = {};", serde_json::to_string(&initial_primary_color).unwrap_or_default());
 
     // Reusable layout coordinator to update all webview bounds seamlessly
     let layout_coordinator = Arc::new({
@@ -334,6 +357,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_ipc = proxy_for_left.clone();
             let coord = coordinator_for_ipc.clone();
             let left_w_holder = left_width_for_ipc.clone();
+            let toolbar_for_left = toolbar_for_left_ipc.clone();
 
             move |req| {
                 let body = req.body();
@@ -355,6 +379,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     Ok(IpcMessage::Navigate { url }) => {
                         let _ = proxy_ipc.send_event(AppEvent::NavigateActiveTab { url });
+                    }
+                    Ok(IpcMessage::OpenNewTab { url }) => {
+                        let _ = proxy_ipc.send_event(AppEvent::CreateTab {
+                            url,
+                            activate: true,
+                        });
                     }
                     Ok(IpcMessage::PickResumeFile) => {
                         if let Some(file) = rfd::FileDialog::new()
@@ -414,6 +444,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("[Tailorbird Host] SetLeftWidth received: {:.1}", width);
                         coord(Some(width));
                     }
+                    Ok(IpcMessage::SetPrimaryColor { color }) => {
+                        println!("[Tailorbird Host] SetPrimaryColor received: {}", color);
+                        let mut data = load_stored_data();
+                        data.primary_color = Some(color.clone());
+                        if let Err(e) = save_stored_data(&data) {
+                            eprintln!("[Tailorbird Host] Error saving primary color: {}", e);
+                        }
+                        if let Ok(guard) = toolbar_for_left.lock() {
+                            if let Some(ref tb) = *guard {
+                                let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
+                                let _ = tb.evaluate_script(&js);
+                            }
+                        }
+                    }
                     Ok(IpcMessage::SaveData {
                         candidate_profile,
                         resume_source,
@@ -423,8 +467,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         search_criteria,
                         split_width,
                         drawer_states,
+                        primary_color,
                     }) => {
                         let cur_w = split_width.unwrap_or_else(|| *left_w_holder.lock().unwrap());
+                        let existing = load_stored_data();
+                        let chosen_color = primary_color.or(existing.primary_color);
                         let data = AppData {
                             candidate_profile,
                             resume_source,
@@ -434,9 +481,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             search_criteria,
                             split_width: Some(cur_w),
                             drawer_states,
+                            hit_list: existing.hit_list,
+                            primary_color: chosen_color.clone(),
                         };
                         if let Err(e) = save_stored_data(&data) {
                             eprintln!("[Tailorbird Host] Error saving app data: {}", e);
+                        }
+                        if let Some(ref col) = chosen_color {
+                            if let Ok(guard) = toolbar_for_left.lock() {
+                                if let Some(ref tb) = *guard {
+                                    let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(col).unwrap_or_default());
+                                    let _ = tb.evaluate_script(&js);
+                                }
+                            }
                         }
 
                         // Push updated profile & special_fields to active tab context menu
@@ -481,6 +538,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             size: Size::Logical(LogicalSize::new(initial_right_width, TOOLBAR_HEIGHT)),
         })
         .with_devtools(true)
+        .with_initialization_script(&tb_init_script)
         .with_html(TOOLBAR_HTML)
         .with_ipc_handler({
             let proxy_tb = proxy.clone();
@@ -527,13 +585,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let initial_context_script = initial_context_script.clone();
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
+        let toolbar_holder_tab = toolbar_wv_holder.clone();
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
+            let is_hitlist = url == "local://hitlist";
+            let is_settings = url == "local://settings";
             let proxy_title = proxy.clone();
             let proxy_load = proxy.clone();
             let proxy_new_win = proxy.clone();
+            let proxy_ipc = proxy.clone();
             let left_h = left_holder.clone();
+            let toolbar_h = toolbar_holder_tab.clone();
 
             let builder = WebViewBuilder::new()
                 .with_environment(shared_env.clone())
@@ -576,22 +639,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .with_ipc_handler({
                     let left_h = left_h.clone();
+                    let proxy_ipc = proxy_ipc.clone();
                     move |req| {
                         let body = req.body();
-                        if let Ok(IpcMessage::RecordPageData { data }) = serde_json::from_str::<IpcMessage>(body) {
-                            println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
-                            if let Ok(guard) = left_h.lock() {
-                                if let Some(ref left_wv) = *guard {
-                                    let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
-                                    let _ = left_wv.evaluate_script(&js);
+                        match serde_json::from_str::<IpcMessage>(body) {
+                            Ok(IpcMessage::RecordPageData { data }) => {
+                                println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
+                                if let Ok(guard) = left_h.lock() {
+                                    if let Some(ref left_wv) = *guard {
+                                        let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
+                                        let _ = left_wv.evaluate_script(&js);
+                                    }
                                 }
                             }
+                            Ok(IpcMessage::SaveHitList { hit_list }) => {
+                                let mut data = load_stored_data();
+                                data.hit_list = hit_list;
+                                if let Err(e) = save_stored_data(&data) {
+                                    eprintln!("[Tailorbird Host] Error saving hit list: {}", e);
+                                } else {
+                                    println!("[Tailorbird Host] Successfully saved {} hit list targets.", data.hit_list.len());
+                                }
+                            }
+                            Ok(IpcMessage::OpenNewTab { url }) => {
+                                let _ = proxy_ipc.send_event(AppEvent::CreateTab {
+                                    url,
+                                    activate: true,
+                                });
+                            }
+                            Ok(IpcMessage::SetPrimaryColor { color }) => {
+                                println!("[Tailorbird Tab IPC] SetPrimaryColor: {}", color);
+                                let mut data = load_stored_data();
+                                data.primary_color = Some(color.clone());
+                                if let Err(e) = save_stored_data(&data) {
+                                    eprintln!("[Tailorbird Host] Error saving primary color: {}", e);
+                                }
+                                if let Ok(guard) = toolbar_h.lock() {
+                                    if let Some(ref tb) = *guard {
+                                        let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
+                                        let _ = tb.evaluate_script(&js);
+                                    }
+                                }
+                                if let Ok(guard) = left_h.lock() {
+                                    if let Some(ref left_wv) = *guard {
+                                        let js = format!("if (window.applyPrimaryColor) {{ window.applyPrimaryColor({}, false); }}", serde_json::to_string(&color).unwrap_or_default());
+                                        let _ = left_wv.evaluate_script(&js);
+                                    }
+                                }
+                            }
+                            _ => {}
                         }
                     }
                 });
 
             let webview = if is_mock {
                 builder.with_html(MOCK_JOB_HTML).build_as_child(win)?
+            } else if is_hitlist {
+                builder.with_html(HITLIST_HTML).build_as_child(win)?
+            } else if is_settings {
+                builder.with_html(SETTINGS_HTML).build_as_child(win)?
             } else {
                 builder.with_url(url).build_as_child(win)?
             };
@@ -603,6 +709,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "specialFields": stored.special_fields,
                 });
                 let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                let _ = webview.evaluate_script(&js);
+            } else if is_hitlist {
+                let stored = load_stored_data();
+                let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
+                let _ = webview.evaluate_script(&js);
+            } else if is_settings {
+                let stored = load_stored_data();
+                let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
                 let _ = webview.evaluate_script(&js);
             }
 
@@ -662,48 +778,76 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         size: Size::Logical(LogicalSize::new(right_width, target_height)),
                     };
 
-                    let new_id = {
-                        let mut nid = next_tab_id_holder.lock().unwrap();
-                        let id = *nid;
-                        *nid += 1;
-                        id
+                    // If requesting settings and already open, switch to existing tab
+                    let already_open_id = if formatted_url == "local://settings" {
+                        let tabs = tabs_holder.lock().unwrap();
+                        tabs.iter().find(|t| t.url == "local://settings").map(|t| t.id)
+                    } else {
+                        None
                     };
 
-                    println!("[Tailorbird Host] Creating tab #{} with URL: {}", new_id, formatted_url);
-
-                    match make_tab_webview(&window, new_id, &formatted_url, bounds, activate) {
-                        Ok(wv) => {
-                            let initial_title = if formatted_url == "local://mock" {
-                                "Tailorbird Mock Job Listing".to_string()
+                    if let Some(existing_id) = already_open_id {
+                        let mut tabs = tabs_holder.lock().unwrap();
+                        for t in tabs.iter_mut() {
+                            if t.id == existing_id {
+                                let _ = t.webview.set_bounds(bounds);
+                                let _ = t.webview.set_visible(true);
+                                let _ = t.webview.focus();
                             } else {
-                                "New Tab".to_string()
-                            };
-
-                            let new_tab = BrowserTab {
-                                id: new_id,
-                                title: initial_title,
-                                url: formatted_url.clone(),
-                                webview: wv,
-                            };
-
-                            let mut tabs = tabs_holder.lock().unwrap();
-                            tabs.push(new_tab);
-
-                            if activate {
-                                for t in tabs.iter_mut() {
-                                    if t.id != new_id {
-                                        let _ = t.webview.set_visible(false);
-                                    }
-                                }
-                                *active_tab_id_holder.lock().unwrap() = new_id;
-                                sync_url(&toolbar_wv_holder, &formatted_url);
+                                let _ = t.webview.set_visible(false);
                             }
-
-                            let cur_active = *active_tab_id_holder.lock().unwrap();
-                            sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
                         }
-                        Err(e) => {
-                            eprintln!("[Tailorbird Host] Error creating tab #{}: {:?}", new_id, e);
+                        *active_tab_id_holder.lock().unwrap() = existing_id;
+                        sync_url(&toolbar_wv_holder, "local://settings");
+                        sync_tabs(&toolbar_wv_holder, &tabs, existing_id);
+                    } else {
+                        let new_id = {
+                            let mut nid = next_tab_id_holder.lock().unwrap();
+                            let id = *nid;
+                            *nid += 1;
+                            id
+                        };
+
+                        println!("[Tailorbird Host] Creating tab #{} with URL: {}", new_id, formatted_url);
+
+                        match make_tab_webview(&window, new_id, &formatted_url, bounds, activate) {
+                            Ok(wv) => {
+                                let initial_title = if formatted_url == "local://mock" {
+                                    "Tailorbird Mock Job Listing".to_string()
+                                } else if formatted_url == "local://hitlist" {
+                                    "🎯 Hit List".to_string()
+                                } else if formatted_url == "local://settings" {
+                                    "⚙️ Settings".to_string()
+                                } else {
+                                    "New Tab".to_string()
+                                };
+
+                                let new_tab = BrowserTab {
+                                    id: new_id,
+                                    title: initial_title,
+                                    url: formatted_url.clone(),
+                                    webview: wv,
+                                };
+
+                                let mut tabs = tabs_holder.lock().unwrap();
+                                tabs.push(new_tab);
+
+                                if activate {
+                                    for t in tabs.iter_mut() {
+                                        if t.id != new_id {
+                                            let _ = t.webview.set_visible(false);
+                                        }
+                                    }
+                                    *active_tab_id_holder.lock().unwrap() = new_id;
+                                    sync_url(&toolbar_wv_holder, &formatted_url);
+                                }
+
+                                let cur_active = *active_tab_id_holder.lock().unwrap();
+                                sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                            }
+                            Err(e) => {
+                                eprintln!("[Tailorbird Host] Error creating tab #{}: {:?}", new_id, e);
+                            }
                         }
                     }
                 }
@@ -824,6 +968,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             });
                             let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
                             let _ = tab.webview.evaluate_script(&js);
+                        } else if formatted == "local://hitlist" {
+                            let _ = tab.webview.load_html(HITLIST_HTML);
+                            tab.url = "local://hitlist".to_string();
+                            tab.title = "🎯 Hit List".to_string();
+                            let stored = load_stored_data();
+                            let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                            let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
+                            let _ = tab.webview.evaluate_script(&js);
+                        } else if formatted == "local://settings" {
+                            let _ = tab.webview.load_html(SETTINGS_HTML);
+                            tab.url = "local://settings".to_string();
+                            tab.title = "⚙️ Settings".to_string();
+                            let stored = load_stored_data();
+                            let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                            let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                            let _ = tab.webview.evaluate_script(&js);
                         } else {
                             let _ = tab.webview.load_url(&formatted);
                             tab.url = formatted.clone();
@@ -892,6 +1052,12 @@ fn format_input_to_url(input: &str) -> String {
     let trimmed = input.trim();
     if trimmed.is_empty() || trimmed == "local://mock" {
         return "local://mock".to_string();
+    }
+    if trimmed == "local://hitlist" || trimmed.eq_ignore_ascii_case("hitlist") {
+        return "local://hitlist".to_string();
+    }
+    if trimmed == "local://settings" || trimmed.eq_ignore_ascii_case("settings") {
+        return "local://settings".to_string();
     }
 
     // Explicit protocol schemes

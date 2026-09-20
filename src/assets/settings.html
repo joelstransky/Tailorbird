@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚙️ Tailorbird Settings</title>
+  <style>
+    :root {
+      --bg: #0B0D13;
+      --card-bg: #11141C;
+      --card-inner: #161A24;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.18);
+      --text: #E2E8F0;
+      --text-bright: #FFFFFF;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --accent: #818CF8;
+      --accent-surface: rgba(129, 140, 248, 0.12);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 40px 24px;
+      min-height: 100vh;
+      overflow-y: auto;
+      user-select: none;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Header */
+    .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-header-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .settings-header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -0.02em;
+    }
+
+    .settings-header-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Section Card */
+    .settings-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    /* 10-Color Swatch Grid */
+    .colors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .color-card {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .color-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .color-card.active {
+      border-color: var(--card-accent, #818CF8);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 0 1px var(--card-accent, #818CF8), 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .swatch-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s ease;
+    }
+
+    .color-card:hover .swatch-circle {
+      transform: scale(1.08);
+    }
+
+    .swatch-check {
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 700;
+      opacity: 0;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      transition: opacity 0.15s ease;
+    }
+
+    .color-card.active .swatch-check {
+      opacity: 1;
+    }
+
+    .color-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-bright);
+      text-align: center;
+    }
+
+    .color-hex {
+      font-size: 10.5px;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* Live Interactive Preview Box */
+    .preview-box {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preview-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .preview-status {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .preview-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn-preview-primary {
+      background: var(--accent);
+      color: #0B0D13;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 5px;
+      cursor: default;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-preview-secondary {
+      background: #1E2433;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 5px;
+      cursor: default;
+    }
+
+    .preview-input {
+      background: #181B26;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-surface);
+      color: var(--text-bright);
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      outline: none;
+      width: 170px;
+    }
+
+    .preview-tag {
+      background: var(--accent-surface);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Page Header -->
+    <div class="settings-header">
+      <div class="settings-header-icon">⚙️</div>
+      <div>
+        <h1 class="settings-header-title">Settings</h1>
+        <p class="settings-header-desc">Customize Tailorbird appearance and workspace preferences.</p>
+      </div>
+    </div>
+
+    <!-- Appearance Section -->
+    <div class="settings-card">
+      <div class="card-title-row">
+        <div>
+          <h2 class="card-title">Accent Color</h2>
+          <p class="card-desc">Choose a primary accent color for active tools, buttons, focus rings, and application highlights.</p>
+        </div>
+      </div>
+
+      <!-- 10 High-Contrast Colors Grid -->
+      <div class="colors-grid" id="colorsGrid"></div>
+
+      <!-- Live Interactive Component Preview -->
+      <div class="preview-box">
+        <div class="preview-header">
+          <span class="preview-label">Live Theme Preview</span>
+          <span class="preview-status" id="previewStatus">Active: Indigo (#818CF8)</span>
+        </div>
+        <div class="preview-row">
+          <button class="btn-preview-primary" id="btnPreviewPrimary" type="button">Primary Button</button>
+          <button class="btn-preview-secondary" type="button">Secondary</button>
+          <input class="preview-input" id="previewInput" type="text" value="Focused Input Field" readonly>
+          <span class="preview-tag" id="previewTag">Active Status</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const COLORS = [
+      { name: 'Indigo', hex: '#818CF8' },
+      { name: 'Royal Blue', hex: '#3B82F6' },
+      { name: 'Sky Cyan', hex: '#0EA5E9' },
+      { name: 'Teal', hex: '#14B8A6' },
+      { name: 'Emerald', hex: '#10B981' },
+      { name: 'Amber Gold', hex: '#F59E0B' },
+      { name: 'Coral Tangerine', hex: '#F97316' },
+      { name: 'Rose Crimson', hex: '#F43F5E' },
+      { name: 'Violet Purple', hex: '#A855F7' },
+      { name: 'Fuchsia Pink', hex: '#EC4899' }
+    ];
+
+    let currentAccent = localStorage.getItem('tailorbird_primary_color') || '#818CF8';
+
+    function sendIpc(action, payload = {}) {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(JSON.stringify({ action, ...payload }));
+        return true;
+      }
+      return false;
+    }
+
+    function renderColorCards() {
+      const grid = document.getElementById('colorsGrid');
+      grid.innerHTML = '';
+
+      COLORS.forEach(c => {
+        const card = document.createElement('div');
+        const isActive = c.hex.toLowerCase() === currentAccent.toLowerCase();
+        card.className = 'color-card' + (isActive ? ' active' : '');
+        card.style.setProperty('--card-accent', c.hex);
+        card.onclick = () => selectColor(c.hex, c.name);
+
+        card.innerHTML = `
+          <div class="swatch-circle" style="background-color: ${c.hex}">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">${c.name}</span>
+          <span class="color-hex">${c.hex}</span>
+        `;
+
+        grid.appendChild(card);
+      });
+
+      updatePreview(currentAccent);
+    }
+
+    function selectColor(hex, name) {
+      currentAccent = hex;
+      localStorage.setItem('tailorbird_primary_color', hex);
+
+      // 1. Update document styling
+      document.documentElement.style.setProperty('--accent', hex);
+      document.documentElement.style.setProperty('--accent-surface', hex + '1F');
+
+      // 2. Broadcast to Rust host via IPC
+      sendIpc('SET_PRIMARY_COLOR', { color: hex });
+
+      // 3. Re-render cards active state
+      renderColorCards();
+
+      const found = COLORS.find(c => c.hex.toLowerCase() === hex.toLowerCase());
+      const label = found ? found.name : 'Custom';
+      document.getElementById('previewStatus').textContent = `Active: ${label} (${hex})`;
+    }
+
+    function updatePreview(hex) {
+      document.documentElement.style.setProperty('--accent', hex);
+      document.documentElement.style.setProperty('--accent-surface', hex + '1F');
+      const found = COLORS.find(c => c.hex.toLowerCase() === hex.toLowerCase());
+      const label = found ? found.name : 'Custom';
+      document.getElementById('previewStatus').textContent = `Active: ${label} (${hex})`;
+    }
+
+    // Called by host when tab is loaded or switched to
+    window.setInitialAccentColor = function(hex) {
+      if (hex) {
+        currentAccent = hex;
+        localStorage.setItem('tailorbird_primary_color', hex);
+        renderColorCards();
+      }
+    };
+
+    // Initial render
+    renderColorCards();
+  </script>
+</body>
+</html>

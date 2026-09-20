@@ -4,3 +4,5 @@
 tailorbird_data.json
 *.local.json
 *.csv
+clipboard*
+image.png

@@ -48,6 +48,50 @@ pub struct SpecialField {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
+pub struct HitListContact {
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub title: String,
+    #[serde(default)]
+    pub linkedin_url: String,
+    #[serde(default)]
+    pub email: String,
+    #[serde(default)]
+    pub twitter_url: String,
+    #[serde(default)]
+    pub github_url: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct HitListTarget {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub company_name: String,
+    #[serde(default)]
+    pub website_url: String,
+    #[serde(default)]
+    pub industry: String,
+    #[serde(default)]
+    pub status: String,
+    #[serde(default)]
+    pub contact: HitListContact,
+    #[serde(default)]
+    pub value_angle: String,
+    #[serde(default)]
+    pub draft_message: String,
+    #[serde(default)]
+    pub notes: String,
+    #[serde(default)]
+    pub date_added: String,
+    #[serde(default)]
+    pub last_contacted: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct AppData {
     #[serde(default)]
     pub candidate_profile: Option<CandidateProfile>,
@@ -65,6 +109,10 @@ pub struct AppData {
     pub split_width: Option<f64>,
     #[serde(default)]
     pub drawer_states: Option<std::collections::HashMap<String, bool>>,
+    #[serde(default)]
+    pub hit_list: Vec<HitListTarget>,
+    #[serde(default)]
+    pub primary_color: Option<String>,
 }
 
 fn storage_file_path() -> PathBuf {

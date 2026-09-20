@@ -6,25 +6,47 @@
   <title>Tailorbird Control Panel</title>
   <style>
     :root {
-      --ps-bg: #282828;
-      --ps-panel-bg: #323232;
-      --ps-header-bg: #2b2b2b;
-      --ps-header-hover: #383838;
-      --ps-input-bg: #1c1c1c;
-      --ps-input-border: #444444;
-      --ps-input-focus: #2680eb;
-      --ps-border: #1d1d1d;
-      --ps-border-light: #444444;
-      --ps-text: #cccccc;
-      --ps-text-bright: #ffffff;
-      --ps-text-muted: #888888;
-      --ps-btn-bg: #3c3c3c;
-      --ps-btn-border: #4f4f4f;
-      --ps-btn-hover: #484848;
-      --ps-accent-blue: #0066d6;
-      --ps-accent-green: #238636;
-      --ps-accent-green-hover: #2ea043;
-      --ps-danger: #c53030;
+      --app-rail-bg: #0B0D13;
+      --app-sidebar-bg: #11141C;
+      --app-header-bg: #0E1118;
+      --app-panel-bg: #11141C;
+      --app-card-bg: #151923;
+      --app-card-border: rgba(255, 255, 255, 0.07);
+      --app-input-bg: #181B26;
+      --app-input-border: rgba(255, 255, 255, 0.08);
+      --app-border: #1D2235;
+      --app-border-subtle: rgba(255, 255, 255, 0.05);
+      --app-text: #E2E8F0;
+      --app-text-bright: #FFFFFF;
+      --app-text-muted: #94A3B8;
+      --app-text-dim: #64748B;
+      
+      --accent: #818CF8;
+      --accent-hover: #6366F1;
+      --accent-active: #4F46E5;
+      --accent-glow: rgba(129, 140, 248, 0.25);
+      --accent-surface: rgba(129, 140, 248, 0.12);
+
+      /* Legacy compatibility mappings */
+      --ps-bg: var(--app-sidebar-bg);
+      --ps-panel-bg: var(--app-panel-bg);
+      --ps-header-bg: var(--app-header-bg);
+      --ps-header-hover: #161A26;
+      --ps-input-bg: var(--app-input-bg);
+      --ps-input-border: var(--app-input-border);
+      --ps-input-focus: var(--accent);
+      --ps-border: var(--app-border-subtle);
+      --ps-border-light: rgba(255, 255, 255, 0.08);
+      --ps-text: var(--app-text);
+      --ps-text-bright: var(--app-text-bright);
+      --ps-text-muted: var(--app-text-muted);
+      --ps-btn-bg: #1E2433;
+      --ps-btn-border: rgba(255, 255, 255, 0.08);
+      --ps-btn-hover: #262E40;
+      --ps-accent-blue: var(--accent);
+      --ps-accent-green: #10B981;
+      --ps-accent-green-hover: #059669;
+      --ps-danger: #EF4444;
       --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
     }
@@ -32,58 +54,261 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--ps-bg);
-      color: var(--ps-text);
+      background-color: var(--app-sidebar-bg);
+      color: var(--app-text);
       font-family: var(--font-ui);
       font-size: 11px;
       line-height: 1.35;
       height: 100vh;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       overflow: hidden;
       user-select: none;
     }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #202020; }
-    ::-webkit-scrollbar-thumb { background: #444444; border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
-    /* Top Photoshop Dock Title Bar */
-    .app-title-bar {
-      height: 32px;
-      background: #202020;
-      border-bottom: 1px solid var(--ps-border);
+    /* Vertical Activity Bar Rail (Far Left) */
+    .activity-bar {
+      width: 48px;
+      min-width: 48px;
+      height: 100vh;
+      background: var(--app-rail-bg);
+      border-right: 1px solid var(--app-border-subtle);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 12px 0;
+      flex-shrink: 0;
+      user-select: none;
+      z-index: 100;
+    }
+
+    .activity-top, .activity-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .activity-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: #64748B;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .activity-btn:hover {
+      color: #E2E8F0;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Tactile Depressed Active Tool Button (Sunken Well with Dual Inner Shadows, No Left Stroke) */
+    .activity-btn.active {
+      background: #07080E;
+      color: var(--accent);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85), inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .activity-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Sidebar Content Wrapper */
+    .sidebar-wrapper {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      background: var(--app-sidebar-bg);
+      position: relative;
+    }
+
+    /* Top Command Bar (Modern Productivity Studio CXnRH) */
+    .command-bar {
+      height: 38px;
+      background: #0B0D13;
+      border-bottom: 1px solid var(--app-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 10px;
+      padding: 0 12px;
+      flex-shrink: 0;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .cmd-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex-shrink: 0;
     }
 
-    .app-brand {
+    .traffic-dots {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #e6e6e6;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
     }
 
-    .app-brand-icon {
+    .traffic-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .traffic-close { background: #FF5F56; }
+    .traffic-min { background: #FFBD2E; }
+    .traffic-max { background: #27C93F; }
+
+    .cmd-brand-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #161924;
+      border: 1px solid #22273D;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #F8FAFC;
+      letter-spacing: 0.2px;
+    }
+
+    .cmd-brand-icon {
       font-size: 13px;
     }
 
-    .app-badge {
-      font-size: 9px;
+    .cmd-center {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .cmd-workspace-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #161924;
+      border: 1px solid #22273D;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: #94A3B8;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .cmd-pill-icon {
+      width: 13px;
+      height: 13px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    #workspaceProfileName {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cmd-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .cmd-btn-shortcut {
+      background: #1E2433;
+      border: 1px solid #334155;
+      border-radius: 5px;
+      color: #F1F5F9;
+      font-size: 10px;
       font-weight: 600;
-      padding: 1px 5px;
-      border-radius: 3px;
-      background: #333333;
-      color: #999999;
-      border: 1px solid #444444;
+      padding: 3px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .cmd-btn-shortcut:hover {
+      background: #283147;
+      border-color: #475569;
+      color: #FFFFFF;
+    }
+
+    /* Candidate Profile Summary Card (JqGOI) */
+    .candidate-summary-card {
+      background: #141724;
+      border: 1px solid var(--app-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .candidate-avatar {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+    }
+
+    .candidate-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .candidate-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #F8FAFC;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .candidate-sub {
+      font-size: 10px;
+      color: #94A3B8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* Panels Container: Flex column with parent scrollbar */
@@ -116,39 +341,47 @@
     }
 
     /* Panel Header Strip (Photoshop tab header style) - sticky to top when scrolling */
+    /* Panel Header Strip (Linear / Arc Studio Style) */
     .panel-drawer-header {
-      height: 28px;
-      background: var(--ps-header-bg);
-      border-bottom: 1px solid #202020;
+      height: 32px;
+      background: #11141C;
+      border-bottom: 1px solid var(--app-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 10px;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.1s ease;
+      transition: background 0.15s ease;
       position: sticky;
       top: 0;
       z-index: 20;
     }
 
     .panel-drawer-header:hover {
-      background: var(--ps-header-hover);
+      background: #161925;
     }
 
     .panel-title {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 11px;
       font-weight: 600;
-      color: #e0e0e0;
-      letter-spacing: 0.3px;
+      color: #F8FAFC;
+      letter-spacing: 0.2px;
+    }
+
+    .panel-title-icon {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+      flex-shrink: 0;
     }
 
     .panel-chevron {
       font-size: 9px;
-      color: #777777;
+      color: #64748B;
       display: inline-block;
       width: 10px;
       transition: transform 0.15s ease;
@@ -161,7 +394,42 @@
     .panel-header-actions {
       display: flex;
       align-items: center;
+      gap: 5px;
+    }
+
+    .header-action-btn {
+      background: #252B42;
+      border: 1px solid #334155;
+      color: #E2E8F0;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .header-action-btn:hover {
+      background: #2E3754;
+      border-color: #475569;
+      color: #FFFFFF;
+    }
+
+    .header-action-primary {
+      background: #4F46E5 !important;
+      border: none !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 1px 4px rgba(79, 70, 229, 0.4);
+    }
+
+    .header-action-primary:hover {
+      background: #4338CA !important;
     }
 
     /* Panel Content Area (fills available height or grows with content) */
@@ -202,7 +470,7 @@
       cursor: col-resize;
       z-index: 99999;
       background: transparent;
-      border-right: 1px solid #1c1c1c;
+      border-right: 1px solid var(--app-border-subtle);
       transition: background-color 0.15s ease;
       display: flex;
       align-items: center;
@@ -273,21 +541,22 @@
     }
 
     input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea {
-      background: var(--ps-input-bg);
-      border: 1px solid var(--ps-input-border);
-      color: var(--ps-text-bright);
-      padding: 4px 6px;
-      border-radius: 2px;
+      background: var(--app-input-bg);
+      border: 1px solid var(--app-input-border);
+      color: var(--app-text);
+      padding: 5px 8px;
+      border-radius: 5px;
       font-size: 11px;
       font-family: inherit;
       width: 100%;
       outline: none;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     input:focus, select:focus, textarea:focus {
-      border-color: var(--ps-input-focus);
-      background: #141414;
+      border-color: var(--accent);
+      background: #141724;
+      box-shadow: 0 0 0 1px var(--accent-glow);
     }
 
     /* Photoshop Action Buttons */
@@ -407,9 +676,9 @@
     }
 
     .history-card {
-      background: #202020;
-      border: 1px solid #383838;
-      border-radius: 3px;
+      background: var(--app-card-bg);
+      border: 1px solid var(--app-card-border);
+      border-radius: 6px;
       padding: 8px;
       display: flex;
       flex-direction: column;
@@ -423,42 +692,42 @@
       gap: 4px;
     }
 
-    /* Work History & Special Fields Tabs */
+    /* Work History & Special Fields Tabs (Linear / Arc Chip Design) */
     .wh-tabs-container {
       display: flex;
-      background: #181818;
-      border: 1px solid #333333;
-      border-radius: 3px;
+      background: #141724;
+      border: 1px solid var(--app-border);
+      border-radius: 6px;
       padding: 2px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       gap: 2px;
       flex-shrink: 0;
+      height: 28px;
+      box-sizing: border-box;
     }
 
     .wh-tab-btn {
       flex: 1;
-      padding: 4px 6px;
+      padding: 3px 6px;
       font-size: 10px;
       font-weight: 600;
-      color: var(--ps-text-muted);
+      color: #64748B;
       background: transparent;
       border: none;
-      border-radius: 2px;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
+      letter-spacing: 0.02em;
     }
 
     .wh-tab-btn:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.05);
+      color: #E2E8F0;
     }
 
     .wh-tab-btn.active {
-      background: #333333;
-      color: #ffffff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      background: #252B42;
+      color: #C7D2FE;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     .wh-tab-view {
@@ -478,9 +747,9 @@
     }
 
     .special-field-card {
-      background: #202020;
-      border: 1px solid #383838;
-      border-radius: 3px;
+      background: var(--app-card-bg);
+      border: 1px solid var(--app-card-border);
+      border-radius: 6px;
       padding: 8px;
       display: flex;
       flex-direction: column;
@@ -543,14 +812,15 @@
     }
 
     /* Prospect Spreadsheet (Photoshop Layers Panel Feel) */
+    /* Prospect Spreadsheet (Photoshop Layers Panel Feel / Linear Style) */
     .layers-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #222222;
-      border: 1px solid #383838;
+      background: #141724;
+      border: 1px solid var(--app-border);
       padding: 4px 6px;
-      border-radius: 3px;
+      border-radius: 6px;
       margin-bottom: 6px;
       gap: 6px;
       flex-shrink: 0;
@@ -559,43 +829,45 @@
     .layers-table-wrap {
       width: 100%;
       overflow-x: auto;
-      background: #1c1c1c;
-      border: 1px solid #333333;
-      border-radius: 2px;
+      background: #131622;
+      border: 1px solid var(--app-border);
+      border-radius: 6px;
     }
 
     .layers-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10.5px;
+      font-size: 11px;
       white-space: nowrap;
     }
 
     .layers-table th {
-      background: #252525;
-      color: #888888;
+      background: #181C2B;
+      color: #94A3B8;
       font-weight: 600;
       text-align: left;
-      padding: 4px 8px;
-      border-bottom: 1px solid #333333;
+      height: 30px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--app-border);
       position: sticky;
       top: 0;
       z-index: 10;
     }
 
     .layers-table td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #282828;
-      color: #bbbbbb;
+      padding: 0 10px;
+      height: 38px;
+      vertical-align: middle;
+      border-bottom: 1px solid #161A28;
+      color: var(--app-text);
     }
 
     .layers-table tr:hover td {
-      background: #2a2a2a;
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .prospect-link {
-      color: #4da3ff;
+      color: var(--accent);
       cursor: pointer;
       text-decoration: none;
       max-width: 140px;
@@ -610,30 +882,31 @@
     }
 
     .prospect-status-select {
-      background: #141414;
-      color: #fff;
-      border: 1px solid #383838;
-      font-size: 9.5px;
-      padding: 1px 4px;
-      border-radius: 2px;
+      background: #1C2030;
+      color: var(--app-text);
+      border: 1px solid #262D45;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
       min-width: 98px;
       width: 98px;
-      height: 20px;
+      height: 24px;
       cursor: pointer;
-    }
-
-    .prospect-status-select:focus {
-      border-color: var(--ps-accent-blue);
       outline: none;
     }
 
+    .prospect-status-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
     .ps-table-input {
-      background: #141414;
-      border: 1px solid #4a4a4a;
+      background: var(--app-input-bg);
+      border: 1px solid var(--app-input-border);
       color: #ffffff;
-      font-size: 10px;
-      padding: 2px 5px;
-      border-radius: 2px;
+      font-size: 10.5px;
+      padding: 3px 6px;
+      border-radius: 4px;
       width: 100%;
       min-width: 80px;
       box-sizing: border-box;
@@ -641,32 +914,34 @@
     }
 
     .ps-table-input:focus {
-      border-color: var(--ps-accent-blue);
+      border-color: var(--accent);
       outline: none;
-      box-shadow: 0 0 0 1px var(--ps-accent-blue);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
     .prospect-row-editing td {
-      background: #252830 !important;
+      background: rgba(129, 140, 248, 0.08) !important;
     }
 
     .layers-footer-bar {
       height: 26px;
-      background: #222222;
-      border-top: 1px solid #333333;
+      background: #131726;
+      border-top: 1px solid var(--app-border);
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding: 0 6px;
+      padding: 0 8px;
       gap: 4px;
       flex-shrink: 0;
+      border-radius: 0 0 6px 6px;
     }
 
-    /* Modal Dialog */
+    /* Modal Dialog Overlay */
     .ps-modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(2px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -675,43 +950,211 @@
     }
 
     .ps-modal-box {
-      background: #2c2c2c;
-      border: 1px solid #484848;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-      border-radius: 4px;
-      padding: 14px 16px;
-      max-width: 340px;
+      background: #151923;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      border-radius: 8px;
+      padding: 16px 20px;
+      max-width: 360px;
       width: 100%;
+    }
+
+    /* Bottom Autofill Dock (Iquwm) */
+    .autofill-bottom-dock {
+      height: 52px;
+      background: #11141C;
+      border-top: 1px solid var(--app-border);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    .autofill-bottom-btn {
+      width: 100%;
+      height: 36px;
+      background: #4F46E5;
+      border: none;
+      border-radius: 6px;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+      transition: all 0.15s ease;
+    }
+
+    .autofill-bottom-btn:hover {
+      background: #4338CA;
+      box-shadow: 0 3px 8px rgba(79, 70, 229, 0.5);
+    }
+
+    .autofill-bottom-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Pro Status Bar (F1CNCF) */
+    .app-status-bar {
+      height: 24px;
+      background: #07080D;
+      border-top: 1px solid var(--app-border);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-indicator-text {
+      font-size: 10px;
+      color: #94A3B8;
+    }
+
+    .status-right {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: #38BDF8;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top App Title Bar -->
-  <div class="app-title-bar">
-    <div class="app-brand">
-      <span class="app-brand-icon">🐦</span>
-      <span>Tailorbird</span>
+  <!-- Vertical Activity Bar on Far Left -->
+  <nav class="activity-bar" id="activityBar">
+    <div class="activity-top">
+      <button class="activity-btn" id="actProfile" title="Candidate Profile" type="button" onclick="handleActivityClick('profile')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+      <button class="activity-btn" id="actResume" title="Resume & Work History" type="button" onclick="handleActivityClick('resume')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </button>
+      <button class="activity-btn" id="actFinder" title="Job Finder" type="button" onclick="handleActivityClick('finder')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <button class="activity-btn" id="actProspects" title="Prospects Pipeline" type="button" onclick="handleActivityClick('prospects')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="3" y1="15" x2="21" y2="15"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+      <button class="activity-btn" id="actHitList" title="Target Hit List" type="button" onclick="handleActivityClick('hitlist')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+        </svg>
+      </button>
     </div>
-    <span class="app-badge">Control Panel</span>
-  </div>
+    <div class="activity-bottom">
+      <button class="activity-btn" id="actSettings" title="Settings (Accent Color)" type="button" onclick="handleActivityClick('settings')">
+        <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sidebar Column containing Titlebar and Dock Panels -->
+  <div class="sidebar-wrapper">
+
+    <!-- Top Command Bar (Modern Productivity Studio CXnRH) -->
+    <div class="command-bar">
+      <div class="cmd-left">
+        <div class="traffic-dots">
+          <span class="traffic-dot traffic-close"></span>
+          <span class="traffic-dot traffic-min"></span>
+          <span class="traffic-dot traffic-max"></span>
+        </div>
+        <div class="cmd-brand-pill">
+          <span class="cmd-brand-icon">🐦</span>
+          <span>Tailorbird</span>
+        </div>
+      </div>
+      <div class="cmd-center">
+        <div class="cmd-workspace-pill">
+          <svg class="cmd-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          <span id="workspaceProfileName">Alex Rivera — Staff / Senior Systems Profile</span>
+        </div>
+      </div>
+      <div class="cmd-right">
+        <button class="cmd-btn-shortcut" id="btnOpenHitListTop" type="button" title="Open Target Hit List">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="6"/>
+            <circle cx="12" cy="12" r="2"/>
+          </svg>
+          <span>Hit List</span>
+        </button>
+      </div>
+    </div>
 
   <!-- Dock Container -->
   <div class="dock-container">
 
     <!-- Drawer 1: Candidate Profile -->
-    <div class="panel-drawer open" id="drawerProfile">
+    <div class="panel-drawer" id="drawerProfile">
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerProfile')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
+          <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
           <span>Properties (Candidate Profile)</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="ps-btn ps-btn-primary ps-btn-sm" id="btnAutofill" title="Autofill Application Form">⚡ Autofill</button>
+          <button class="header-action-btn header-action-primary" id="btnAutofill" title="Autofill Application Form">⚡ Autofill</button>
         </div>
       </div>
 
       <div class="panel-content">
+        <!-- Candidate Summary Card (JqGOI) -->
+        <div class="candidate-summary-card">
+          <div class="candidate-avatar" id="summaryAvatarInitials">AR</div>
+          <div class="candidate-info">
+            <div class="candidate-name" id="summaryCandidateName">Alex Rivera</div>
+            <div class="candidate-sub" id="summaryCandidateSub">Staff / Senior Systems Profile • Las Vegas, NV</div>
+          </div>
+        </div>
         <!-- Profile Tab Bar -->
         <div class="wh-tabs-container">
           <button class="wh-tab-btn active" id="tabBtnProfileGeneral" type="button" onclick="switchProfileTab('general')">General</button>
@@ -888,11 +1331,15 @@
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerResume')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
+          <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
           <span id="drawerWorkTitle">Work History</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="ps-btn ps-btn-sm" id="btnAddPosition" title="Add Position">+ Position</button>
-          <button class="ps-btn ps-btn-sm" id="btnAddSpecialField" style="display: none;" title="Add Special Field">+ Field</button>
+          <button class="header-action-btn" id="btnAddPosition" title="Add Position">+ Position</button>
+          <button class="header-action-btn" id="btnAddSpecialField" style="display: none;" title="Add Special Field">+ Field</button>
         </div>
       </div>
 
@@ -909,7 +1356,7 @@
           <div style="display:flex; gap:4px; margin-bottom:4px; flex-shrink: 0;">
             <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL..." style="flex:1;">
             <button class="ps-btn ps-btn-sm" id="btnBrowseResume" title="Browse local file">Browse</button>
-            <button class="ps-btn ps-btn-blue ps-btn-sm" id="btnImportResume" title="Import & scan resume">Scan</button>
+            <button class="header-action-btn header-action-primary" id="btnImportResume" title="Import & scan resume">Scan</button>
           </div>
 
           <!-- Scan Feature Callout (advertises scan feature when work history is empty) -->
@@ -943,10 +1390,14 @@
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerFinder')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
+          <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
           <span>Job Finder</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="ps-btn ps-btn-blue ps-btn-sm" id="btnRunSearch">🔍 Search</button>
+          <button class="header-action-btn header-action-primary" id="btnRunSearch">🔍 Search</button>
         </div>
       </div>
 
@@ -966,7 +1417,7 @@
         </div>
 
         <div class="ps-subgroup-title">Target Platforms</div>
-        <div style="display: flex; flex-direction: column; gap: 4px; background: #202020; border: 1px solid #383838; padding: 6px; border-radius: 2px;">
+        <div style="display: flex; flex-direction: column; gap: 6px; background: var(--app-card-bg); border: 1px solid var(--app-card-border); padding: 8px 10px; border-radius: 6px;">
           <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:#ccc;">
             <input type="checkbox" id="chkGreenhouse" checked style="width:auto;"> Greenhouse (boards.greenhouse.io)
           </label>
@@ -988,10 +1439,16 @@
       <div class="panel-drawer-header" onclick="toggleDrawer('drawerProspects')">
         <span class="panel-title">
           <span class="panel-chevron">▶</span>
-          <span>Prospects <span id="prospectCount" style="color: #888; font-weight: normal;">(0)</span></span>
+          <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="3" y1="15" x2="21" y2="15"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+          <span>Prospects <span id="prospectCount" style="color: var(--app-text-muted); font-weight: normal;">(0)</span></span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="ps-btn ps-btn-primary ps-btn-sm" id="btnRecordPage" title="Record current listing into sheet">➕ Record</button>
+          <button class="header-action-btn header-action-primary" id="btnRecordPage" title="Record current listing into sheet">➕ Record</button>
         </div>
       </div>
 
@@ -1024,6 +1481,25 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Bottom Autofill Dock (Iquwm) -->
+  <div class="autofill-bottom-dock">
+    <button id="btnAutofillBottom" class="autofill-bottom-btn" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <span>Run ATS Autofill Engine</span>
+    </button>
+  </div>
+
+  <!-- Pro Status Bar (F1CNCF) -->
+  <div class="app-status-bar">
+    <div class="status-left">
+      <span class="status-indicator-dot"></span>
+      <span class="status-indicator-text">Autofill Engine: Online</span>
+    </div>
+    <div class="status-right">Rust Tao/Wry</div>
   </div>
 
   <!-- Photoshop-style Modal Confirmation Dialog (Import Overwrite) -->
@@ -1060,6 +1536,7 @@
       </div>
     </div>
   </div>
+  </div><!-- end sidebar-wrapper -->
 
   <!-- Drag Overlay and Resizable Middle Divider between Control Panel and Browser -->
   <div id="resizerOverlay" class="resizer-overlay"></div>
@@ -1104,51 +1581,48 @@
 
     // --- Drawer States & Toggling ---
     const DRAWER_IDS = ['drawerProfile', 'drawerResume', 'drawerFinder', 'drawerProspects'];
+    const DRAWER_TOOL_MAP = {
+      'drawerProfile': 'actProfile',
+      'drawerResume': 'actResume',
+      'drawerFinder': 'actFinder',
+      'drawerProspects': 'actProspects'
+    };
 
-    function getDrawerStates() {
-      const states = {};
+    function syncActivityBarButtons() {
+      DRAWER_IDS.forEach(id => {
+        const drawer = document.getElementById(id);
+        const btnId = DRAWER_TOOL_MAP[id];
+        const btn = document.getElementById(btnId);
+        if (btn && drawer) {
+          if (drawer.classList.contains('open')) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        }
+      });
+    }
+
+    function applyDrawerStates() {
+      // Start the app with all tools collapsed regardless of last session
       DRAWER_IDS.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-          states[id] = el.classList.contains('open');
+          el.classList.remove('open');
         }
       });
-      return states;
+      syncActivityBarButtons();
     }
 
-    function applyDrawerStates(savedStates) {
-      if (savedStates && typeof savedStates === 'object' && Object.keys(savedStates).length > 0) {
-        DRAWER_IDS.forEach(id => {
-          const el = document.getElementById(id);
-          if (el && savedStates[id] !== undefined) {
-            if (savedStates[id]) {
-              el.classList.add('open');
-            } else {
-              el.classList.remove('open');
-            }
-          }
-        });
-      } else {
-        // Collapse all but the first one if no history
-        DRAWER_IDS.forEach((id, idx) => {
-          const el = document.getElementById(id);
-          if (el) {
-            if (idx === 0) {
-              el.classList.add('open');
-            } else {
-              el.classList.remove('open');
-            }
-          }
-        });
-      }
-    }
-
-    // Toggle panel drawer (collapsible with full-height expansion and persistence)
+    // Toggle panel drawer (collapsible with full-height expansion and icon sync)
     function toggleDrawer(drawerId) {
       const drawer = document.getElementById(drawerId);
       if (drawer) {
         drawer.classList.toggle('open');
-        saveAllData();
+        syncActivityBarButtons();
+        if (drawer.classList.contains('open')) {
+          drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       }
     }
 
@@ -1957,11 +2431,55 @@
         if (data.searchCriteria.indeed !== undefined) document.getElementById('chkIndeed').checked = data.searchCriteria.indeed;
       }
 
-      // 6. Drawer Collapse States
-      applyDrawerStates(data.drawerStates);
+      // 6. Drawer Collapse States (always start collapsed)
+      applyDrawerStates();
+
+      // 7. Primary Theme Accent Color
+      if (data.primaryColor) {
+        applyPrimaryColor(data.primaryColor, false);
+      }
+
+      // 8. Update Candidate Summary card, command bar pill & chips
+      updateCandidateSummaryUI();
 
       isDataLoaded = true;
     }
+
+    // --- Candidate Profile Summary & Quick Chips Sync ---
+    function updateCandidateSummaryUI(name, email, phone, location, portfolio, role) {
+      const n = (name !== undefined ? name : (document.getElementById('fullName') ? document.getElementById('fullName').value : '')).trim();
+      const em = (email !== undefined ? email : (document.getElementById('email') ? document.getElementById('email').value : '')).trim();
+      const ph = (phone !== undefined ? phone : (document.getElementById('phone') ? document.getElementById('phone').value : '')).trim();
+      const loc = (location !== undefined ? location : (document.getElementById('location') ? document.getElementById('location').value : '')).trim();
+      const port = (portfolio !== undefined ? portfolio : (document.getElementById('portfolioUrl') ? document.getElementById('portfolioUrl').value : '')).trim();
+      const r = (role !== undefined ? role : (document.getElementById('searchTitle') ? document.getElementById('searchTitle').value : '')).trim();
+
+      // Initials calculation
+      let initials = 'TB';
+      if (n) {
+        const parts = n.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+          initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        } else if (parts.length === 1) {
+          initials = parts[0].slice(0, 2).toUpperCase();
+        }
+      }
+
+      const avatarEl = document.getElementById('summaryAvatarInitials');
+      if (avatarEl) avatarEl.textContent = initials;
+
+      const nameEl = document.getElementById('summaryCandidateName');
+      if (nameEl) nameEl.textContent = n || 'Candidate Profile';
+
+      const roleDisplay = r || 'Staff / Senior Systems Profile';
+      const locDisplay = loc || 'Las Vegas, NV';
+      const subEl = document.getElementById('summaryCandidateSub');
+      if (subEl) subEl.textContent = `${roleDisplay} • ${locDisplay}`;
+
+      const wsEl = document.getElementById('workspaceProfileName');
+      if (wsEl) wsEl.textContent = `${n || 'Alex Rivera'} — ${roleDisplay}`;
+    }
+    window.updateCandidateSummaryUI = updateCandidateSummaryUI;
 
     window.setAllData = function(data) {
       applyLoadedData(data);
@@ -1969,6 +2487,7 @@
 
     window.setResumePath = function(path) {
       resumeSourceInput.value = path;
+      updateCandidateSummaryUI();
       saveAllData();
     };
 
@@ -2032,26 +2551,103 @@
         prospects,
         searchCriteria,
         splitWidth: window.innerWidth,
-        drawerStates: getDrawerStates()
+        drawerStates: null,
+        primaryColor: currentPrimaryColor
       });
     }
 
-    // Auto-save on input changes for profile and search builder
+    // --- Activity Bar & Settings Logic ---
+    function handleActivityClick(tool) {
+      const toolToDrawer = {
+        'profile': 'drawerProfile',
+        'resume': 'drawerResume',
+        'finder': 'drawerFinder',
+        'prospects': 'drawerProspects'
+      };
+
+      const drawerId = toolToDrawer[tool];
+      if (drawerId) {
+        toggleDrawer(drawerId);
+      } else if (tool === 'hitlist') {
+        sendIpc('OPEN_NEW_TAB', { url: 'local://hitlist' });
+      } else if (tool === 'settings') {
+        sendIpc('OPEN_NEW_TAB', { url: 'local://settings' });
+      }
+    }
+
+    let currentPrimaryColor = localStorage.getItem('tailorbird_primary_color') || '#818CF8';
+
+    function applyPrimaryColor(hex, shouldBroadcast = false) {
+      if (!hex) return;
+      currentPrimaryColor = hex;
+      document.documentElement.style.setProperty('--accent', hex);
+      document.documentElement.style.setProperty('--ps-accent-blue', hex);
+      document.documentElement.style.setProperty('--accent-glow', hex + '40');
+      document.documentElement.style.setProperty('--accent-surface', hex + '1F');
+
+      const bottomBtn = document.getElementById('btnAutofillBottom');
+      if (bottomBtn) bottomBtn.style.background = hex;
+      const topAutofill = document.getElementById('btnAutofill');
+      if (topAutofill) topAutofill.style.background = hex;
+
+      localStorage.setItem('tailorbird_primary_color', hex);
+
+      if (shouldBroadcast) {
+        sendIpc('SET_PRIMARY_COLOR', { color: hex });
+        saveAllData();
+      }
+    }
+    window.applyPrimaryColor = applyPrimaryColor;
+
+    // Apply cached or default primary color right away
+    applyPrimaryColor(currentPrimaryColor, false);
+
+    // Auto-save & candidate summary sync on input changes for profile and search builder
     ['fullName', 'pronouns', 'email', 'phone', 'location', 'currentCompany', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'salaryMin', 'salaryMax', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('change', () => saveAllData());
+      if (el) {
+        el.addEventListener('input', () => updateCandidateSummaryUI());
+        el.addEventListener('change', () => {
+          updateCandidateSummaryUI();
+          saveAllData();
+        });
+      }
     });
     ['searchTitle', 'searchLocation', 'chkGreenhouse', 'chkLever', 'chkLinkedin', 'chkIndeed'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('change', () => saveAllData());
+      if (el) {
+        el.addEventListener('input', () => updateCandidateSummaryUI());
+        el.addEventListener('change', () => {
+          updateCandidateSummaryUI();
+          saveAllData();
+        });
+      }
     });
+
+    // Wire bottom autofill engine button
+    const btnAutofillBottom = document.getElementById('btnAutofillBottom');
+    if (btnAutofillBottom) {
+      btnAutofillBottom.addEventListener('click', () => {
+        const btn = document.getElementById('btnAutofill');
+        if (btn) btn.click();
+      });
+    }
+
+    // Wire top hit list shortcut button
+    const btnOpenHitListTop = document.getElementById('btnOpenHitListTop');
+    if (btnOpenHitListTop) {
+      btnOpenHitListTop.addEventListener('click', () => {
+        sendIpc('OPEN_NEW_TAB', { url: 'local://hitlist' });
+      });
+    }
 
     // Immediate check for window.__INITIAL_DATA__ injected by host
     if (window.__INITIAL_DATA__) {
       applyLoadedData(window.__INITIAL_DATA__);
     } else {
-      applyDrawerStates(null);
+      applyDrawerStates();
       updateScanCalloutVisibility();
+      updateCandidateSummaryUI();
     }
 
     // Also trigger LOAD_DATA via IPC with retry
@@ -2066,10 +2662,12 @@
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       triggerLoadData();
       updateScanCalloutVisibility();
+      updateCandidateSummaryUI();
     } else {
       window.addEventListener('DOMContentLoaded', () => {
         triggerLoadData();
         updateScanCalloutVisibility();
+        updateCandidateSummaryUI();
       });
     }
 

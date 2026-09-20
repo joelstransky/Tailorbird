@@ -298,25 +298,122 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }}
 
     // Helper for dropdown/radio/text selection fields (e.g. Demographics, EEO)
+    const getFieldAndContextText = (el) => {{
+        let text = ((el.name || '') + ' ' + (el.id || '') + ' ' + (el.getAttribute('aria-label') || '') + ' ' + (el.placeholder || '')).toLowerCase();
+        let curr = el.parentElement;
+        for (let i = 0; i < 6 && curr && curr !== document.body; i++) {{
+            const classStr = (curr.className || '').toString().toLowerCase();
+            const tag = (curr.tagName || '').toLowerCase();
+            if (
+                classStr.includes('question') ||
+                classStr.includes('label') ||
+                classStr.includes('field') ||
+                classStr.includes('section') ||
+                classStr.includes('group') ||
+                tag === 'fieldset' ||
+                tag === 'li'
+            ) {{
+                // Collect text content of the enclosing question/label container
+                const containerText = (curr.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                text += ' ' + containerText;
+                break;
+            }}
+            curr = curr.parentElement;
+        }}
+        return text;
+    }};
+
+    const isOptionMatch = (targetVal, optVal, optText) => {{
+        if (!targetVal) return false;
+        const t = targetVal.toLowerCase().trim();
+        const v = (optVal || '').toLowerCase().trim();
+        const txt = (optText || '').toLowerCase().trim();
+
+        // Exact matches
+        if (v === t || txt === t) return true;
+
+        // 1. Gender mappings (strictly prevent "male" from matching "female"!)
+        if (t === 'male') {{
+            return (txt === 'male' || v === 'male' || txt === 'man' || v === 'man' || txt.startsWith('male ') || txt.startsWith('male/'));
+        }}
+        if (t === 'female') {{
+            return (txt === 'female' || v === 'female' || txt === 'woman' || v === 'woman' || txt.startsWith('female ') || txt.startsWith('female/'));
+        }}
+        if (t === 'non-binary') {{
+            return (txt.includes('non-binary') || v.includes('non-binary'));
+        }}
+
+        // 2. Race / Ethnicity mappings
+        if (t.includes('white')) {{
+            if (txt.includes('white') || v.includes('white') || txt.includes('caucasian')) return true;
+        }}
+        if (t.includes('hispanic') || t.includes('latino')) {{
+            if (txt.includes('hispanic') || txt.includes('latino') || txt.includes('spanish')) return true;
+        }}
+        if (t.includes('black') || t.includes('african')) {{
+            if (txt.includes('black') || txt.includes('african')) return true;
+        }}
+        if (t.includes('asian')) {{
+            if (txt.includes('asian')) return true;
+        }}
+
+        // 3. Veteran mappings
+        if (t.includes('not a protected veteran') || t.includes('not a veteran')) {{
+            if (txt.includes('not a protected veteran') || txt.includes('not a veteran') || v.includes('not a protected veteran')) return true;
+        }}
+        if (t.includes('one or more') || (t.includes('protected veteran') && !t.includes('not'))) {{
+            if ((txt.includes('one or more') || txt.includes('protected veteran')) && !txt.includes('not a protected veteran') && !txt.includes('not a veteran')) return true;
+        }}
+
+        // 4. Disability mappings
+        const isTargetDecline = t.includes('wish to answer') || t.includes('prefer not') || t.includes('decline') || t.includes('disclose');
+        if (isTargetDecline) {{
+            if (txt.includes('prefer not') || txt.includes('wish to answer') || txt.includes('decline') || txt.includes('disclose') || v.includes('prefer not') || v.includes('disclose')) return true;
+        }}
+        if (!isTargetDecline && (t === 'yes' || t.includes('have a disability'))) {{
+            if (txt === 'yes' || v === 'yes' || (txt.includes('yes') && !txt.includes('no'))) return true;
+        }}
+        if (!isTargetDecline && (t === 'no' || t.includes('do not have a disability'))) {{
+            if (txt === 'no' || v === 'no' || (txt.includes('no') && !txt.includes('yes'))) return true;
+        }}
+
+        // 5. Pronoun mappings
+        if (t.includes('he/him')) {{
+            if (txt.includes('he/him') || v.includes('he/him') || txt.includes('he / him')) return true;
+        }}
+        if (t.includes('she/her')) {{
+            if (txt.includes('she/her') || v.includes('she/her') || txt.includes('she / her')) return true;
+        }}
+        if (t.includes('they/them')) {{
+            if (txt.includes('they/them') || v.includes('they/them') || txt.includes('they / them')) return true;
+        }}
+
+        // General fallback
+        if (v && v.includes(t)) return true;
+        if (txt && txt.includes(t)) return true;
+
+        return false;
+    }};
+
     const fillChoiceField = (fieldPattern, targetVal) => {{
         if (!targetVal) return;
-        const cleanTarget = targetVal.toLowerCase().trim();
         let matched = false;
 
         // A. Radio / Checkbox
         const inputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
         for (const input of inputs) {{
-            const nameOrId = ((input.name || '') + ' ' + (input.id || '')).toLowerCase();
-            if (fieldPattern.test(nameOrId)) {{
-                const inputVal = (input.value || '').toLowerCase();
-                const parentText = (input.closest('label')?.textContent || input.parentElement?.textContent || '').toLowerCase();
-                if (inputVal.includes(cleanTarget) || parentText.includes(cleanTarget) || (cleanTarget.length > 2 && (cleanTarget.includes(inputVal) || cleanTarget.includes(parentText)))) {{
+            const contextText = getFieldAndContextText(input);
+            if (fieldPattern.test(contextText)) {{
+                const inputVal = input.value || '';
+                const parentText = input.closest('label')?.textContent || input.parentElement?.textContent || '';
+                if (isOptionMatch(targetVal, inputVal, parentText)) {{
                     input.checked = true;
                     input.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     input.dispatchEvent(new Event('change', {{ bubbles: true }}));
                     filledElements.add(input);
                     filledCount++;
                     matched = true;
+                    console.log(`[Tailorbird] Checked option for pattern ${{fieldPattern}}: ${{inputVal || parentText}}`);
                     break;
                 }}
             }}
@@ -326,17 +423,18 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         if (!matched) {{
             const selects = document.querySelectorAll('select');
             for (const sel of selects) {{
-                const nameOrId = ((sel.name || '') + ' ' + (sel.id || '')).toLowerCase();
-                if (fieldPattern.test(nameOrId) && !filledElements.has(sel)) {{
+                const contextText = getFieldAndContextText(sel);
+                if (fieldPattern.test(contextText) && !filledElements.has(sel)) {{
                     for (const opt of sel.options) {{
-                        const optText = (opt.text || '').toLowerCase();
-                        const optVal = (opt.value || '').toLowerCase();
-                        if (optText.includes(cleanTarget) || (optVal && optVal.includes(cleanTarget)) || (cleanTarget.length > 2 && optText.length > 2 && (cleanTarget.includes(optText) || optText.includes(cleanTarget)))) {{
+                        const optText = opt.text || '';
+                        const optVal = opt.value || '';
+                        if (isOptionMatch(targetVal, optVal, optText)) {{
                             sel.value = opt.value;
                             sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
                             filledElements.add(sel);
                             filledCount++;
                             matched = true;
+                            console.log(`[Tailorbird] Selected dropdown option for pattern ${{fieldPattern}}: ${{optText || optVal}}`);
                             break;
                         }}
                     }}
@@ -349,8 +447,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         if (!matched) {{
             const textInputs = document.querySelectorAll('input[type="text"], input:not([type])');
             for (const input of textInputs) {{
-                const nameOrId = ((input.name || '') + ' ' + (input.id || '') + ' ' + (input.placeholder || '')).toLowerCase();
-                if (fieldPattern.test(nameOrId) && !filledElements.has(input)) {{
+                const contextText = getFieldAndContextText(input);
+                if (fieldPattern.test(contextText) && !filledElements.has(input)) {{
                     input.value = targetVal;
                     input.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     input.dispatchEvent(new Event('change', {{ bubbles: true }}));
@@ -375,6 +473,9 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }}
     if (profile.disabilityStatus) {{
         fillChoiceField(/disabilit/i, profile.disabilityStatus);
+    }}
+    if (profile.pronouns) {{
+        fillChoiceField(/pronoun/i, profile.pronouns);
     }}
 
     // 13. Highlight remaining unfilled form fields

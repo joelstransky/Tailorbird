@@ -6,19 +6,22 @@
   <title>Tailorbird Toolbar</title>
   <style>
     :root {
-      --bg: #161b22;
-      --strip-bg: #0d1117;
-      --border: #30363d;
-      --text: #c9d1d9;
-      --text-bright: #f0f6fc;
-      --text-muted: #8b949e;
-      --accent: #238636;
-      --accent-blue: #388bfd;
-      --input-bg: #0d1117;
-      --hover-bg: #21262d;
-      --active-tab-bg: #161b22;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      --tab-bar-bg: #0E1118;
+      --nav-bar-bg: #12151D;
+      --border-color: #1E222D;
+      --active-tab-bg: #181C28;
+      --tab-border: #232836;
+      --omnibar-bg: #181B26;
+      --omnibar-border: #232836;
+      --record-btn-bg: #1E2433;
+      --record-btn-border: #334155;
+      --text: #94A3B8;
+      --text-bright: #E2E8F0;
+      --text-muted: #64748B;
+      --accent: #818CF8;
+      --accent-cyan: #38BDF8;
+      --accent-green: #10B981;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     * {
@@ -28,33 +31,33 @@
     }
 
     body {
-      background-color: var(--bg);
+      background-color: var(--nav-bar-bg);
       color: var(--text);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      height: 74px;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      height: 78px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       user-select: none;
     }
 
-    /* Top Tier: Tab Strip */
-    .tab-strip {
-      height: 34px;
-      background: var(--strip-bg);
-      border-bottom: 1px solid var(--border);
+    /* 1. Browser Tab Bar (36px, fill #0E1118, stroke #1E222D, padding 0 10px, gap 6px) */
+    .tab-bar {
+      height: 36px;
+      background: var(--tab-bar-bg);
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: flex-end;
-      padding: 0 8px;
-      gap: 4px;
+      padding: 0 10px;
+      gap: 6px;
       overflow: hidden;
     }
 
     .tab-list {
       display: flex;
       align-items: flex-end;
-      gap: 3px;
+      gap: 6px;
       overflow-x: auto;
       scrollbar-width: none;
       flex: 1;
@@ -66,45 +69,49 @@
     }
 
     .tab-chip {
-      height: 29px;
-      max-width: 190px;
-      min-width: 100px;
+      height: 30px;
+      max-width: 240px;
+      min-width: 120px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 0 10px 0 8px;
+      gap: 8px;
+      padding: 0 12px;
       border-radius: 6px 6px 0 0;
-      background: #15191f;
+      background: transparent;
       color: var(--text-muted);
-      font-size: 11.5px;
+      font-size: 11px;
+      font-weight: 500;
       cursor: pointer;
       border: 1px solid transparent;
       border-bottom: none;
-      user-select: none;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
       position: relative;
     }
 
     .tab-chip:hover {
-      background: var(--hover-bg);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text-bright);
     }
 
     .tab-chip.active {
       background: var(--active-tab-bg);
       color: var(--text-bright);
-      border-color: var(--border);
-      border-top: 2px solid var(--accent-blue);
-      font-weight: 500;
+      border-color: var(--tab-border);
       z-index: 2;
     }
 
     .tab-icon {
-      font-size: 12px;
+      width: 13px;
+      height: 13px;
       display: flex;
       align-items: center;
+      justify-content: center;
       flex-shrink: 0;
-      opacity: 0.85;
+      color: var(--accent-cyan);
+    }
+
+    .tab-chip.active .tab-icon {
+      color: var(--accent-cyan);
     }
 
     .tab-title {
@@ -112,124 +119,115 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      letter-spacing: -0.01em;
     }
 
     .tab-close {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
       color: var(--text-muted);
       cursor: pointer;
-      opacity: 0.6;
       flex-shrink: 0;
       transition: all 0.15s ease;
     }
 
-    .tab-chip:hover .tab-close,
-    .tab-chip.active .tab-close {
-      opacity: 1;
-    }
-
     .tab-close:hover {
-      background: rgba(248, 81, 73, 0.25);
-      color: #f85149;
+      background: rgba(239, 68, 68, 0.2);
+      color: #EF4444;
     }
 
     .new-tab-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
       background: transparent;
-      border: 1px solid transparent;
+      border: none;
       color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       flex-shrink: 0;
       transition: all 0.15s ease;
     }
 
     .new-tab-btn:hover {
-      background: var(--hover-bg);
-      color: var(--text-bright);
-      border-color: var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #FFFFFF;
     }
 
-    .new-tab-btn:active {
-      transform: scale(0.92);
-    }
-
-    /* Bottom Tier: Navigation & Omnibar Controls */
-    .controls-row {
-      height: 40px;
+    /* 2. Navigation Toolbar (42px, fill #12151D, stroke #1E222D, padding 0 16px, gap 12px) */
+    .nav-toolbar {
+      height: 42px;
+      background: var(--nav-bar-bg);
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
-      padding: 0 10px;
+      padding: 0 16px;
+      gap: 12px;
+    }
+
+    .nav-history-buttons {
+      display: flex;
+      align-items: center;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
-      background-color: var(--bg);
     }
 
-    .nav-buttons {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .nav-btn {
+    .nav-icon-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 5px;
       background: transparent;
-      border: 1px solid transparent;
-      color: var(--text);
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      border: none;
+      color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
       transition: all 0.15s ease;
     }
 
-    .nav-btn:hover {
-      background: var(--hover-bg);
+    .nav-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text-bright);
-      border-color: var(--border);
     }
 
-    .nav-btn:active {
-      transform: scale(0.94);
+    .nav-icon-btn:active {
+      transform: scale(0.92);
     }
 
-    .url-bar-container {
+    /* Omnibar Input (height 30px, fill #181B26, cornerRadius 6px, stroke #232836, padding 0 10px) */
+    .omnibar-wrap {
       flex: 1;
+      height: 30px;
+      background: var(--omnibar-bg);
+      border: 1px solid var(--omnibar-border);
+      border-radius: 6px;
       display: flex;
       align-items: center;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      height: 28px;
-      padding: 0 8px;
+      padding: 0 10px;
       gap: 8px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .url-bar-container:focus-within {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.25);
+    .omnibar-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
-    .url-icon {
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: default;
+    .omnibar-lock-icon {
+      width: 12px;
+      height: 12px;
+      color: var(--accent-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     #urlInput {
@@ -238,86 +236,112 @@
       border: none;
       outline: none;
       color: var(--text-bright);
-      font-size: 12px;
-      font-family: var(--font-sans);
-    }
-
-    .url-go-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
       font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 600;
+      font-family: var(--font-ui);
     }
 
-    .url-go-btn:hover {
-      background: var(--hover-bg);
-      color: var(--text-bright);
+    #urlInput::placeholder {
+      color: var(--text-muted);
     }
 
-    .preset-pills {
+    /* Record Prospect Button (height 28px, fill #1E2433, cornerRadius 6px, stroke #334155, gap 6px, padding 0 10px) */
+    .record-prospect-btn {
+      height: 28px;
+      background: var(--record-btn-bg);
+      border: 1px solid var(--record-btn-border);
+      border-radius: 6px;
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-
-    .pill {
-      background: #21262d;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 3px 8px;
+      padding: 0 10px;
+      color: var(--text-bright);
       font-size: 11px;
-      color: var(--text-muted);
+      font-weight: 500;
       cursor: pointer;
-      white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.15s ease;
     }
 
-    .pill:hover {
-      background: #30363d;
-      color: var(--text-bright);
-      border-color: var(--accent-blue);
+    .record-prospect-btn:hover {
+      background: #252D3F;
+      border-color: #475569;
+    }
+
+    .record-prospect-btn:active {
+      transform: scale(0.96);
+    }
+
+    .record-prospect-icon {
+      width: 13px;
+      height: 13px;
+      color: var(--accent-cyan);
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Tier: Tab Strip -->
-  <div class="tab-strip">
+  <!-- Browser Tab Bar (Pen LdQOH) -->
+  <div class="tab-bar">
     <div class="tab-list" id="tabList">
-      <!-- Dynamic Tabs Injected Here -->
+      <!-- Dynamically populated tab chips -->
     </div>
-    <button class="new-tab-btn" id="btnNewTab" title="New Tab (+)" type="button">+</button>
+    <button class="new-tab-btn" id="btnNewTab" title="New Tab" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
   </div>
 
-  <!-- Bottom Tier: Navigation Controls & Omnibar -->
-  <div class="controls-row">
-    <div class="nav-buttons">
-      <button class="nav-btn" id="btnBack" title="Back" type="button">◀</button>
-      <button class="nav-btn" id="btnForward" title="Forward" type="button">▶</button>
-      <button class="nav-btn" id="btnReload" title="Reload Page" type="button">🔄</button>
-      <button class="nav-btn" id="btnHome" title="Home (Built-in Mock ATS)" type="button">🏠</button>
+  <!-- Navigation Toolbar (Pen U7fO6) -->
+  <div class="nav-toolbar">
+    <div class="nav-history-buttons">
+      <button class="nav-icon-btn" id="btnBack" title="Back" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <button class="nav-icon-btn" id="btnForward" title="Forward" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+      <button class="nav-icon-btn" id="btnReload" title="Reload" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </button>
     </div>
 
-    <div class="url-bar-container">
-      <span class="url-icon" id="urlIcon">📄</span>
-      <input type="text" id="urlInput" placeholder="Search Google or enter job URL..." value="local://mock">
-      <button class="url-go-btn" id="btnGo" type="button">Go</button>
+    <!-- Omnibar Input (Pen yB9Fn) -->
+    <div class="omnibar-wrap">
+      <span class="omnibar-lock-icon" id="omniLock">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </span>
+      <input type="text" id="urlInput" placeholder="Search or type URL..." value="local://mock">
     </div>
 
-    <div class="preset-pills">
-      <span class="pill" data-url="local://mock">📄 Test Form</span>
-    </div>
+    <!-- Record Prospect Action (Pen wJ3hT) -->
+    <button class="record-prospect-btn" id="btnRecordProspect" title="Record active page listing to prospects sheet" type="button">
+      <svg class="record-prospect-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        <line x1="12" y1="7" x2="12" y2="13"></line>
+        <line x1="9" y1="10" x2="15" y2="10"></line>
+      </svg>
+      <span>Record Prospect</span>
+    </button>
   </div>
 
   <script>
     const urlInput = document.getElementById('urlInput');
-    const urlIcon = document.getElementById('urlIcon');
     const tabList = document.getElementById('tabList');
     const btnNewTab = document.getElementById('btnNewTab');
+    const omniLock = document.getElementById('omniLock');
 
     let currentTabs = [];
     let currentActiveId = null;
@@ -347,6 +371,10 @@
         if (!displayTitle || displayTitle === 'New Tab') {
           if (tab.url === 'local://mock') {
             displayTitle = 'Mock ATS Form';
+          } else if (tab.url === 'local://hitlist') {
+            displayTitle = 'Hit List';
+          } else if (tab.url === 'local://settings') {
+            displayTitle = 'Settings';
           } else if (tab.url) {
             try {
               displayTitle = new URL(tab.url).hostname;
@@ -359,20 +387,31 @@
         }
         chip.title = `${displayTitle}\n${tab.url || ''}`;
 
-        // Determine icon based on URL
-        let icon = '📄';
-        if ((tab.url || '').includes('google.com/search')) icon = '🔍';
-        else if ((tab.url || '').startsWith('https://')) icon = '🔒';
-        else if (tab.url !== 'local://mock') icon = '🌐';
+        // SVG icon selection based on url
+        let iconSvg = '';
+        if (tab.url === 'local://hitlist') {
+          iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+        } else if (tab.url === 'local://settings') {
+          iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
+        } else if ((tab.url || '').includes('google.com/search')) {
+          iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+        } else {
+          iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+        }
 
         chip.innerHTML = `
-          <span class="tab-icon">${icon}</span>
+          <span class="tab-icon">${iconSvg}</span>
           <span class="tab-title">${escapeHtml(displayTitle)}</span>
-          <span class="tab-close" title="Close tab" data-id="${tab.id}">✕</span>
+          <span class="tab-close" title="Close tab" data-id="${tab.id}">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </span>
         `;
 
         chip.addEventListener('click', (e) => {
-          if (e.target.classList.contains('tab-close')) {
+          if (e.target.closest('.tab-close')) {
             e.stopPropagation();
             sendIpc('CLOSE_TAB', { id: tab.id });
           } else {
@@ -385,7 +424,6 @@
         tabList.appendChild(chip);
       });
 
-      // Scroll active tab into view
       const activeEl = tabList.querySelector('.tab-chip.active');
       if (activeEl) {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
@@ -405,21 +443,21 @@
       });
     }
 
-    // Window global to receive current URL updates for active tab
     window.setUrl = function(url) {
       if (url) {
         urlInput.value = url;
-        if (url.includes('google.com/search')) {
-          urlIcon.textContent = '🔍';
-        } else if (url === 'local://mock') {
-          urlIcon.textContent = '📄';
-        } else if (url.startsWith('https://')) {
-          urlIcon.textContent = '🔒';
-        } else {
-          urlIcon.textContent = '🌐';
-        }
       }
     };
+
+    window.setPrimaryColor = function(color) {
+      if (color) {
+        document.documentElement.style.setProperty('--accent', color);
+      }
+    };
+
+    if (window.__INITIAL_PRIMARY_COLOR__) {
+      window.setPrimaryColor(window.__INITIAL_PRIMARY_COLOR__);
+    }
 
     function navigate() {
       let url = urlInput.value.trim();
@@ -434,23 +472,12 @@
     document.getElementById('btnBack').addEventListener('click', () => sendIpc('BACK'));
     document.getElementById('btnForward').addEventListener('click', () => sendIpc('FORWARD'));
     document.getElementById('btnReload').addEventListener('click', () => sendIpc('RELOAD'));
-    document.getElementById('btnHome').addEventListener('click', () => {
-      urlInput.value = 'local://mock';
-      sendIpc('HOME');
+    document.getElementById('btnRecordProspect').addEventListener('click', () => {
+      sendIpc('SCRAPE_CURRENT_PAGE');
     });
 
-    document.getElementById('btnGo').addEventListener('click', navigate);
     urlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') navigate();
-    });
-
-    // Preset pills
-    document.querySelectorAll('.pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        const url = pill.getAttribute('data-url');
-        urlInput.value = url;
-        sendIpc('NAVIGATE', { url: url });
-      });
     });
   </script>
 </body>

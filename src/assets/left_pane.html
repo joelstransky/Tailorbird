@@ -140,122 +140,166 @@
       position: relative;
     }
 
-    /* Top Command Bar (Modern Productivity Studio CXnRH) */
-    .command-bar {
-      height: 38px;
-      background: #0B0D13;
-      border-bottom: 1px solid var(--app-border);
+    /* Bird Brand Icon & About Popover */
+    .activity-brand-wrap {
+      position: relative;
+      width: 100%;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 12px;
-      flex-shrink: 0;
-      gap: 8px;
-      z-index: 50;
+      justify-content: center;
+      margin-bottom: 4px;
     }
 
-    .cmd-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .traffic-dots {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .traffic-dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .traffic-close { background: #FF5F56; }
-    .traffic-min { background: #FFBD2E; }
-    .traffic-max { background: #27C93F; }
-
-    .cmd-brand-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .activity-brand-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       background: #161924;
-      border: 1px solid #22273D;
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 12px;
+      border: 1px solid #23283E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    .activity-brand-btn:hover {
+      background: #1F2436;
+      border-color: #384266;
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* About Popover Dialog on Hover */
+    .about-popover {
+      position: absolute;
+      left: 48px;
+      top: 0px;
+      width: 240px;
+      background: #131622;
+      border: 1px solid #293047;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(4px) scale(0.97);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10000;
+    }
+
+    .activity-brand-wrap:hover .about-popover {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(8px) scale(1);
+    }
+
+    .about-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .about-header-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .about-title {
+      font-size: 13px;
       font-weight: 700;
       color: #F8FAFC;
       letter-spacing: 0.2px;
     }
 
-    .cmd-brand-icon {
-      font-size: 13px;
-    }
-
-    .cmd-center {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      justify-content: center;
-    }
-
-    .cmd-workspace-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #161924;
-      border: 1px solid #22273D;
-      border-radius: 6px;
-      padding: 3px 10px;
-      font-size: 11px;
-      color: #94A3B8;
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    .cmd-pill-icon {
-      width: 13px;
-      height: 13px;
+    .about-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-family: var(--font-mono);
       color: var(--accent);
-      flex-shrink: 0;
-    }
-
-    #workspaceProfileName {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .cmd-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .cmd-btn-shortcut {
-      background: #1E2433;
-      border: 1px solid #334155;
-      border-radius: 5px;
-      color: #F1F5F9;
-      font-size: 10px;
+      background: rgba(129, 140, 248, 0.12);
+      border: 1px solid rgba(129, 140, 248, 0.25);
+      padding: 1px 5px;
+      border-radius: 4px;
       font-weight: 600;
-      padding: 3px 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.15s ease;
     }
 
-    .cmd-btn-shortcut:hover {
-      background: #283147;
-      border-color: #475569;
-      color: #FFFFFF;
+    .about-desc {
+      font-size: 11px;
+      line-height: 1.45;
+      color: #94A3B8;
+      margin-bottom: 8px;
+    }
+
+    .about-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+
+    /* Middle Resizer Divider between Left Pane and Browser Pane */
+    .middle-resizer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 100vh;
+      cursor: col-resize;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .middle-resizer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 2px;
+      height: 100%;
+      background: var(--app-border-subtle);
+      transition: background 0.15s ease, width 0.15s ease;
+    }
+
+    .middle-resizer:hover::after,
+    .middle-resizer.resizing::after {
+      background: var(--accent);
+      width: 3px;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .resizer-handle {
+      display: none;
+    }
+
+    .resizer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      cursor: col-resize;
+      z-index: 99998;
+      display: none;
+      user-select: none;
+    }
+
+    body.is-resizing {
+      cursor: col-resize !important;
+      user-select: none !important;
     }
 
     /* Candidate Profile Summary Card (JqGOI) */
@@ -1043,6 +1087,23 @@
   <!-- Vertical Activity Bar on Far Left -->
   <nav class="activity-bar" id="activityBar">
     <div class="activity-top">
+      <!-- Bird Brand Button with About Hover Dialog -->
+      <div class="activity-brand-wrap">
+        <div class="activity-brand-btn" id="btnBrandBird" title="About Tailorbird">🐦</div>
+        <div class="about-popover" id="aboutPopover">
+          <div class="about-header">
+            <span class="about-header-icon">🐦</span>
+            <span class="about-title">Tailorbird</span>
+            <span class="about-badge">v0.1.0</span>
+          </div>
+          <p class="about-desc">Modern Studio Candidate Profile, Resume Parser & Autofill Companion for Job Seekers.</p>
+          <div class="about-footer">
+            <span>Productivity Studio</span>
+            <span>Desktop v0.1</span>
+          </div>
+        </div>
+      </div>
+
       <button class="activity-btn" id="actProfile" title="Candidate Profile" type="button" onclick="handleActivityClick('profile')">
         <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -1090,42 +1151,8 @@
     </div>
   </nav>
 
-  <!-- Sidebar Column containing Titlebar and Dock Panels -->
+  <!-- Sidebar Column containing Dock Panels -->
   <div class="sidebar-wrapper">
-
-    <!-- Top Command Bar (Modern Productivity Studio CXnRH) -->
-    <div class="command-bar">
-      <div class="cmd-left">
-        <div class="traffic-dots">
-          <span class="traffic-dot traffic-close"></span>
-          <span class="traffic-dot traffic-min"></span>
-          <span class="traffic-dot traffic-max"></span>
-        </div>
-        <div class="cmd-brand-pill">
-          <span class="cmd-brand-icon">🐦</span>
-          <span>Tailorbird</span>
-        </div>
-      </div>
-      <div class="cmd-center">
-        <div class="cmd-workspace-pill">
-          <svg class="cmd-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-          </svg>
-          <span id="workspaceProfileName">Alex Rivera — Staff / Senior Systems Profile</span>
-        </div>
-      </div>
-      <div class="cmd-right">
-        <button class="cmd-btn-shortcut" id="btnOpenHitListTop" type="button" title="Open Target Hit List">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="6"/>
-            <circle cx="12" cy="12" r="2"/>
-          </svg>
-          <span>Hit List</span>
-        </button>
-      </div>
-    </div>
 
   <!-- Dock Container -->
   <div class="dock-container">
@@ -2633,14 +2660,6 @@
       });
     }
 
-    // Wire top hit list shortcut button
-    const btnOpenHitListTop = document.getElementById('btnOpenHitListTop');
-    if (btnOpenHitListTop) {
-      btnOpenHitListTop.addEventListener('click', () => {
-        sendIpc('OPEN_NEW_TAB', { url: 'local://hitlist' });
-      });
-    }
-
     // Immediate check for window.__INITIAL_DATA__ injected by host
     if (window.__INITIAL_DATA__) {
       applyLoadedData(window.__INITIAL_DATA__);
@@ -2680,8 +2699,8 @@
       let isResizing = false;
       let startScreenX = 0;
       let initialWidth = 0;
-      let rafId = null;
       let currentWidth = null;
+      let rafId = null;
 
       function onPointerMove(e) {
         if (!isResizing) return;
@@ -2715,6 +2734,9 @@
         window.removeEventListener('pointermove', onPointerMove);
         window.removeEventListener('pointerup', onPointerEnd);
         window.removeEventListener('pointercancel', onPointerEnd);
+        resizer.removeEventListener('pointermove', onPointerMove);
+        resizer.removeEventListener('pointerup', onPointerEnd);
+        resizer.removeEventListener('pointercancel', onPointerEnd);
 
         if (rafId) {
           cancelAnimationFrame(rafId);
@@ -2734,7 +2756,7 @@
         if (overlay) overlay.style.display = 'block';
 
         startScreenX = (e.screenX !== undefined && e.screenX !== 0) ? e.screenX : e.clientX;
-        initialWidth = currentWidth || window.innerWidth;
+        initialWidth = window.innerWidth;
         currentWidth = initialWidth;
 
         try {
@@ -2744,6 +2766,9 @@
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerEnd);
         window.addEventListener('pointercancel', onPointerEnd);
+        resizer.addEventListener('pointermove', onPointerMove);
+        resizer.addEventListener('pointerup', onPointerEnd);
+        resizer.addEventListener('pointercancel', onPointerEnd);
 
         e.preventDefault();
         e.stopPropagation();

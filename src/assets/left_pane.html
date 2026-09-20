@@ -534,63 +534,6 @@
       display: flex;
     }
 
-    /* Resizer Overlay to capture pointer moves seamlessly across boundaries */
-    .resizer-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 99998;
-      cursor: col-resize;
-      display: none;
-      background: transparent;
-    }
-
-    /* Resizable Middle Divider between Control Panel and Browser */
-    .middle-resizer {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 8px;
-      height: 100vh;
-      cursor: col-resize;
-      z-index: 99999;
-      background: transparent;
-      border-right: 1px solid var(--app-border-subtle);
-      transition: background-color 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      touch-action: none;
-    }
-
-    .resizer-handle {
-      width: 2px;
-      height: 36px;
-      background: #555555;
-      border-radius: 1px;
-      opacity: 0;
-      transition: opacity 0.15s ease;
-    }
-
-    .middle-resizer:hover,
-    .middle-resizer.resizing {
-      background: var(--ps-accent-blue);
-    }
-
-    .middle-resizer:hover .resizer-handle,
-    .middle-resizer.resizing .resizer-handle {
-      opacity: 1;
-      background: #ffffff;
-    }
-
-    body.is-resizing {
-      user-select: none !important;
-      cursor: col-resize !important;
-    }
-
     /* Photoshop Section Subheaders (e.g. ˅ Transform) */
     .ps-subgroup-title {
       font-size: 10px;
@@ -1413,7 +1356,6 @@
           <span id="drawerWorkTitle">Work History</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn" id="btnAddPosition" title="Add Position">+ Position</button>
           <button class="header-action-btn" id="btnAddSpecialField" style="display: none;" title="Add Special Field">+ Field</button>
         </div>
       </div>
@@ -1443,6 +1385,12 @@
                 Instead of typing everything in manually, link or browse your resume above and click <strong>Scan</strong> to auto-fill your positions and achievements!
               </div>
             </div>
+          </div>
+
+          <!-- Action bar placed directly above the first work history item -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 6px 0; flex-shrink: 0;">
+            <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Positions</span>
+            <button class="header-action-btn" id="btnAddPosition" title="Add Position">+ Position</button>
           </div>
 
           <!-- History cards expanding full height -->
@@ -2750,10 +2698,9 @@
       let currentWidth = null;
       let rafId = null;
 
-      function onPointerMove(e) {
+      function updateWidth(screenX) {
         if (!isResizing) return;
-        const currentX = (e.screenX !== undefined && e.screenX !== 0) ? e.screenX : e.clientX;
-        const deltaX = currentX - startScreenX;
+        const deltaX = screenX - startScreenX;
         const newWidth = Math.round(initialWidth + deltaX);
         if (newWidth < 220) return;
 
@@ -2768,23 +2715,31 @@
         }
       }
 
-      function onPointerEnd(e) {
+      function onMove(e) {
+        if (!isResizing) return;
+        const screenX = (e.screenX !== undefined && e.screenX !== 0) ? e.screenX : e.clientX;
+        updateWidth(screenX);
+      }
+
+      function onEnd(e) {
         if (!isResizing) return;
         isResizing = false;
         resizer.classList.remove('resizing');
         document.body.classList.remove('is-resizing');
         if (overlay) overlay.style.display = 'none';
 
-        try {
-          resizer.releasePointerCapture(e.pointerId);
-        } catch (_) {}
+        if (e && e.pointerId) {
+          try {
+            resizer.releasePointerCapture(e.pointerId);
+          } catch (_) {}
+        }
 
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerEnd);
-        window.removeEventListener('pointercancel', onPointerEnd);
-        resizer.removeEventListener('pointermove', onPointerMove);
-        resizer.removeEventListener('pointerup', onPointerEnd);
-        resizer.removeEventListener('pointercancel', onPointerEnd);
+        window.removeEventListener('pointermove', onMove, true);
+        window.removeEventListener('pointerup', onEnd, true);
+        window.removeEventListener('pointercancel', onEnd, true);
+        document.removeEventListener('mousemove', onMove, true);
+        document.removeEventListener('mouseup', onEnd, true);
+        window.removeEventListener('blur', onEnd);
 
         if (rafId) {
           cancelAnimationFrame(rafId);
@@ -2798,6 +2753,7 @@
       }
 
       resizer.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
         isResizing = true;
         resizer.classList.add('resizing');
         document.body.classList.add('is-resizing');
@@ -2811,18 +2767,16 @@
           resizer.setPointerCapture(e.pointerId);
         } catch (_) {}
 
-        window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerup', onPointerEnd);
-        window.addEventListener('pointercancel', onPointerEnd);
-        resizer.addEventListener('pointermove', onPointerMove);
-        resizer.addEventListener('pointerup', onPointerEnd);
-        resizer.addEventListener('pointercancel', onPointerEnd);
+        window.addEventListener('pointermove', onMove, true);
+        window.addEventListener('pointerup', onEnd, true);
+        window.addEventListener('pointercancel', onEnd, true);
+        document.addEventListener('mousemove', onMove, true);
+        document.addEventListener('mouseup', onEnd, true);
+        window.addEventListener('blur', onEnd);
 
         e.preventDefault();
         e.stopPropagation();
       });
-
-      resizer.addEventListener('lostpointercapture', onPointerEnd);
     }
 
     if (document.readyState === 'loading') {

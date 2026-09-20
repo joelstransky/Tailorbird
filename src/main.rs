@@ -91,6 +91,7 @@ enum AppEvent {
     TabTitleChanged { id: usize, title: String },
     TabPageLoaded { id: usize, url: String },
     NavigateActiveTab { url: String },
+    SetLeftWidth { width: f64 },
     Back,
     Forward,
     Reload,
@@ -326,8 +327,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let coordinator_for_ipc = layout_coordinator.clone();
-
     // 1. Initialize Left Pane (Control Panel: Profile, Resume/Work History, Prospects, Finder)
     let left_webview = WebViewBuilder::new()
         .with_bounds(Rect {
@@ -355,7 +354,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let tabs_holder = tabs_for_left.clone();
             let active_id_holder = active_id_for_left.clone();
             let proxy_ipc = proxy_for_left.clone();
-            let coord = coordinator_for_ipc.clone();
             let left_w_holder = left_width_for_ipc.clone();
             let toolbar_for_left = toolbar_for_left_ipc.clone();
 
@@ -441,8 +439,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Ok(IpcMessage::SetLeftWidth { width }) => {
-                        println!("[Tailorbird Host] SetLeftWidth received: {:.1}", width);
-                        coord(Some(width));
+                        let _ = proxy_ipc.send_event(AppEvent::SetLeftWidth { width });
                     }
                     Ok(IpcMessage::SetPrimaryColor { color }) => {
                         println!("[Tailorbird Host] SetPrimaryColor received: {}", color);
@@ -991,6 +988,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         sync_url(&toolbar_wv_holder, &formatted);
                     }
                     sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+                AppEvent::SetLeftWidth { width } => {
+                    coordinator_for_loop(Some(width));
                 }
                 AppEvent::Back => {
                     let cur_active = *active_tab_id_holder.lock().unwrap();

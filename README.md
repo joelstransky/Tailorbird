@@ -1,6 +1,10 @@
-# Tailorbird
+<div align="center">
+  <img src="docs/images/tailorbird_icon.png" width="96" height="96" alt="Tailorbird Logo" style="border-radius: 20px;" />
+  <h1>Tailorbird</h1>
+  <p><strong>Specialized Desktop Browser for Job Hunting</strong></p>
+</div>
 
-Tailorbird is a specialized desktop browser designed for job hunting. It pairs a personal information panel with a full web browser in a split-screen view, keeping your resume details, past positions, tracked listings, and outreach notes right next to the application forms you are filling out.
+Tailorbird pairs a personal information panel with a full web browser in a split-screen view, keeping your resume details, past positions, tracked listings, and outreach notes right next to the application forms you are filling out.
 
 ![Tailorbird Main Dashboard](docs/images/tailorbird_dual_pane_dashboard.png)
 

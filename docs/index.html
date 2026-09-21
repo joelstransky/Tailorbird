@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tailorbird — Specialized Job Search Browser</title>
-  <meta name="description" content="A specialized desktop browser for managing job searches, tracking applications, and filling out job forms side by side.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2338bdf8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M16 7h.01%22/><path d=%22M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 18%22/><path d=%22m20 7 2 .5-2 .5%22/><path d=%22M10 18v3%22/><path d=%22M14 17.75V21%22/><path d=%22M7 18a6 6 0 0 0 3.84-10.61%22/></svg>">
+  <link rel="icon" type="image/png" href="images/tailorbird_icon.png">
+  <link rel="shortcut icon" href="images/tailorbird_icon.png">
   <style>
     :root {
       --bg: #0b0d13;
@@ -387,16 +387,7 @@
   <!-- Navigation -->
   <nav>
     <a href="#" class="brand">
-      <span class="brand-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 7h.01"/>
-          <path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 18"/>
-          <path d="m20 7 2 .5-2 .5"/>
-          <path d="M10 18v3"/>
-          <path d="M14 17.75V21"/>
-          <path d="M7 18a6 6 0 0 0 3.84-10.61"/>
-        </svg>
-      </span>
+      <img src="images/tailorbird_icon.png" width="28" height="28" alt="Tailorbird Logo" style="border-radius: 7px;">
       <span>Tailorbird</span>
     </a>
     <div class="nav-links">
@@ -415,6 +406,9 @@
 
   <!-- Hero -->
   <header class="hero">
+    <div style="display: flex; justify-content: center; margin-bottom: 1.25rem;">
+      <img src="images/tailorbird_icon.png" width="76" height="76" alt="Tailorbird Logo" style="border-radius: 18px; box-shadow: 0 10px 30px rgba(56, 189, 248, 0.22), 0 2px 8px rgba(0, 0, 0, 0.5);">
+    </div>
     <div class="hero-badge">Specialized Job Search Desktop Browser</div>
     <h1>Side-by-side job hunting, application tracking, and form filling</h1>
     <p>
@@ -433,7 +427,10 @@
         <span class="dot"></span>
         <span class="dot"></span>
         <span class="dot"></span>
-        <span class="window-title">Tailorbird — Dual-Pane Workspace</span>
+        <span class="window-title" style="display: inline-flex; align-items: center; gap: 6px;">
+          <img src="images/tailorbird_icon.png" width="13" height="13" alt="Tailorbird" style="border-radius: 3px;">
+          Tailorbird — Dual-Pane Workspace
+        </span>
       </div>
       <img src="images/tailorbird_dual_pane_dashboard.png" alt="Tailorbird Main Dual-Pane Dashboard">
     </div>
@@ -565,6 +562,10 @@
 
   <!-- Footer -->
   <footer>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 0.75rem;">
+      <img src="images/tailorbird_icon.png" width="22" height="22" alt="Tailorbird Logo" style="border-radius: 5px;">
+      <span style="font-weight: 600; color: var(--text); font-size: 0.95rem;">Tailorbird</span>
+    </div>
     <p>Tailorbird is open source software created by <a href="https://github.com/joelstransky" target="_blank" rel="noopener">Joel Stransky</a>.</p>
     <p style="margin-top: 0.35rem;">Released under the MIT License.</p>
   </footer>

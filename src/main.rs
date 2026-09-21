@@ -940,11 +940,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         match make_tab_webview(&window, new_id, &formatted_url, bounds, activate) {
                             Ok(wv) => {
                                 let initial_title = if formatted_url == "local://mock" {
-                                    "Tailorbird Mock Job Listing".to_string()
+                                    "Tailorbird Test Bench".to_string()
                                 } else if formatted_url == "local://hitlist" {
-                                    "🎯 Hit List".to_string()
+                                    "Hit List".to_string()
                                 } else if formatted_url == "local://settings" {
-                                    "⚙️ Settings".to_string()
+                                    "Settings".to_string()
                                 } else {
                                     "New Tab".to_string()
                                 };
@@ -1112,7 +1112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         } else if formatted == "local://hitlist" {
                             let _ = tab.webview.load_html(HITLIST_HTML);
                             tab.url = "local://hitlist".to_string();
-                            tab.title = "🎯 Hit List".to_string();
+                            tab.title = "Hit List".to_string();
                             let stored = load_stored_data();
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
@@ -1123,7 +1123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let html = prepare_settings_html(&current_color);
                             let _ = tab.webview.load_html(&html);
                             tab.url = "local://settings".to_string();
-                            tab.title = "⚙️ Settings".to_string();
+                            tab.title = "Settings".to_string();
                             let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
                             let _ = tab.webview.evaluate_script(&js);
                         } else {

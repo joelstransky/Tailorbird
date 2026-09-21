@@ -961,7 +961,19 @@ pub fn generate_context_menu_script(
         }});
 
         window.addEventListener('blur', closeContextMenu);
-        window.addEventListener('scroll', closeContextMenu, true);
+        window.addEventListener('scroll', function(e) {{
+            if (menu && menu.style.display !== 'none' && (e.target === menu || menu.contains(e.target))) {{
+                return;
+            }}
+            closeContextMenu();
+        }}, true);
+
+        menu.addEventListener('wheel', function(e) {{
+            e.stopPropagation();
+        }}, {{ passive: true }});
+        menu.addEventListener('touchmove', function(e) {{
+            e.stopPropagation();
+        }}, {{ passive: true }});
     }}
 
     if (document.readyState === 'loading') {{

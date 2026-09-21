@@ -9,6 +9,9 @@ use tao::{
     event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy},
     window::WindowBuilder,
 };
+
+#[cfg(target_os = "windows")]
+use tao::platform::windows::WindowExtWindows;
 use wry::{
     NewWindowResponse, PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows,
     WebViewExtWindows,
@@ -29,6 +32,24 @@ const TOOLBAR_HTML: &str = include_str!("assets/toolbar.html");
 const MOCK_JOB_HTML: &str = include_str!("assets/mock_job_page.html");
 const HITLIST_HTML: &str = include_str!("assets/hitlist.html");
 const SETTINGS_HTML: &str = include_str!("assets/settings.html");
+
+fn prepare_settings_html(primary_color: &str) -> String {
+    let color_json = serde_json::to_string(primary_color).unwrap_or_else(|_| "\"#818CF8\"".to_string());
+    SETTINGS_HTML.replace(
+        "/*__INITIAL_COLOR__*/",
+        &format!("window.__INITIAL_ACCENT_COLOR__ = {};", color_json),
+    )
+}
+
+fn prepare_left_pane_html(primary_color: &str) -> String {
+    let color_json = serde_json::to_string(primary_color).unwrap_or_else(|_| "\"#818CF8\"".to_string());
+    LEFT_PANE_HTML
+        .replace("/*__PRIMARY_COLOR__*/ #818CF8", primary_color)
+        .replace(
+            "let currentPrimaryColor = (window.__INITIAL_PRIMARY_COLOR__)",
+            &format!("window.__INITIAL_PRIMARY_COLOR__ = {}; let currentPrimaryColor = (window.__INITIAL_PRIMARY_COLOR__)", color_json),
+        )
+}
 
 const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
     try {
@@ -92,6 +113,7 @@ enum AppEvent {
     TabPageLoaded { id: usize, url: String },
     NavigateActiveTab { url: String },
     SetLeftWidth { width: f64 },
+    SetPrimaryColor { color: String },
     Back,
     Forward,
     Reload,
@@ -135,6 +157,8 @@ enum IpcMessage {
     ScrapeCurrentPage,
     #[serde(rename = "RECORD_PAGE_DATA")]
     RecordPageData { data: ScrapedData },
+    #[serde(rename = "START_RESIZE")]
+    StartResize,
     #[serde(rename = "SET_LEFT_WIDTH")]
     SetLeftWidth { width: f64 },
     #[serde(rename = "SWITCH_TAB")]
@@ -245,6 +269,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     window.set_focus();
     println!("[Tailorbird] Native parent window created successfully.");
 
+    #[cfg(target_os = "windows")]
+    let hwnd_raw = window.hwnd() as isize;
+    #[cfg(not(target_os = "windows"))]
+    let hwnd_raw = 0isize;
+
     // Load persisted app data to restore split width if available
     let initial_app_data = load_stored_data();
     let initial_left_width = initial_app_data.split_width.unwrap_or(LEFT_PANE_WIDTH);
@@ -264,6 +293,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let left_width_holder = Arc::new(Mutex::new(initial_left_width));
     let window_size_holder = Arc::new(Mutex::new((DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)));
+    let scale_factor_holder = Arc::new(Mutex::new(window.scale_factor()));
 
     let left_for_ipc = left_wv_holder.clone();
     let left_width_for_ipc = left_width_holder.clone();
@@ -271,9 +301,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let active_id_for_left = active_tab_id_holder.clone();
     let proxy_for_left = proxy.clone();
     let toolbar_for_left_ipc = toolbar_wv_holder.clone();
+    let scale_factor_for_ipc = scale_factor_holder.clone();
 
     let initial_primary_color = initial_app_data.primary_color.clone().unwrap_or_else(|| "#818CF8".to_string());
     let tb_init_script = format!("window.__INITIAL_PRIMARY_COLOR__ = {};", serde_json::to_string(&initial_primary_color).unwrap_or_default());
+    let prepared_left_html = prepare_left_pane_html(&initial_primary_color);
 
     // Reusable layout coordinator to update all webview bounds seamlessly
     let layout_coordinator = Arc::new({
@@ -348,7 +380,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 NewWindowResponse::Deny
             }
         })
-        .with_html(LEFT_PANE_HTML)
+        .with_html(&prepared_left_html)
         .with_ipc_handler({
             let left_holder = left_for_ipc.clone();
             let tabs_holder = tabs_for_left.clone();
@@ -356,6 +388,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_ipc = proxy_for_left.clone();
             let left_w_holder = left_width_for_ipc.clone();
             let toolbar_for_left = toolbar_for_left_ipc.clone();
+            let win_sz_for_ipc = window_size_holder.clone();
+            let sf_for_ipc = scale_factor_for_ipc.clone();
+            let hwnd_for_ipc = hwnd_raw;
 
             move |req| {
                 let body = req.body();
@@ -438,22 +473,61 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     }
+                    Ok(IpcMessage::StartResize) => {
+                        let proxy_resize = proxy_ipc.clone();
+                        let win_sz_h = win_sz_for_ipc.clone();
+                        let left_w_h = left_w_holder.clone();
+                        let sf_h = sf_for_ipc.clone();
+                        let hwnd_isize = hwnd_for_ipc;
+
+                        std::thread::spawn(move || {
+                            #[cfg(target_os = "windows")]
+                            {
+                                use windows_sys::Win32::Foundation::POINT;
+                                use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
+                                use windows_sys::Win32::UI::WindowsAndMessaging::GetCursorPos;
+                                use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+
+                                // 1. Record starting logical width and initial physical cursor position
+                                let start_lw = *left_w_h.lock().unwrap();
+                                let mut start_pt = POINT { x: 0, y: 0 };
+                                unsafe {
+                                    GetCursorPos(&mut start_pt);
+                                    ScreenToClient(hwnd_isize as _, &mut start_pt);
+                                }
+
+                                while (unsafe { GetAsyncKeyState(VK_LBUTTON as i32) } as u16 & 0x8000) != 0 {
+                                    let mut pt = POINT { x: 0, y: 0 };
+                                    unsafe {
+                                        GetCursorPos(&mut pt);
+                                        ScreenToClient(hwnd_isize as _, &mut pt);
+                                    }
+
+                                    let scale_factor = sf_h.lock().map(|g| *g).unwrap_or(1.0).max(0.1);
+                                    let delta_physical = pt.x - start_pt.x;
+                                    let delta_logical = (delta_physical as f64) / scale_factor;
+
+                                    let (win_width, _) = *win_sz_h.lock().unwrap();
+                                    let min_w = 220.0;
+                                    let max_w = (win_width - 250.0).max(min_w);
+                                    let new_w = (start_lw + delta_logical).clamp(min_w, max_w);
+
+                                    let _ = proxy_resize.send_event(AppEvent::SetLeftWidth { width: new_w });
+                                    std::thread::sleep(std::time::Duration::from_millis(16));
+                                }
+
+                                let cur_w = *left_w_h.lock().unwrap();
+                                let mut data = load_stored_data();
+                                data.split_width = Some(cur_w);
+                                let _ = save_stored_data(&data);
+                            }
+                        });
+                    }
                     Ok(IpcMessage::SetLeftWidth { width }) => {
                         let _ = proxy_ipc.send_event(AppEvent::SetLeftWidth { width });
                     }
                     Ok(IpcMessage::SetPrimaryColor { color }) => {
-                        println!("[Tailorbird Host] SetPrimaryColor received: {}", color);
-                        let mut data = load_stored_data();
-                        data.primary_color = Some(color.clone());
-                        if let Err(e) = save_stored_data(&data) {
-                            eprintln!("[Tailorbird Host] Error saving primary color: {}", e);
-                        }
-                        if let Ok(guard) = toolbar_for_left.lock() {
-                            if let Some(ref tb) = *guard {
-                                let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
-                                let _ = tb.evaluate_script(&js);
-                            }
-                        }
+                        let _ = proxy_ipc.send_event(AppEvent::SetPrimaryColor { color });
                     }
                     Ok(IpcMessage::SaveData {
                         candidate_profile,
@@ -582,7 +656,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let initial_context_script = initial_context_script.clone();
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
-        let toolbar_holder_tab = toolbar_wv_holder.clone();
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
@@ -593,7 +666,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_new_win = proxy.clone();
             let proxy_ipc = proxy.clone();
             let left_h = left_holder.clone();
-            let toolbar_h = toolbar_holder_tab.clone();
 
             let builder = WebViewBuilder::new()
                 .with_environment(shared_env.clone())
@@ -665,24 +737,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 });
                             }
                             Ok(IpcMessage::SetPrimaryColor { color }) => {
-                                println!("[Tailorbird Tab IPC] SetPrimaryColor: {}", color);
-                                let mut data = load_stored_data();
-                                data.primary_color = Some(color.clone());
-                                if let Err(e) = save_stored_data(&data) {
-                                    eprintln!("[Tailorbird Host] Error saving primary color: {}", e);
-                                }
-                                if let Ok(guard) = toolbar_h.lock() {
-                                    if let Some(ref tb) = *guard {
-                                        let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
-                                        let _ = tb.evaluate_script(&js);
-                                    }
-                                }
-                                if let Ok(guard) = left_h.lock() {
-                                    if let Some(ref left_wv) = *guard {
-                                        let js = format!("if (window.applyPrimaryColor) {{ window.applyPrimaryColor({}, false); }}", serde_json::to_string(&color).unwrap_or_default());
-                                        let _ = left_wv.evaluate_script(&js);
-                                    }
-                                }
+                                let _ = proxy_ipc.send_event(AppEvent::SetPrimaryColor { color });
                             }
                             _ => {}
                         }
@@ -694,7 +749,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if is_hitlist {
                 builder.with_html(HITLIST_HTML).build_as_child(win)?
             } else if is_settings {
-                builder.with_html(SETTINGS_HTML).build_as_child(win)?
+                let stored = load_stored_data();
+                let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                let html = prepare_settings_html(&current_color);
+                builder.with_html(&html).build_as_child(win)?
             } else {
                 builder.with_url(url).build_as_child(win)?
             };
@@ -785,10 +843,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     if let Some(existing_id) = already_open_id {
                         let mut tabs = tabs_holder.lock().unwrap();
+                        let stored = load_stored_data();
+                        let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                        let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
                         for t in tabs.iter_mut() {
                             if t.id == existing_id {
                                 let _ = t.webview.set_bounds(bounds);
                                 let _ = t.webview.set_visible(true);
+                                let _ = t.webview.evaluate_script(&js);
                                 let _ = t.webview.focus();
                             } else {
                                 let _ = t.webview.set_visible(false);
@@ -974,11 +1036,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
                             let _ = tab.webview.evaluate_script(&js);
                         } else if formatted == "local://settings" {
-                            let _ = tab.webview.load_html(SETTINGS_HTML);
-                            tab.url = "local://settings".to_string();
-                            tab.title = "⚙️ Settings".to_string();
                             let stored = load_stored_data();
                             let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                            let html = prepare_settings_html(&current_color);
+                            let _ = tab.webview.load_html(&html);
+                            tab.url = "local://settings".to_string();
+                            tab.title = "⚙️ Settings".to_string();
                             let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
                             let _ = tab.webview.evaluate_script(&js);
                         } else {
@@ -991,6 +1054,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 AppEvent::SetLeftWidth { width } => {
                     coordinator_for_loop(Some(width));
+                }
+                AppEvent::SetPrimaryColor { color } => {
+                    println!("[Tailorbird EventLoop] SetPrimaryColor applied: {}", color);
+                    let mut data = load_stored_data();
+                    data.primary_color = Some(color.clone());
+                    if let Err(e) = save_stored_data(&data) {
+                        eprintln!("[Tailorbird Host] Error saving primary color: {}", e);
+                    }
+
+                    // 1. Update Left Control Panel
+                    if let Ok(guard) = left_wv_holder.lock() {
+                        if let Some(ref left_wv) = *guard {
+                            let js = format!(
+                                r#"
+                                (function() {{
+                                    try {{
+                                        if (window.applyPrimaryColor) {{
+                                            window.applyPrimaryColor({col}, false);
+                                        }} else {{
+                                            document.documentElement.style.setProperty('--accent', {col});
+                                        }}
+                                    }} catch (e) {{
+                                        console.error('applyPrimaryColor error:', e);
+                                    }}
+                                }})();
+                                "#,
+                                col = serde_json::to_string(&color).unwrap_or_default()
+                            );
+                            if let Err(e) = left_wv.evaluate_script(&js) {
+                                eprintln!("[Tailorbird Host] Failed to evaluate applyPrimaryColor on left_wv: {:?}", e);
+                            } else {
+                                println!("[Tailorbird Host] Successfully dispatched primary color to left_wv: {}", color);
+                            }
+                        }
+                    }
+
+                    // 2. Update Browser Toolbar
+                    if let Ok(guard) = toolbar_wv_holder.lock() {
+                        if let Some(ref tb) = *guard {
+                            let js = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
+                            let _ = tb.evaluate_script(&js);
+                        }
+                    }
+
+                    // 3. Update all open tabs (settings, hitlist, etc.)
+                    if let Ok(guard) = tabs_holder.lock() {
+                        let js_settings = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
+                        let js_tab = format!("if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}", serde_json::to_string(&color).unwrap_or_default());
+                        for tab in guard.iter() {
+                            let _ = tab.webview.evaluate_script(&js_settings);
+                            let _ = tab.webview.evaluate_script(&js_tab);
+                        }
+                    }
                 }
                 AppEvent::Back => {
                     let cur_active = *active_tab_id_holder.lock().unwrap();
@@ -1037,11 +1153,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ..
             } => {
                 let scale_factor = window.scale_factor();
+                if let Ok(mut sf) = scale_factor_holder.lock() {
+                    *sf = scale_factor;
+                }
                 let logical_size = physical_size.to_logical::<f64>(scale_factor);
                 if let Ok(mut sz) = window_size_holder.lock() {
                     *sz = (logical_size.width, logical_size.height);
                 }
                 coordinator_for_loop(None);
+            }
+            Event::WindowEvent {
+                event: WindowEvent::ScaleFactorChanged { scale_factor, .. },
+                ..
+            } => {
+                if let Ok(mut sf) = scale_factor_holder.lock() {
+                    *sf = scale_factor;
+                }
             }
             _ => {}
         }

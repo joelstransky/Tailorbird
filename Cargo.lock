@@ -2798,6 +2798,7 @@ dependencies = [
  "serde_json",
  "tao",
  "ureq",
+ "windows-sys 0.59.0",
  "wry",
 ]
 

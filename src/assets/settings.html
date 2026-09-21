@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚙️ Tailorbird Settings</title>
+  <title>Tailorbird Settings</title>
+  <script>/*__INITIAL_COLOR__*/</script>
   <style>
     :root {
       --bg: #0B0D13;
@@ -121,20 +122,22 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 12px;
+      min-height: 220px;
     }
 
     .color-card {
       background: var(--card-inner);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 14px 10px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
+      user-select: none;
     }
 
     .color-card:hover {
@@ -145,32 +148,36 @@
 
     .color-card.active {
       border-color: var(--card-accent, #818CF8);
-      background: rgba(255, 255, 255, 0.06);
-      box-shadow: 0 0 0 1px var(--card-accent, #818CF8), 0 4px 14px rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 1.5px var(--card-accent, #818CF8), 0 6px 16px rgba(0, 0, 0, 0.45);
     }
 
     .swatch-circle {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-      transition: transform 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      flex-shrink: 0;
     }
 
     .color-card:hover .swatch-circle {
       transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     }
 
     .swatch-check {
       color: #FFFFFF;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 800;
       opacity: 0;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
       transition: opacity 0.15s ease;
+      line-height: 1;
     }
 
     .color-card.active .swatch-check {
@@ -182,13 +189,15 @@
       font-weight: 600;
       color: var(--text-bright);
       text-align: center;
+      line-height: 1.2;
     }
 
     .color-hex {
-      font-size: 10.5px;
+      font-size: 11px;
       font-family: var(--mono);
       color: var(--text-dim);
       text-align: center;
+      letter-spacing: 0.02em;
     }
 
     /* Live Interactive Preview Box */
@@ -255,12 +264,12 @@
 
     .preview-input {
       background: #181B26;
-      border: 1px solid var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-surface);
+      border: none;
+      box-shadow: 0 0 0 1.5px var(--accent-surface);
       color: var(--text-bright);
       font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 5px;
+      padding: 6px 12px;
+      border-radius: 6px;
       outline: none;
       width: 170px;
     }
@@ -281,7 +290,12 @@
   <div class="container">
     <!-- Page Header -->
     <div class="settings-header">
-      <div class="settings-header-icon">⚙️</div>
+      <div class="settings-header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
       <div>
         <h1 class="settings-header-title">Settings</h1>
         <p class="settings-header-desc">Customize Tailorbird appearance and workspace preferences.</p>
@@ -298,7 +312,88 @@
       </div>
 
       <!-- 10 High-Contrast Colors Grid -->
-      <div class="colors-grid" id="colorsGrid"></div>
+      <div class="colors-grid" id="colorsGrid">
+        <!-- Indigo -->
+        <div class="color-card active" data-hex="#818CF8" data-name="Indigo" style="--card-accent: #818CF8;">
+          <div class="swatch-circle" style="background-color: #818CF8;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Indigo</span>
+          <span class="color-hex">#818CF8</span>
+        </div>
+        <!-- Royal Blue -->
+        <div class="color-card" data-hex="#3B82F6" data-name="Royal Blue" style="--card-accent: #3B82F6;">
+          <div class="swatch-circle" style="background-color: #3B82F6;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Royal Blue</span>
+          <span class="color-hex">#3B82F6</span>
+        </div>
+        <!-- Sky Cyan -->
+        <div class="color-card" data-hex="#0EA5E9" data-name="Sky Cyan" style="--card-accent: #0EA5E9;">
+          <div class="swatch-circle" style="background-color: #0EA5E9;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Sky Cyan</span>
+          <span class="color-hex">#0EA5E9</span>
+        </div>
+        <!-- Teal -->
+        <div class="color-card" data-hex="#14B8A6" data-name="Teal" style="--card-accent: #14B8A6;">
+          <div class="swatch-circle" style="background-color: #14B8A6;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Teal</span>
+          <span class="color-hex">#14B8A6</span>
+        </div>
+        <!-- Emerald -->
+        <div class="color-card" data-hex="#10B981" data-name="Emerald" style="--card-accent: #10B981;">
+          <div class="swatch-circle" style="background-color: #10B981;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Emerald</span>
+          <span class="color-hex">#10B981</span>
+        </div>
+        <!-- Amber Gold -->
+        <div class="color-card" data-hex="#F59E0B" data-name="Amber Gold" style="--card-accent: #F59E0B;">
+          <div class="swatch-circle" style="background-color: #F59E0B;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Amber Gold</span>
+          <span class="color-hex">#F59E0B</span>
+        </div>
+        <!-- Coral Tangerine -->
+        <div class="color-card" data-hex="#F97316" data-name="Coral Tangerine" style="--card-accent: #F97316;">
+          <div class="swatch-circle" style="background-color: #F97316;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Coral Tangerine</span>
+          <span class="color-hex">#F97316</span>
+        </div>
+        <!-- Rose Crimson -->
+        <div class="color-card" data-hex="#F43F5E" data-name="Rose Crimson" style="--card-accent: #F43F5E;">
+          <div class="swatch-circle" style="background-color: #F43F5E;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Rose Crimson</span>
+          <span class="color-hex">#F43F5E</span>
+        </div>
+        <!-- Violet Purple -->
+        <div class="color-card" data-hex="#A855F7" data-name="Violet Purple" style="--card-accent: #A855F7;">
+          <div class="swatch-circle" style="background-color: #A855F7;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Violet Purple</span>
+          <span class="color-hex">#A855F7</span>
+        </div>
+        <!-- Fuchsia Pink -->
+        <div class="color-card" data-hex="#EC4899" data-name="Fuchsia Pink" style="--card-accent: #EC4899;">
+          <div class="swatch-circle" style="background-color: #EC4899;">
+            <span class="swatch-check">✓</span>
+          </div>
+          <span class="color-name">Fuchsia Pink</span>
+          <span class="color-hex">#EC4899</span>
+        </div>
+      </div>
 
       <!-- Live Interactive Component Preview -->
       <div class="preview-box">
@@ -330,58 +425,35 @@
       { name: 'Fuchsia Pink', hex: '#EC4899' }
     ];
 
-    let currentAccent = localStorage.getItem('tailorbird_primary_color') || '#818CF8';
+    function safeGetStorage(key) {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          return window.localStorage.getItem(key);
+        }
+      } catch (_) {}
+      return null;
+    }
 
-    function sendIpc(action, payload = {}) {
-      if (window.ipc && typeof window.ipc.postMessage === 'function') {
-        window.ipc.postMessage(JSON.stringify({ action, ...payload }));
-        return true;
+    function safeSetStorage(key, val) {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(key, val);
+        }
+      } catch (_) {}
+    }
+
+    let currentAccent = (window.__INITIAL_ACCENT_COLOR__) || safeGetStorage('tailorbird_primary_color') || '#818CF8';
+
+    function sendIpc(action, payload) {
+      try {
+        if (window.ipc && typeof window.ipc.postMessage === 'function') {
+          window.ipc.postMessage(JSON.stringify(Object.assign({ action: action }, payload || {})));
+          return true;
+        }
+      } catch (err) {
+        console.error('IPC send error:', err);
       }
       return false;
-    }
-
-    function renderColorCards() {
-      const grid = document.getElementById('colorsGrid');
-      grid.innerHTML = '';
-
-      COLORS.forEach(c => {
-        const card = document.createElement('div');
-        const isActive = c.hex.toLowerCase() === currentAccent.toLowerCase();
-        card.className = 'color-card' + (isActive ? ' active' : '');
-        card.style.setProperty('--card-accent', c.hex);
-        card.onclick = () => selectColor(c.hex, c.name);
-
-        card.innerHTML = `
-          <div class="swatch-circle" style="background-color: ${c.hex}">
-            <span class="swatch-check">✓</span>
-          </div>
-          <span class="color-name">${c.name}</span>
-          <span class="color-hex">${c.hex}</span>
-        `;
-
-        grid.appendChild(card);
-      });
-
-      updatePreview(currentAccent);
-    }
-
-    function selectColor(hex, name) {
-      currentAccent = hex;
-      localStorage.setItem('tailorbird_primary_color', hex);
-
-      // 1. Update document styling
-      document.documentElement.style.setProperty('--accent', hex);
-      document.documentElement.style.setProperty('--accent-surface', hex + '1F');
-
-      // 2. Broadcast to Rust host via IPC
-      sendIpc('SET_PRIMARY_COLOR', { color: hex });
-
-      // 3. Re-render cards active state
-      renderColorCards();
-
-      const found = COLORS.find(c => c.hex.toLowerCase() === hex.toLowerCase());
-      const label = found ? found.name : 'Custom';
-      document.getElementById('previewStatus').textContent = `Active: ${label} (${hex})`;
     }
 
     function updatePreview(hex) {
@@ -389,20 +461,56 @@
       document.documentElement.style.setProperty('--accent-surface', hex + '1F');
       const found = COLORS.find(c => c.hex.toLowerCase() === hex.toLowerCase());
       const label = found ? found.name : 'Custom';
-      document.getElementById('previewStatus').textContent = `Active: ${label} (${hex})`;
+      const statusEl = document.getElementById('previewStatus');
+      if (statusEl) {
+        statusEl.textContent = `Active: ${label} (${hex})`;
+      }
     }
 
-    // Called by host when tab is loaded or switched to
+    function applyAccent(hex, shouldBroadcast) {
+      if (!hex) return;
+      currentAccent = hex;
+      safeSetStorage('tailorbird_primary_color', hex);
+
+      // Update card active classes
+      const cards = document.querySelectorAll('.color-card');
+      cards.forEach(card => {
+        const cardHex = card.getAttribute('data-hex');
+        if (cardHex && cardHex.toLowerCase() === hex.toLowerCase()) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      updatePreview(hex);
+
+      if (shouldBroadcast) {
+        sendIpc('SET_PRIMARY_COLOR', { color: hex });
+      }
+    }
+
+    function initSettings() {
+      const cards = document.querySelectorAll('.color-card');
+      cards.forEach(card => {
+        const hex = card.getAttribute('data-hex');
+        card.onclick = () => applyAccent(hex, true);
+      });
+
+      applyAccent(currentAccent, false);
+    }
+
     window.setInitialAccentColor = function(hex) {
       if (hex) {
-        currentAccent = hex;
-        localStorage.setItem('tailorbird_primary_color', hex);
-        renderColorCards();
+        applyAccent(hex, false);
       }
     };
 
-    // Initial render
-    renderColorCards();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSettings);
+    } else {
+      initSettings();
+    }
   </script>
 </body>
 </html>

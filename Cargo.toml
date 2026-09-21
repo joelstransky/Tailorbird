@@ -21,3 +21,6 @@ windows-sys = { version = "0.59", features = [
     "Win32_Graphics_Gdi",
 ] }
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+

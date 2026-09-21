@@ -2401,6 +2401,16 @@
         notes: ''
       });
 
+      // Expand prospects drawer if not open so user sees newly added prospect
+      const drawer = document.getElementById('drawerProspects');
+      if (drawer && !drawer.classList.contains('open')) {
+        drawer.classList.add('open');
+        syncActivityBarButtons();
+      }
+      if (drawer) {
+        drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
       renderProspects();
       saveAllData();
     };
@@ -2556,16 +2566,12 @@
         return;
       }
 
-      let csv = 'Company,Job Title,Status,Date Added,URL\n';
+      let csv = 'Company,Job Title,Status,Date Added,URL,Notes\n';
       prospects.forEach(p => {
-        csv += `"${(p.company||'').replace(/"/g, '""')}","${(p.jobTitle||'').replace(/"/g, '""')}","${p.status}","${p.dateAdded}","${p.url}"\n`;
+        csv += `"${(p.company||'').replace(/"/g, '""')}","${(p.jobTitle||'').replace(/"/g, '""')}","${p.status}","${p.dateAdded}","${(p.url||'').replace(/"/g, '""')}","${(p.notes||'').replace(/"/g, '""')}"\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `tailorbird_prospects_${Date.now()}.csv`;
-      a.click();
+      sendIpc('EXPORT_PROSPECTS_CSV', { csv });
     });
 
     // --- Job Finder ---

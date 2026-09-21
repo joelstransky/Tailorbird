@@ -7,7 +7,7 @@ use tao::{
     dpi::{LogicalPosition, LogicalSize, Position, Size},
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy},
-    window::WindowBuilder,
+    window::{Icon, WindowBuilder},
 };
 
 #[cfg(target_os = "windows")]
@@ -25,6 +25,9 @@ const LEFT_PANE_WIDTH: f64 = 420.0;
 const TOOLBAR_HEIGHT: f64 = 78.0;
 const DEFAULT_WINDOW_WIDTH: f64 = 1280.0;
 const DEFAULT_WINDOW_HEIGHT: f64 = 750.0;
+
+// Embedded icon bytes for window title bar and taskbar
+const ICON_RGBA: &[u8] = include_bytes!("assets/icon_32.rgba");
 
 // Embedded HTML assets for zero-dependency standalone execution
 const LEFT_PANE_HTML: &str = include_str!("assets/left_pane.html");
@@ -64,10 +67,12 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
 
         const leverTitle = document.querySelector('.posting-headline h2')?.innerText?.trim();
         const ashbyTitle = document.querySelector('h1')?.innerText?.trim();
+        const badgeCompany = document.querySelector('.company-badge')?.innerText?.trim();
+        const compElem = document.querySelector('.company-name, .company, [class*="company-name"], [class*="companyName"]')?.innerText?.trim();
         const h1 = document.querySelector('h1')?.innerText?.trim();
 
         let jobTitle = ghTitle || leverTitle || ashbyTitle || h1 || ogTitle || title;
-        let company = ghCompany || ogSite || '';
+        let company = badgeCompany || ghCompany || compElem || ogSite || '';
 
         if (!company) {
             if (title.includes(' at ')) {
@@ -75,12 +80,22 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
             } else if (title.includes(' - ')) {
                 const parts = title.split(' - ');
                 if (parts.length > 1) {
-                    company = parts[parts.length - 1].split('|')[0].trim();
+                    if (parts[1].trim().toLowerCase() === jobTitle.toLowerCase()) {
+                        company = parts[0].trim();
+                    } else if (parts[0].trim().toLowerCase() === jobTitle.toLowerCase()) {
+                        company = parts[1].trim();
+                    } else {
+                        company = parts[0].trim();
+                    }
                 }
             } else if (title.includes(' | ')) {
                 const parts = title.split(' | ');
                 if (parts.length > 1) {
-                    company = parts[parts.length - 1].trim();
+                    if (parts[1].trim().toLowerCase() === jobTitle.toLowerCase()) {
+                        company = parts[0].trim();
+                    } else {
+                        company = parts[parts.length - 1].trim();
+                    }
                 }
             }
         }
@@ -114,6 +129,7 @@ enum AppEvent {
     NavigateActiveTab { url: String },
     SetLeftWidth { width: f64 },
     SetPrimaryColor { color: String },
+    ScrapeCurrentPage,
     Back,
     Forward,
     Reload,
@@ -207,6 +223,10 @@ enum IpcMessage {
     OpenNewTab {
         url: String,
     },
+    #[serde(rename = "EXPORT_PROSPECTS_CSV")]
+    ExportProspectsCsv {
+        csv: String,
+    },
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -259,12 +279,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = event_loop_builder.build();
     let proxy: EventLoopProxy<AppEvent> = event_loop.create_proxy();
 
-    let window = WindowBuilder::new()
+    let mut win_builder = WindowBuilder::new()
         .with_title("Tailorbird — Specialized Job Search Browser")
         .with_inner_size(LogicalSize::new(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT))
         .with_min_inner_size(LogicalSize::new(760.0, 480.0))
-        .with_visible(true)
-        .build(&event_loop)?;
+        .with_visible(true);
+
+    if let Ok(icon) = Icon::from_rgba(ICON_RGBA.to_vec(), 32, 32) {
+        win_builder = win_builder.with_window_icon(Some(icon));
+    }
+
+    let window = win_builder.build(&event_loop)?;
 
     window.set_focus();
     println!("[Tailorbird] Native parent window created successfully.");
@@ -465,13 +490,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Ok(IpcMessage::ScrapeCurrentPage) => {
-                        println!("[Tailorbird Host] Triggering page scraper on active tab...");
-                        if let Ok(guard) = tabs_holder.lock() {
-                            let active_id = *active_id_holder.lock().unwrap();
-                            if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
-                                let _ = tab.webview.evaluate_script(SCRAPE_PAGE_SCRIPT);
+                        let _ = proxy_ipc.send_event(AppEvent::ScrapeCurrentPage);
+                    }
+                    Ok(IpcMessage::ExportProspectsCsv { csv }) => {
+                        std::thread::spawn(move || {
+                            if let Some(path) = rfd::FileDialog::new()
+                                .set_title("Export Prospects as CSV")
+                                .set_file_name("tailorbird_prospects.csv")
+                                .add_filter("CSV Files", &["csv"])
+                                .save_file()
+                            {
+                                if let Err(e) = std::fs::write(&path, &csv) {
+                                    eprintln!("[Tailorbird Host] Failed to save CSV file: {}", e);
+                                } else {
+                                    println!("[Tailorbird Host] Successfully exported prospects to {:?}", path);
+                                }
                             }
-                        }
+                        });
                     }
                     Ok(IpcMessage::StartResize) => {
                         let proxy_resize = proxy_ipc.clone();
@@ -628,6 +663,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::Home) => {
                         let _ = proxy_tb.send_event(AppEvent::Home);
                     }
+                    Ok(IpcMessage::ScrapeCurrentPage) => {
+                        let _ = proxy_tb.send_event(AppEvent::ScrapeCurrentPage);
+                    }
                     Ok(IpcMessage::Navigate { url }) => {
                         let _ = proxy_tb.send_event(AppEvent::NavigateActiveTab { url });
                     }
@@ -656,6 +694,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let initial_context_script = initial_context_script.clone();
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
+        let toolbar_holder = toolbar_wv_holder.clone();
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
@@ -666,6 +705,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_new_win = proxy.clone();
             let proxy_ipc = proxy.clone();
             let left_h = left_holder.clone();
+            let toolbar_h = toolbar_holder.clone();
 
             let builder = WebViewBuilder::new()
                 .with_environment(shared_env.clone())
@@ -708,6 +748,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .with_ipc_handler({
                     let left_h = left_h.clone();
+                    let toolbar_h = toolbar_h.clone();
                     let proxy_ipc = proxy_ipc.clone();
                     move |req| {
                         let body = req.body();
@@ -718,6 +759,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     if let Some(ref left_wv) = *guard {
                                         let js = format!("if (window.addProspectRow) {{ window.addProspectRow({}); }}", serde_json::to_string(&data).unwrap_or_default());
                                         let _ = left_wv.evaluate_script(&js);
+                                    }
+                                }
+                                if let Ok(guard) = toolbar_h.lock() {
+                                    if let Some(ref tb_wv) = *guard {
+                                        let js = format!("if (window.showRecordSuccess) {{ window.showRecordSuccess({}); }}", serde_json::to_string(&data.company).unwrap_or_default());
+                                        let _ = tb_wv.evaluate_script(&js);
                                     }
                                 }
                             }
@@ -833,10 +880,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         size: Size::Logical(LogicalSize::new(right_width, target_height)),
                     };
 
-                    // If requesting settings and already open, switch to existing tab
-                    let already_open_id = if formatted_url == "local://settings" {
+                    // If requesting a local page and it is already open, focus the existing tab instead of creating duplicates
+                    let is_local_page = formatted_url.starts_with("local://");
+                    let already_open_id = if is_local_page {
                         let tabs = tabs_holder.lock().unwrap();
-                        tabs.iter().find(|t| t.url == "local://settings").map(|t| t.id)
+                        tabs.iter().find(|t| {
+                            t.url == formatted_url
+                                || (formatted_url == "local://hitlist" && (t.url == "local://hitlist" || t.title.contains("Hit List")))
+                                || (formatted_url == "local://settings" && (t.url == "local://settings" || t.title.contains("Settings")))
+                                || (formatted_url == "local://mock" && (t.url == "local://mock" || t.title.contains("Mock")))
+                        }).map(|t| t.id)
                     } else {
                         None
                     };
@@ -845,19 +898,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let mut tabs = tabs_holder.lock().unwrap();
                         let stored = load_stored_data();
                         let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
-                        let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                        let js_accent = format!(
+                            "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }} if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}",
+                            serde_json::to_string(&current_color).unwrap_or_default(),
+                            serde_json::to_string(&current_color).unwrap_or_default()
+                        );
+                        let hitlist_js = if formatted_url == "local://hitlist" {
+                            let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                            format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json)
+                        } else {
+                            String::new()
+                        };
+
                         for t in tabs.iter_mut() {
                             if t.id == existing_id {
+                                t.url = formatted_url.clone();
                                 let _ = t.webview.set_bounds(bounds);
                                 let _ = t.webview.set_visible(true);
-                                let _ = t.webview.evaluate_script(&js);
+                                let _ = t.webview.evaluate_script(&js_accent);
+                                if !hitlist_js.is_empty() {
+                                    let _ = t.webview.evaluate_script(&hitlist_js);
+                                }
                                 let _ = t.webview.focus();
                             } else {
                                 let _ = t.webview.set_visible(false);
                             }
                         }
                         *active_tab_id_holder.lock().unwrap() = existing_id;
-                        sync_url(&toolbar_wv_holder, "local://settings");
+                        sync_url(&toolbar_wv_holder, &formatted_url);
                         sync_tabs(&toolbar_wv_holder, &tabs, existing_id);
                     } else {
                         let new_id = {
@@ -997,9 +1065,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let mut tabs = tabs_holder.lock().unwrap();
                     let cur_active = *active_tab_id_holder.lock().unwrap();
                     if let Some(tab) = tabs.iter_mut().find(|t| t.id == id) {
-                        tab.url = url.clone();
+                        let is_blank_or_data = url.is_empty() || url == "about:blank" || url.starts_with("data:");
+                        let is_currently_local = tab.url.starts_with("local://");
+
+                        // Never overwrite an existing URL with about:blank, data:..., or empty string
+                        if !is_blank_or_data {
+                            tab.url = url.clone();
+                        }
+
                         if id == cur_active {
-                            sync_url(&toolbar_wv_holder, &url);
+                            let omnibar_url = if is_blank_or_data && is_currently_local {
+                                &tab.url
+                            } else {
+                                &url
+                            };
+                            if !omnibar_url.is_empty() && omnibar_url != "about:blank" {
+                                sync_url(&toolbar_wv_holder, omnibar_url);
+                            }
                             let stored = load_stored_data();
                             let context_data = serde_json::json!({
                                 "candidateProfile": stored.candidate_profile,
@@ -1139,6 +1221,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         sync_url(&toolbar_wv_holder, "local://mock");
                     }
                     sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+                AppEvent::ScrapeCurrentPage => {
+                    println!("[Tailorbird Host] Triggering page scraper on active tab...");
+                    if let Ok(guard) = tabs_holder.lock() {
+                        let active_id = *active_tab_id_holder.lock().unwrap();
+                        if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
+                            let _ = tab.webview.evaluate_script(SCRAPE_PAGE_SCRIPT);
+                        }
+                    }
                 }
             },
             Event::WindowEvent {

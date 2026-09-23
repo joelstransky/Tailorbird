@@ -1290,10 +1290,10 @@
       <div class="panel-content">
         <!-- Candidate Summary Card (JqGOI) -->
         <div class="candidate-summary-card">
-          <div class="candidate-avatar" id="summaryAvatarInitials">AR</div>
+          <div class="candidate-avatar" id="summaryAvatarInitials">--</div>
           <div class="candidate-info">
-            <div class="candidate-name" id="summaryCandidateName">Alex Rivera</div>
-            <div class="candidate-sub" id="summaryCandidateSub">Staff / Senior Systems Profile • Las Vegas, NV</div>
+            <div class="candidate-name" id="summaryCandidateName">Candidate Profile</div>
+            <div class="candidate-sub" id="summaryCandidateSub">Set up your profile to enable autofill</div>
           </div>
         </div>
         <!-- Profile Tab Bar -->
@@ -1307,28 +1307,28 @@
           <div class="prop-row">
             <span class="prop-label">Full Name</span>
             <div class="prop-input-wrap">
-              <input type="text" id="fullName" value="Alex Rivera" placeholder="Alex Rivera">
+              <input type="text" id="fullName" value="" placeholder="e.g. Jane Doe">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Email</span>
             <div class="prop-input-wrap">
-              <input type="email" id="email" value="alex@example.com" placeholder="alex@example.com">
+              <input type="email" id="email" value="" placeholder="e.g. jane@example.com">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Phone</span>
             <div class="prop-input-wrap">
-              <input type="tel" id="phone" value="555-0199" placeholder="555-0199">
+              <input type="tel" id="phone" value="" placeholder="e.g. (555) 000-0000">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Location</span>
             <div class="prop-input-wrap">
-              <input type="text" id="location" value="" placeholder="e.g. Las Vegas, NV or Remote">
+              <input type="text" id="location" value="" placeholder="e.g. San Francisco, CA or Remote">
             </div>
           </div>
 
@@ -1342,14 +1342,14 @@
           <div class="prop-row">
             <span class="prop-label">LinkedIn</span>
             <div class="prop-input-wrap">
-              <input type="text" id="linkedin" value="https://linkedin.com/in/alex" placeholder="https://linkedin.com/in/...">
+              <input type="text" id="linkedin" value="" placeholder="https://linkedin.com/in/...">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">GitHub</span>
             <div class="prop-input-wrap">
-              <input type="text" id="github" value="https://github.com/alex" placeholder="https://github.com/...">
+              <input type="text" id="github" value="" placeholder="https://github.com/...">
             </div>
           </div>
 
@@ -1363,7 +1363,7 @@
           <div class="prop-row">
             <span class="prop-label">Experience</span>
             <div class="prop-input-wrap">
-              <input type="number" id="experienceYears" value="8" min="0" max="50" style="width: 70px;">
+              <input type="number" id="experienceYears" value="" min="0" max="50" placeholder="0" style="width: 70px;">
               <span style="color:#777; font-size:10px;">years</span>
             </div>
           </div>
@@ -1588,14 +1588,14 @@
         <div class="prop-row">
           <span class="prop-label">Keywords</span>
           <div class="prop-input-wrap">
-            <input type="text" id="searchTitle" value="Systems Engineer" placeholder="e.g. Staff Software Engineer">
+            <input type="text" id="searchTitle" value="" placeholder="e.g. Staff Software Engineer">
           </div>
         </div>
 
         <div class="prop-row">
           <span class="prop-label">Location</span>
           <div class="prop-input-wrap">
-            <input type="text" id="searchLocation" value="Remote" placeholder="e.g. Remote, SF">
+            <input type="text" id="searchLocation" value="" placeholder="e.g. Remote, San Francisco">
           </div>
         </div>
 
@@ -2592,22 +2592,39 @@
 
       // 1. Candidate Profile
       if (data.candidateProfile) {
-        if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName;
-        if (data.candidateProfile.pronouns !== undefined) setPronouns(data.candidateProfile.pronouns);
-        if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email;
-        if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = data.candidateProfile.phone;
-        if (data.candidateProfile.location !== undefined) document.getElementById('location').value = data.candidateProfile.location;
-        if (data.candidateProfile.currentCompany !== undefined) document.getElementById('currentCompany').value = data.candidateProfile.currentCompany;
-        if (data.candidateProfile.linkedin !== undefined) document.getElementById('linkedin').value = data.candidateProfile.linkedin;
-        if (data.candidateProfile.github !== undefined) document.getElementById('github').value = data.candidateProfile.github;
-        if (data.candidateProfile.portfolioUrl !== undefined) document.getElementById('portfolioUrl').value = data.candidateProfile.portfolioUrl;
-        if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears;
-        if (data.candidateProfile.salaryMin !== undefined) document.getElementById('salaryMin').value = data.candidateProfile.salaryMin;
-        if (data.candidateProfile.salaryMax !== undefined) document.getElementById('salaryMax').value = data.candidateProfile.salaryMax;
-        if (data.candidateProfile.gender !== undefined) setGender(data.candidateProfile.gender);
-        if (data.candidateProfile.race !== undefined) setRace(data.candidateProfile.race);
-        if (data.candidateProfile.veteranStatus !== undefined) setVeteranStatus(data.candidateProfile.veteranStatus);
-        if (data.candidateProfile.disabilityStatus !== undefined) setDisabilityStatus(data.candidateProfile.disabilityStatus);
+        if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName || '';
+        if (data.candidateProfile.pronouns !== undefined) setPronouns(data.candidateProfile.pronouns || '');
+        if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email || '';
+        if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = data.candidateProfile.phone || '';
+        if (data.candidateProfile.location !== undefined) document.getElementById('location').value = data.candidateProfile.location || '';
+        if (data.candidateProfile.currentCompany !== undefined) document.getElementById('currentCompany').value = data.candidateProfile.currentCompany || '';
+        if (data.candidateProfile.linkedin !== undefined) document.getElementById('linkedin').value = data.candidateProfile.linkedin || '';
+        if (data.candidateProfile.github !== undefined) document.getElementById('github').value = data.candidateProfile.github || '';
+        if (data.candidateProfile.portfolioUrl !== undefined) document.getElementById('portfolioUrl').value = data.candidateProfile.portfolioUrl || '';
+        if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears || '';
+        if (data.candidateProfile.salaryMin !== undefined) document.getElementById('salaryMin').value = data.candidateProfile.salaryMin || '';
+        if (data.candidateProfile.salaryMax !== undefined) document.getElementById('salaryMax').value = data.candidateProfile.salaryMax || '';
+        if (data.candidateProfile.gender !== undefined) setGender(data.candidateProfile.gender || '');
+        if (data.candidateProfile.race !== undefined) setRace(data.candidateProfile.race || '');
+        if (data.candidateProfile.veteranStatus !== undefined) setVeteranStatus(data.candidateProfile.veteranStatus || '');
+        if (data.candidateProfile.disabilityStatus !== undefined) setDisabilityStatus(data.candidateProfile.disabilityStatus || '');
+      } else {
+        document.getElementById('fullName').value = '';
+        setPronouns('');
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('location').value = '';
+        document.getElementById('currentCompany').value = '';
+        document.getElementById('linkedin').value = '';
+        document.getElementById('github').value = '';
+        document.getElementById('portfolioUrl').value = '';
+        document.getElementById('experienceYears').value = '';
+        document.getElementById('salaryMin').value = '';
+        document.getElementById('salaryMax').value = '';
+        setGender('');
+        setRace('');
+        setVeteranStatus('');
+        setDisabilityStatus('');
       }
 
       // 2. Resume Source
@@ -2638,12 +2655,15 @@
 
       // 5. Search Criteria
       if (data.searchCriteria) {
-        if (data.searchCriteria.title !== undefined) document.getElementById('searchTitle').value = data.searchCriteria.title;
-        if (data.searchCriteria.location !== undefined) document.getElementById('searchLocation').value = data.searchCriteria.location;
+        if (data.searchCriteria.title !== undefined) document.getElementById('searchTitle').value = data.searchCriteria.title || '';
+        if (data.searchCriteria.location !== undefined) document.getElementById('searchLocation').value = data.searchCriteria.location || '';
         if (data.searchCriteria.greenhouse !== undefined) document.getElementById('chkGreenhouse').checked = data.searchCriteria.greenhouse;
         if (data.searchCriteria.lever !== undefined) document.getElementById('chkLever').checked = data.searchCriteria.lever;
         if (data.searchCriteria.linkedin !== undefined) document.getElementById('chkLinkedin').checked = data.searchCriteria.linkedin;
         if (data.searchCriteria.indeed !== undefined) document.getElementById('chkIndeed').checked = data.searchCriteria.indeed;
+      } else {
+        document.getElementById('searchTitle').value = '';
+        document.getElementById('searchLocation').value = '';
       }
 
       // 6. Drawer Collapse States (always start collapsed)
@@ -2670,7 +2690,7 @@
       const r = (role !== undefined ? role : (document.getElementById('searchTitle') ? document.getElementById('searchTitle').value : '')).trim();
 
       // Initials calculation
-      let initials = 'TB';
+      let initials = '--';
       if (n) {
         const parts = n.split(/\s+/).filter(Boolean);
         if (parts.length >= 2) {
@@ -2686,13 +2706,20 @@
       const nameEl = document.getElementById('summaryCandidateName');
       if (nameEl) nameEl.textContent = n || 'Candidate Profile';
 
-      const roleDisplay = r || 'Staff / Senior Systems Profile';
-      const locDisplay = loc || 'Las Vegas, NV';
+      const roleDisplay = r;
+      const locDisplay = loc;
+      const subParts = [roleDisplay, locDisplay].filter(Boolean);
       const subEl = document.getElementById('summaryCandidateSub');
-      if (subEl) subEl.textContent = `${roleDisplay} • ${locDisplay}`;
+      if (subEl) subEl.textContent = subParts.length > 0 ? subParts.join(' • ') : 'Set up your profile to enable autofill';
 
       const wsEl = document.getElementById('workspaceProfileName');
-      if (wsEl) wsEl.textContent = `${n || 'Alex Rivera'} — ${roleDisplay}`;
+      if (wsEl) {
+        if (n) {
+          wsEl.textContent = roleDisplay ? `${n} — ${roleDisplay}` : n;
+        } else {
+          wsEl.textContent = roleDisplay || 'Candidate Profile';
+        }
+      }
     }
     window.updateCandidateSummaryUI = updateCandidateSummaryUI;
 

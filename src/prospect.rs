@@ -116,11 +116,15 @@ pub struct AppData {
 }
 
 fn storage_file_path() -> PathBuf {
-    // 1. Portable mode: check current working directory
-    let local = PathBuf::from("tailorbird_data.json");
-    if local.exists() {
-        return local;
+    // 1. In debug/development mode only, check current working directory for local testing
+    #[cfg(debug_assertions)]
+    {
+        let local = PathBuf::from("tailorbird_data.json");
+        if local.exists() {
+            return local;
+        }
     }
+
     // 2. Portable mode: check next to running binary
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
@@ -131,7 +135,7 @@ fn storage_file_path() -> PathBuf {
         }
     }
 
-    // 3. Platform-specific user data directories:
+    // 3. Platform-specific user data directories (for installed applications):
     // Windows: %APPDATA%\Tailorbird
     #[cfg(target_os = "windows")]
     if let Ok(appdata) = std::env::var("APPDATA") {
@@ -165,7 +169,7 @@ fn storage_file_path() -> PathBuf {
         return app_dir.join("tailorbird_data.json");
     }
 
-    local
+    PathBuf::from("tailorbird_data.json")
 }
 
 pub fn load_stored_data() -> AppData {

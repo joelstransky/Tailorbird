@@ -6,3 +6,4 @@ tailorbird_data.json
 *.csv
 clipboard*
 image.png
+/dist

@@ -537,6 +537,52 @@
       filter: brightness(1.1);
     }
 
+    /* Drawer action buttons: visible when drawer is closed, hidden when drawer is open */
+    .panel-drawer.open .panel-header-actions .drawer-action-btn {
+      display: none !important;
+    }
+
+    /* Tool Footer Action Bar (Lower right of each tool's UI when open) */
+    .tool-footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 12px;
+      flex-shrink: 0;
+    }
+
+    .tool-action-btn {
+      background: var(--accent) !important;
+      border: none !important;
+      color: #FFFFFF !important;
+      border-radius: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 4px 12px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 1px 4px var(--accent-glow);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tool-action-btn:hover {
+      background: var(--accent-hover) !important;
+      filter: brightness(1.1);
+    }
+
+    .tool-action-btn svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
     /* Panel Content Area (fills available height or grows with content) */
     .panel-content {
       flex: 1 1 auto;
@@ -1278,7 +1324,7 @@
           <span>Properties (Candidate Profile)</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnAutofill" title="Autofill Application Form">
+          <button class="header-action-btn header-action-primary drawer-action-btn" id="btnAutofill" title="Autofill Application Form">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
@@ -1464,6 +1510,16 @@
             </div>
           </div>
         </div>
+
+        <!-- Lower right action button when drawer is open -->
+        <div class="tool-footer-actions">
+          <button class="tool-action-btn" id="btnAutofillFooter" title="Autofill Application Form" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Autofill</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1479,12 +1535,15 @@
           <span id="drawerWorkTitle">Work History</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn" id="btnAddSpecialField" style="display: none;" title="Add Special Field">
+          <button class="header-action-btn header-action-primary drawer-action-btn" id="btnScanResumeHeader" title="Import & scan resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+              <line x1="7" y1="12" x2="17" y2="12"></line>
             </svg>
-            <span>Field</span>
+            <span>Scan</span>
           </button>
         </div>
       </div>
@@ -1555,6 +1614,17 @@
 
         <!-- Tab 2: Special Fields View -->
         <div id="tabViewSpecial" class="wh-tab-view" style="display: none;">
+          <!-- Action bar placed directly above the special fields items -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin: 4px 0 6px 0; flex-shrink: 0;">
+            <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Custom Snippets</span>
+            <button class="header-action-btn" id="btnAddSpecialField" title="Add Special Field" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Field</span>
+            </button>
+          </div>
           <div class="special-fields-scroll-area" id="specialFieldsList">
             <!-- Special field cards injected dynamically -->
           </div>
@@ -1574,7 +1644,7 @@
           <span>Job Finder</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnRunSearch" title="Search Job Listings">
+          <button class="header-action-btn header-action-primary drawer-action-btn" id="btnRunSearch" title="Search Job Listings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -1611,12 +1681,23 @@
           </label>
           <label class="platform-check-item">
             <input type="checkbox" id="chkLinkedin" checked>
-            <span>LinkedIn Jobs (linkedin.com/jobs)</span>
+            <span>LinkedIn (linkedin.com)</span>
           </label>
           <label class="platform-check-item">
             <input type="checkbox" id="chkIndeed">
             <span>Indeed (indeed.com)</span>
           </label>
+        </div>
+
+        <!-- Lower right action button when drawer is open -->
+        <div class="tool-footer-actions">
+          <button class="tool-action-btn" id="btnRunSearchFooter" title="Search Job Listings" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Search</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1635,7 +1716,7 @@
           <span>Prospects <span id="prospectCount" style="color: var(--app-text-muted); font-weight: normal;">(0)</span></span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary" id="btnRecordPage" title="Record current listing into sheet">
+          <button class="header-action-btn header-action-primary drawer-action-btn" id="btnRecordPage" title="Record current listing into sheet">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -1677,6 +1758,13 @@
 
         <div class="layers-footer-bar">
           <span style="font-size: 10px; color: #777; margin-right: auto;" id="prospectStatusSummary">0 positions tracked</span>
+          <button class="tool-action-btn" id="btnRecordPageFooter" title="Record current listing into sheet" type="button" style="height: 22px; padding: 2px 10px; font-size: 10px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Record</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1908,8 +1996,7 @@
     function getDisabilityStatus() { return disabilityHandler.getVal(); }
     function setDisabilityStatus(val) { disabilityHandler.setVal(val); }
 
-    // --- Profile & Autofill ---
-    document.getElementById('btnAutofill').addEventListener('click', () => {
+    function handleAutofill() {
       const data = {
         fullName: document.getElementById('fullName').value.trim(),
         pronouns: getPronouns(),
@@ -1929,6 +2016,10 @@
         disabilityStatus: getDisabilityStatus()
       };
       sendIpc('AUTOFILL', { data });
+    }
+    ['btnAutofill', 'btnAutofillFooter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', handleAutofill);
     });
 
     // --- Resume & Work History ---
@@ -1945,7 +2036,7 @@
       saveAllData();
     };
 
-    document.getElementById('btnImportResume').addEventListener('click', () => {
+    function handleScanResume() {
       const source = resumeSourceInput.value.trim();
       if (!source) {
         showErrorAlert('Please select a local resume file or paste a public Google Doc URL.', 'No Resume Specified');
@@ -1957,6 +2048,10 @@
       } else {
         performImport(source);
       }
+    }
+    ['btnImportResume', 'btnScanResumeHeader'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', handleScanResume);
     });
 
     document.getElementById('btnCancelImport').addEventListener('click', () => {
@@ -2366,8 +2461,11 @@
       renderProspects();
     });
 
-    document.getElementById('btnRecordPage').addEventListener('click', () => {
-      sendIpc('SCRAPE_CURRENT_PAGE');
+    ['btnRecordPage', 'btnRecordPageFooter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => {
+        sendIpc('SCRAPE_CURRENT_PAGE');
+      });
     });
 
     window.addProspectRow = function(p) {
@@ -2561,14 +2659,14 @@
     });
 
     // --- Job Finder ---
-    document.getElementById('btnRunSearch').addEventListener('click', () => {
+    function handleRunSearch() {
       const title = document.getElementById('searchTitle').value.trim();
       const location = document.getElementById('searchLocation').value.trim();
 
       const sites = [];
       if (document.getElementById('chkGreenhouse').checked) sites.push('site:boards.greenhouse.io');
       if (document.getElementById('chkLever').checked) sites.push('site:jobs.lever.co');
-      if (document.getElementById('chkLinkedin').checked) sites.push('site:linkedin.com/jobs');
+      if (document.getElementById('chkLinkedin').checked) sites.push('site:linkedin.com');
       if (document.getElementById('chkIndeed').checked) sites.push('site:indeed.com');
 
       let queryParts = [];
@@ -2581,6 +2679,11 @@
 
       const query = queryParts.join(' ');
       sendIpc('NAVIGATE', { url: query });
+    }
+
+    ['btnRunSearch', 'btnRunSearchFooter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', handleRunSearch);
     });
 
     // --- Storage & Sync ---
@@ -2869,10 +2972,15 @@
           stroke: ${hex} !important;
         }
         .header-action-primary,
+        .tool-action-btn,
         #btnAutofill,
+        #btnAutofillFooter,
         #btnRunSearch,
+        #btnRunSearchFooter,
         #btnRecordPage,
-        #btnImportResume {
+        #btnRecordPageFooter,
+        #btnImportResume,
+        #btnScanResumeHeader {
           background: ${hex} !important;
           border-color: ${hex} !important;
         }
@@ -2906,7 +3014,7 @@
         icon.style.setProperty('stroke', hex, 'important');
       });
 
-      ['btnAutofill', 'btnRunSearch', 'btnRecordPage', 'btnImportResume'].forEach(id => {
+      ['btnAutofill', 'btnAutofillFooter', 'btnRunSearch', 'btnRunSearchFooter', 'btnRecordPage', 'btnRecordPageFooter', 'btnImportResume', 'btnScanResumeHeader'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
           btn.style.setProperty('background', hex, 'important');

@@ -116,12 +116,12 @@ pub struct AppData {
 }
 
 fn storage_file_path() -> PathBuf {
-    // 1. Current working directory
+    // 1. Portable mode: check current working directory
     let local = PathBuf::from("tailorbird_data.json");
     if local.exists() {
         return local;
     }
-    // 2. Next to running binary
+    // 2. Portable mode: check next to running binary
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
             let exe_local = exe_dir.join("tailorbird_data.json");
@@ -130,6 +130,41 @@ fn storage_file_path() -> PathBuf {
             }
         }
     }
+
+    // 3. Platform-specific user data directories:
+    // Windows: %APPDATA%\Tailorbird
+    #[cfg(target_os = "windows")]
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        let app_dir = PathBuf::from(appdata).join("Tailorbird");
+        let _ = fs::create_dir_all(&app_dir);
+        return app_dir.join("tailorbird_data.json");
+    }
+
+    // macOS: ~/Library/Application Support/Tailorbird
+    #[cfg(target_os = "macos")]
+    if let Ok(home) = std::env::var("HOME") {
+        let app_dir = PathBuf::from(home)
+            .join("Library")
+            .join("Application Support")
+            .join("Tailorbird");
+        let _ = fs::create_dir_all(&app_dir);
+        return app_dir.join("tailorbird_data.json");
+    }
+
+    // Linux (Arch, Debian, etc.): $XDG_CONFIG_HOME/tailorbird or ~/.config/tailorbird
+    #[cfg(target_os = "linux")]
+    {
+        let config_dir = std::env::var("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                PathBuf::from(home).join(".config")
+            });
+        let app_dir = config_dir.join("tailorbird");
+        let _ = fs::create_dir_all(&app_dir);
+        return app_dir.join("tailorbird_data.json");
+    }
+
     local
 }
 

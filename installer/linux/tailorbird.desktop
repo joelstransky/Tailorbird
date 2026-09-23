@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Tailorbird
+Comment=Specialized desktop browser for job hunting, application tracking, and form filling
+Exec=tailorbird %U
+Icon=tailorbird
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;Office;
+StartupWMClass=tailorbird
+MimeType=x-scheme-handler/local;

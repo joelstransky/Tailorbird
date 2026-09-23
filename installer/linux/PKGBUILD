@@ -1,0 +1,27 @@
+# Maintainer: Joel Stransky <stranskydesign@gmail.com>
+pkgname=tailorbird
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Specialized desktop browser for job hunting, application tracking, and form filling"
+arch=('x86_64')
+url="https://github.com/joelstransky/Tailorbird"
+license=('MIT')
+depends=('webkit2gtk-4.1' 'openssl')
+makedepends=('cargo' 'git')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "Tailorbird-$pkgver"
+    cargo build --release --locked
+}
+
+package() {
+    cd "Tailorbird-$pkgver"
+    install -Dm755 "target/release/tailorbird" "$pkgdir/usr/bin/tailorbird"
+    install -Dm644 "src/assets/icon.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/tailorbird.png"
+    install -Dm644 "installer/linux/tailorbird.desktop" "$pkgdir/usr/share/applications/tailorbird.desktop"
+    if [ -f "LICENSE" ]; then
+        install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    fi
+}

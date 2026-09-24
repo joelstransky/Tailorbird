@@ -298,6 +298,31 @@
       line-height: 1.35;
     }
 
+    .about-dep-list {
+      margin-top: 3px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .about-dep-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .about-dep-name {
+      color: #CBD5E1;
+    }
+
+    .about-dep-ver {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #64748B;
+    }
+
     /* Middle Resizer Divider between Left Pane and Browser Pane */
     .middle-resizer {
       position: fixed;
@@ -1302,7 +1327,27 @@
           <div class="about-section">
             <div class="about-section-label">Credits</div>
             <div class="about-section-val">Created by Joel Stransky</div>
-            <div class="about-section-val" style="color: #64748B; margin-top: 2px;">Tech Stack: Rust · Tao · Wry · WebView2</div>
+          </div>
+          <div class="about-section">
+            <div class="about-section-label">Dependencies</div>
+            <div class="about-dep-list">
+              <div class="about-dep-row">
+                <span class="about-dep-name">Rust</span>
+                <span class="about-dep-ver">v1.98.1</span>
+              </div>
+              <div class="about-dep-row">
+                <span class="about-dep-name">Tao</span>
+                <span class="about-dep-ver">v0.37.0</span>
+              </div>
+              <div class="about-dep-row">
+                <span class="about-dep-name">Wry</span>
+                <span class="about-dep-ver">v0.57.0</span>
+              </div>
+              <div class="about-dep-row">
+                <span class="about-dep-name">WebView2</span>
+                <span class="about-dep-ver">v0.39.1</span>
+              </div>
+            </div>
           </div>
           <div class="about-section">
             <div class="about-section-label">Build Info</div>

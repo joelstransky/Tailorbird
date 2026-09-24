@@ -1259,7 +1259,7 @@
         </div>
       </div>
 
-      <button class="activity-btn" id="actProfile" title="Candidate Profile" type="button" onclick="handleActivityClick('profile')">
+      <button class="activity-btn" id="actProfile" title="Profile" type="button" onclick="handleActivityClick('profile')">
         <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
@@ -1321,7 +1321,7 @@
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          <span>Properties (Candidate Profile)</span>
+          <span>Profile</span>
         </span>
         <div class="panel-header-actions" onclick="event.stopPropagation();">
           <button class="header-action-btn header-action-primary drawer-action-btn" id="btnAutofill" title="Autofill Application Form">
@@ -1379,13 +1379,6 @@
           </div>
 
           <div class="prop-row">
-            <span class="prop-label">Company</span>
-            <div class="prop-input-wrap">
-              <input type="text" id="currentCompany" value="" placeholder="Current employer">
-            </div>
-          </div>
-
-          <div class="prop-row">
             <span class="prop-label">LinkedIn</span>
             <div class="prop-input-wrap">
               <input type="text" id="linkedin" value="" placeholder="https://linkedin.com/in/...">
@@ -1411,15 +1404,6 @@
             <div class="prop-input-wrap">
               <input type="number" id="experienceYears" value="" min="0" max="50" placeholder="0" style="width: 70px;">
               <span style="color:#777; font-size:10px;">years</span>
-            </div>
-          </div>
-
-          <div class="prop-row">
-            <span class="prop-label">Salary Range</span>
-            <div class="prop-input-wrap" style="gap: 4px;">
-              <input type="text" id="salaryMin" value="" placeholder="Min (e.g. $140k)" style="flex:1;">
-              <span style="color:#777; font-size:10px;">-</span>
-              <input type="text" id="salaryMax" value="" placeholder="Max (e.g. $200k)" style="flex:1;">
             </div>
           </div>
         </div>
@@ -1992,13 +1976,13 @@
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         location: document.getElementById('location').value.trim(),
-        currentCompany: document.getElementById('currentCompany').value.trim(),
+        currentCompany: (workHistory && workHistory.length > 0 && workHistory[0].company) ? workHistory[0].company.trim() : '',
         linkedin: document.getElementById('linkedin').value.trim(),
         github: document.getElementById('github').value.trim(),
         portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
         experienceYears: document.getElementById('experienceYears').value.trim(),
-        salaryMin: document.getElementById('salaryMin').value.trim(),
-        salaryMax: document.getElementById('salaryMax').value.trim(),
+        salaryMin: '',
+        salaryMax: '',
         gender: getGender(),
         race: getRace(),
         veteranStatus: getVeteranStatus(),
@@ -2673,6 +2657,29 @@
       if (el) el.addEventListener('click', handleRunSearch);
     });
 
+    // --- Phone Number Formatting ---
+    function formatPhoneNumber(val) {
+      if (!val) return '';
+      const str = String(val).trim();
+      if (str.startsWith('+')) {
+        return str;
+      }
+      let digits = str.replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.length === 11 && digits.startsWith('1')) {
+        digits = digits.slice(1);
+      }
+      if (digits.length <= 3) {
+        return digits;
+      } else if (digits.length <= 6) {
+        return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+      } else if (digits.length <= 10) {
+        return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+      } else {
+        return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)} x${digits.slice(10)}`;
+      }
+    }
+
     // --- Storage & Sync ---
     let isDataLoaded = false;
 
@@ -2685,15 +2692,12 @@
         if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName || '';
         if (data.candidateProfile.pronouns !== undefined) setPronouns(data.candidateProfile.pronouns || '');
         if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email || '';
-        if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = data.candidateProfile.phone || '';
+        if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = formatPhoneNumber(data.candidateProfile.phone || '');
         if (data.candidateProfile.location !== undefined) document.getElementById('location').value = data.candidateProfile.location || '';
-        if (data.candidateProfile.currentCompany !== undefined) document.getElementById('currentCompany').value = data.candidateProfile.currentCompany || '';
         if (data.candidateProfile.linkedin !== undefined) document.getElementById('linkedin').value = data.candidateProfile.linkedin || '';
         if (data.candidateProfile.github !== undefined) document.getElementById('github').value = data.candidateProfile.github || '';
         if (data.candidateProfile.portfolioUrl !== undefined) document.getElementById('portfolioUrl').value = data.candidateProfile.portfolioUrl || '';
         if (data.candidateProfile.experienceYears !== undefined) document.getElementById('experienceYears').value = data.candidateProfile.experienceYears || '';
-        if (data.candidateProfile.salaryMin !== undefined) document.getElementById('salaryMin').value = data.candidateProfile.salaryMin || '';
-        if (data.candidateProfile.salaryMax !== undefined) document.getElementById('salaryMax').value = data.candidateProfile.salaryMax || '';
         if (data.candidateProfile.gender !== undefined) setGender(data.candidateProfile.gender || '');
         if (data.candidateProfile.race !== undefined) setRace(data.candidateProfile.race || '');
         if (data.candidateProfile.veteranStatus !== undefined) setVeteranStatus(data.candidateProfile.veteranStatus || '');
@@ -2704,13 +2708,10 @@
         document.getElementById('email').value = '';
         document.getElementById('phone').value = '';
         document.getElementById('location').value = '';
-        document.getElementById('currentCompany').value = '';
         document.getElementById('linkedin').value = '';
         document.getElementById('github').value = '';
         document.getElementById('portfolioUrl').value = '';
         document.getElementById('experienceYears').value = '';
-        document.getElementById('salaryMin').value = '';
-        document.getElementById('salaryMax').value = '';
         setGender('');
         setRace('');
         setVeteranStatus('');
@@ -2853,13 +2854,13 @@
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         location: document.getElementById('location').value.trim(),
-        currentCompany: document.getElementById('currentCompany').value.trim(),
+        currentCompany: (workHistory && workHistory.length > 0 && workHistory[0].company) ? workHistory[0].company.trim() : '',
         linkedin: document.getElementById('linkedin').value.trim(),
         github: document.getElementById('github').value.trim(),
         portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
         experienceYears: document.getElementById('experienceYears').value.trim(),
-        salaryMin: document.getElementById('salaryMin').value.trim(),
-        salaryMax: document.getElementById('salaryMax').value.trim(),
+        salaryMin: '',
+        salaryMax: '',
         gender: getGender(),
         race: getRace(),
         veteranStatus: getVeteranStatus(),
@@ -3021,8 +3022,27 @@
     // Apply initial primary color right away
     applyPrimaryColor(currentPrimaryColor, false);
 
+    // Phone input auto-formatting
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', () => {
+        const val = phoneInput.value;
+        if (!val.startsWith('+')) {
+          const formatted = formatPhoneNumber(val);
+          if (formatted !== val) {
+            phoneInput.value = formatted;
+          }
+        }
+      });
+      phoneInput.addEventListener('blur', () => {
+        phoneInput.value = formatPhoneNumber(phoneInput.value);
+        updateCandidateSummaryUI();
+        saveAllData();
+      });
+    }
+
     // Auto-save & candidate summary sync on input changes for profile and search builder
-    ['fullName', 'pronouns', 'email', 'phone', 'location', 'currentCompany', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'salaryMin', 'salaryMax', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
+    ['fullName', 'pronouns', 'email', 'phone', 'location', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('input', () => updateCandidateSummaryUI());

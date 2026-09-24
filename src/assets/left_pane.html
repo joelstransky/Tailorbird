@@ -1109,50 +1109,65 @@
       align-items: center;
       gap: 6px;
       user-select: none;
-      font-size: 11px;
-      line-height: 1;
       vertical-align: middle;
     }
 
     .prospect-step-btn {
       background: transparent;
-      border: none;
-      color: var(--app-text-muted, #94A3B8);
-      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-top-color: rgba(255, 255, 255, 0.32);
+      border-left-color: rgba(255, 255, 255, 0.26);
+      border-bottom-color: rgba(0, 0, 0, 0.5);
+      border-right-color: rgba(0, 0, 0, 0.42);
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.25);
+      border-radius: 3px;
+      color: var(--app-text, #E2E8F0);
+      font-size: 13px;
       font-family: inherit;
-      font-weight: 600;
+      font-weight: bold;
       line-height: 1;
-      padding: 0 1px;
+      width: 17px;
+      height: 17px;
+      padding: 0;
       margin: 0;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: auto;
-      width: auto;
       box-sizing: border-box;
-      transition: color 0.15s ease, opacity 0.15s ease;
+      transition: all 0.12s ease;
     }
 
     .prospect-step-btn:hover:not(:disabled) {
       color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.38);
+      border-top-color: rgba(255, 255, 255, 0.48);
+      border-bottom-color: rgba(0, 0, 0, 0.55);
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.16), 0 1px 3px rgba(0, 0, 0, 0.35);
     }
 
     .prospect-step-btn:active:not(:disabled) {
-      transform: scale(0.9);
+      transform: translateY(1px);
+      box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.6);
+      border-top-color: rgba(0, 0, 0, 0.55);
+      border-left-color: rgba(0, 0, 0, 0.45);
+      border-bottom-color: rgba(255, 255, 255, 0.22);
+      border-right-color: rgba(255, 255, 255, 0.22);
     }
 
     .prospect-step-btn:disabled {
       opacity: 0.25;
       cursor: default;
       pointer-events: none;
+      box-shadow: none;
+      border-color: rgba(255, 255, 255, 0.08);
     }
 
     .prospect-status-text {
       font-size: 11px;
       line-height: 1;
-      font-weight: 500;
-      min-width: 66px;
+      font-weight: 600;
+      min-width: 68px;
       text-align: center;
       display: inline-block;
       white-space: nowrap;

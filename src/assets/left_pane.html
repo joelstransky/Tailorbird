@@ -1104,23 +1104,59 @@
       text-decoration: underline;
     }
 
-    .prospect-status-select {
-      background: #1C2030;
-      color: var(--app-text);
-      border: 1px solid #262D45;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      min-width: 98px;
-      width: 98px;
-      height: 24px;
-      cursor: pointer;
-      outline: none;
+    .prospect-status-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      font-size: 11px;
+      line-height: 1;
+      vertical-align: middle;
     }
 
-    .prospect-status-select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent);
+    .prospect-step-btn {
+      background: transparent;
+      border: none;
+      color: var(--app-text-muted, #94A3B8);
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 600;
+      line-height: 1;
+      padding: 0 1px;
+      margin: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: auto;
+      width: auto;
+      box-sizing: border-box;
+      transition: color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .prospect-step-btn:hover:not(:disabled) {
+      color: #FFFFFF;
+    }
+
+    .prospect-step-btn:active:not(:disabled) {
+      transform: scale(0.9);
+    }
+
+    .prospect-step-btn:disabled {
+      opacity: 0.25;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .prospect-status-text {
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 500;
+      min-width: 66px;
+      text-align: center;
+      display: inline-block;
+      white-space: nowrap;
+      vertical-align: middle;
     }
 
     .ps-table-input {
@@ -2537,6 +2573,22 @@
         const isEditing = editingProspects.has(pid);
         const tr = document.createElement('tr');
 
+        const statusIdx = getProspectStageIndex(p.status);
+        const currentStatus = PROSPECT_STAGES[statusIdx] || p.status || 'Interested';
+        const canRetreat = statusIdx > 0;
+        const canAdvance = statusIdx < PROSPECT_STAGES.length - 1;
+        const statusColor = getStatusColor(currentStatus);
+
+        const statusStepperHtml = `
+          <td>
+            <div class="prospect-status-stepper">
+              <button type="button" class="prospect-step-btn" onclick="retreatProspectStatus(${originalIndex})" title="${canRetreat ? 'Retreat to ' + PROSPECT_STAGES[statusIdx - 1] : 'Initial stage'}" ${!canRetreat ? 'disabled' : ''}>&minus;</button>
+              <span class="prospect-status-text" style="color: ${statusColor};" title="${escapeHtml(currentStatus)}">${escapeHtml(currentStatus)}</span>
+              <button type="button" class="prospect-step-btn" onclick="advanceProspectStatus(${originalIndex})" title="${canAdvance ? 'Advance to ' + PROSPECT_STAGES[statusIdx + 1] : 'Final stage'}" ${!canAdvance ? 'disabled' : ''}>+</button>
+            </div>
+          </td>
+        `;
+
         if (isEditing) {
           tr.className = 'prospect-row-editing';
           tr.innerHTML = `
@@ -2546,17 +2598,7 @@
             <td>
               <input type="text" id="edit-role-${pid}" class="ps-table-input" value="${escapeHtml(p.jobTitle)}" placeholder="Role / Title" onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
             </td>
-            <td>
-              <select class="prospect-status-select" onchange="updateProspectStatus(${originalIndex}, this.value)">
-                <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
-                <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
-                <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
-                <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
-                <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
-                <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
-                <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-              </select>
-            </td>
+            ${statusStepperHtml}
             <td>
               <input type="text" id="edit-url-${pid}" class="ps-table-input" value="${escapeHtml(p.url)}" placeholder="https://..." onkeydown="if(event.key==='Enter')saveEditProspect('${pid}');if(event.key==='Escape')cancelEditProspect('${pid}');">
             </td>
@@ -2569,17 +2611,7 @@
           tr.innerHTML = `
             <td><strong style="color:#eee;">${escapeHtml(p.company)}</strong></td>
             <td title="${escapeHtml(p.jobTitle)}">${escapeHtml(p.jobTitle)}</td>
-            <td>
-              <select class="prospect-status-select" onchange="updateProspectStatus(${originalIndex}, this.value)">
-                <option value="Interested" ${p.status === 'Interested' ? 'selected' : ''}>Interested</option>
-                <option value="Screening" ${p.status === 'Screening' ? 'selected' : ''}>Screening</option>
-                <option value="Interviewing" ${p.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
-                <option value="Responded" ${p.status === 'Responded' ? 'selected' : ''}>Responded</option>
-                <option value="Applied" ${p.status === 'Applied' ? 'selected' : ''}>Applied</option>
-                <option value="Offer" ${p.status === 'Offer' ? 'selected' : ''}>Offer</option>
-                <option value="Rejected" ${p.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-              </select>
-            </td>
+            ${statusStepperHtml}
             <td><span class="prospect-link" onclick="openProspectUrl('${escapeHtml(p.url)}')">${escapeHtml(p.url)}</span></td>
             <td style="text-align:right; white-space:nowrap;">
               <button class="ps-btn ps-btn-sm" style="padding:1px 5px;" onclick="startEditProspect('${pid}')" title="Edit row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px; height:11px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
@@ -2592,9 +2624,67 @@
       });
     }
 
+    const PROSPECT_STAGES = ['Interested', 'Applied', 'Screening', 'Interviewing', 'Offer', 'Rejected'];
+
+    function getProspectStageIndex(status) {
+      const idx = PROSPECT_STAGES.indexOf(status);
+      if (idx !== -1) return idx;
+      if (status === 'Responded') return 1;
+      return 0;
+    }
+
+    function getStatusColor(status) {
+      switch (status) {
+        case 'Interested': return '#94A3B8';
+        case 'Applied': return 'var(--accent, #818CF8)';
+        case 'Screening': return '#38BDF8';
+        case 'Interviewing': return '#FBBF24';
+        case 'Offer': return '#34D399';
+        case 'Rejected': return '#EF4444';
+        default: return 'var(--app-text, #E2E8F0)';
+      }
+    }
+
+    function advanceProspectStatus(index) {
+      if (!prospects[index]) return;
+      const pid = prospects[index].id || ('prospect-' + index);
+      const compInput = document.getElementById(`edit-company-${pid}`);
+      const roleInput = document.getElementById(`edit-role-${pid}`);
+      const urlInput = document.getElementById(`edit-url-${pid}`);
+      if (compInput) prospects[index].company = compInput.value.trim();
+      if (roleInput) prospects[index].jobTitle = roleInput.value.trim();
+      if (urlInput) prospects[index].url = urlInput.value.trim();
+
+      const currentIdx = getProspectStageIndex(prospects[index].status);
+      if (currentIdx < PROSPECT_STAGES.length - 1) {
+        prospects[index].status = PROSPECT_STAGES[currentIdx + 1];
+        renderProspects();
+        saveAllData();
+      }
+    }
+
+    function retreatProspectStatus(index) {
+      if (!prospects[index]) return;
+      const pid = prospects[index].id || ('prospect-' + index);
+      const compInput = document.getElementById(`edit-company-${pid}`);
+      const roleInput = document.getElementById(`edit-role-${pid}`);
+      const urlInput = document.getElementById(`edit-url-${pid}`);
+      if (compInput) prospects[index].company = compInput.value.trim();
+      if (roleInput) prospects[index].jobTitle = roleInput.value.trim();
+      if (urlInput) prospects[index].url = urlInput.value.trim();
+
+      const currentIdx = getProspectStageIndex(prospects[index].status);
+      if (currentIdx > 0) {
+        prospects[index].status = PROSPECT_STAGES[currentIdx - 1];
+        renderProspects();
+        saveAllData();
+      }
+    }
+
     function updateProspectStatus(index, status) {
       if (prospects[index]) {
         prospects[index].status = status;
+        renderProspects();
         saveAllData();
       }
     }

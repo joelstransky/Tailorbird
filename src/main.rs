@@ -129,6 +129,7 @@ enum AppEvent {
     TabTitleChanged { id: usize, title: String },
     TabPageLoaded { id: usize, url: String },
     NavigateActiveTab { url: String },
+    RunSearch { query: String },
     SetLeftWidth { width: f64 },
     SetPrimaryColor { color: String },
     ScrapeCurrentPage,
@@ -143,6 +144,8 @@ struct TabInfo {
     id: usize,
     title: String,
     url: String,
+    #[serde(rename = "isSearch")]
+    is_search: bool,
 }
 
 struct BrowserTab {
@@ -150,6 +153,7 @@ struct BrowserTab {
     title: String,
     url: String,
     webview: WebView,
+    is_search: bool,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -159,6 +163,8 @@ enum IpcMessage {
     Autofill { data: CandidateProfile },
     #[serde(rename = "NAVIGATE")]
     Navigate { url: String },
+    #[serde(rename = "RUN_SEARCH")]
+    RunSearch { query: String },
     #[serde(rename = "BACK")]
     Back,
     #[serde(rename = "FORWARD")]
@@ -246,6 +252,7 @@ fn sync_tabs(toolbar_holder: &Arc<Mutex<Option<WebView>>>, tabs: &[BrowserTab], 
             id: t.id,
             title: t.title.clone(),
             url: t.url.clone(),
+            is_search: t.is_search,
         })
         .collect();
     if let Ok(guard) = toolbar_holder.lock() {
@@ -439,6 +446,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     Ok(IpcMessage::Navigate { url }) => {
                         let _ = proxy_ipc.send_event(AppEvent::NavigateActiveTab { url });
+                    }
+                    Ok(IpcMessage::RunSearch { query }) => {
+                        let _ = proxy_ipc.send_event(AppEvent::RunSearch { query });
                     }
                     Ok(IpcMessage::OpenNewTab { url }) => {
                         let _ = proxy_ipc.send_event(AppEvent::CreateTab {
@@ -671,6 +681,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::Navigate { url }) => {
                         let _ = proxy_tb.send_event(AppEvent::NavigateActiveTab { url });
                     }
+                    Ok(IpcMessage::RunSearch { query }) => {
+                        let _ = proxy_tb.send_event(AppEvent::RunSearch { query });
+                    }
                     Ok(IpcMessage::SwitchTab { id }) => {
                         let _ = proxy_tb.send_event(AppEvent::SwitchTab { id });
                     }
@@ -843,6 +856,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         title: "Tailorbird Mock Job Listing".to_string(),
         url: "local://mock".to_string(),
         webview: initial_tab_wv,
+        is_search: false,
     };
 
     tabs_holder.lock().unwrap().push(initial_tab);
@@ -956,6 +970,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     title: initial_title,
                                     url: formatted_url.clone(),
                                     webview: wv,
+                                    is_search: false,
                                 };
 
                                 let mut tabs = tabs_holder.lock().unwrap();
@@ -1013,6 +1028,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let _ = t.webview.load_html(MOCK_JOB_HTML);
                             t.url = "local://mock".to_string();
                             t.title = "Tailorbird Mock Job Listing".to_string();
+                            t.is_search = false;
                             t.id
                         } else {
                             1
@@ -1100,6 +1116,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let cur_active = *active_tab_id_holder.lock().unwrap();
                     let mut tabs = tabs_holder.lock().unwrap();
                     if let Some(tab) = tabs.iter_mut().find(|t| t.id == cur_active) {
+                        if formatted.starts_with("local://") || (!formatted.contains("google.com/search") && !formatted.contains("bing.com/search") && !formatted.contains("duckduckgo.com")) {
+                            tab.is_search = false;
+                        }
                         if formatted == "local://mock" {
                             let _ = tab.webview.load_html(MOCK_JOB_HTML);
                             tab.url = "local://mock".to_string();
@@ -1135,6 +1154,80 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         sync_url(&toolbar_wv_holder, &formatted);
                     }
                     sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                }
+                AppEvent::RunSearch { query } => {
+                    let search_url = if query.trim().is_empty() {
+                        "https://www.google.com".to_string()
+                    } else {
+                        format_search_url(&query)
+                    };
+
+                    let (win_width, win_height) = *window_size_holder.lock().unwrap();
+                    let cur_lw = *left_width_holder.lock().unwrap();
+                    let right_width = (win_width - cur_lw).max(0.0);
+                    let target_height = (win_height - TOOLBAR_HEIGHT).max(0.0);
+                    let bounds = Rect {
+                        position: Position::Logical(LogicalPosition::new(cur_lw, TOOLBAR_HEIGHT)),
+                        size: Size::Logical(LogicalSize::new(right_width, target_height)),
+                    };
+
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    let existing_search_id = tabs.iter().find(|t| {
+                        t.is_search
+                            || t.url.contains("google.com/search")
+                            || t.title == "Job Search"
+                    }).map(|t| t.id);
+
+                    if let Some(search_id) = existing_search_id {
+                        println!("[Tailorbird Host] Reusing existing search tab #{}, navigating to: {}", search_id, search_url);
+                        for t in tabs.iter_mut() {
+                            if t.id == search_id {
+                                t.is_search = true;
+                                t.url = search_url.clone();
+                                t.title = "Job Search".to_string();
+                                let _ = t.webview.load_url(&search_url);
+                                let _ = t.webview.set_bounds(bounds);
+                                let _ = t.webview.set_visible(true);
+                                let _ = t.webview.focus();
+                            } else {
+                                let _ = t.webview.set_visible(false);
+                            }
+                        }
+                        *active_tab_id_holder.lock().unwrap() = search_id;
+                        sync_url(&toolbar_wv_holder, &search_url);
+                        sync_tabs(&toolbar_wv_holder, &tabs, search_id);
+                    } else {
+                        let new_id = {
+                            let mut nid = next_tab_id_holder.lock().unwrap();
+                            let id = *nid;
+                            *nid += 1;
+                            id
+                        };
+                        println!("[Tailorbird Host] Launching new search tab #{} with URL: {}", new_id, search_url);
+
+                        match make_tab_webview(&window, new_id, &search_url, bounds, true) {
+                            Ok(wv) => {
+                                let new_tab = BrowserTab {
+                                    id: new_id,
+                                    title: "Job Search".to_string(),
+                                    url: search_url.clone(),
+                                    webview: wv,
+                                    is_search: true,
+                                };
+
+                                for t in tabs.iter_mut() {
+                                    let _ = t.webview.set_visible(false);
+                                }
+                                tabs.push(new_tab);
+                                *active_tab_id_holder.lock().unwrap() = new_id;
+                                sync_url(&toolbar_wv_holder, &search_url);
+                                sync_tabs(&toolbar_wv_holder, &tabs, new_id);
+                            }
+                            Err(e) => {
+                                eprintln!("[Tailorbird Host] Error creating search tab #{}: {:?}", new_id, e);
+                            }
+                        }
+                    }
                 }
                 AppEvent::SetLeftWidth { width } => {
                     coordinator_for_loop(Some(width));

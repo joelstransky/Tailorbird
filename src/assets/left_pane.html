@@ -2649,7 +2649,7 @@
       if (location) queryParts.push(`"${location}"`);
 
       const query = queryParts.join(' ');
-      sendIpc('NAVIGATE', { url: query });
+      sendIpc('RUN_SEARCH', { query });
     }
 
     ['btnRunSearch', 'btnRunSearchFooter'].forEach(id => {

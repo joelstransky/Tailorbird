@@ -1534,18 +1534,7 @@
           </svg>
           <span id="drawerWorkTitle">Work History</span>
         </span>
-        <div class="panel-header-actions" onclick="event.stopPropagation();">
-          <button class="header-action-btn header-action-primary drawer-action-btn" id="btnScanResumeHeader" title="Import & scan resume">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-              <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-              <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-              <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-              <line x1="7" y1="12" x2="17" y2="12"></line>
-            </svg>
-            <span>Scan</span>
-          </button>
-        </div>
+        <div class="panel-header-actions" onclick="event.stopPropagation();"></div>
       </div>
 
       <div class="panel-content">
@@ -2049,10 +2038,8 @@
         performImport(source);
       }
     }
-    ['btnImportResume', 'btnScanResumeHeader'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('click', handleScanResume);
-    });
+    const btnImportResume = document.getElementById('btnImportResume');
+    if (btnImportResume) btnImportResume.addEventListener('click', handleScanResume);
 
     document.getElementById('btnCancelImport').addEventListener('click', () => {
       confirmModal.style.display = 'none';
@@ -2979,8 +2966,7 @@
         #btnRunSearchFooter,
         #btnRecordPage,
         #btnRecordPageFooter,
-        #btnImportResume,
-        #btnScanResumeHeader {
+        #btnImportResume {
           background: ${hex} !important;
           border-color: ${hex} !important;
         }
@@ -3014,7 +3000,7 @@
         icon.style.setProperty('stroke', hex, 'important');
       });
 
-      ['btnAutofill', 'btnAutofillFooter', 'btnRunSearch', 'btnRunSearchFooter', 'btnRecordPage', 'btnRecordPageFooter', 'btnImportResume', 'btnScanResumeHeader'].forEach(id => {
+      ['btnAutofill', 'btnAutofillFooter', 'btnRunSearch', 'btnRunSearchFooter', 'btnRecordPage', 'btnRecordPageFooter', 'btnImportResume'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
           btn.style.setProperty('background', hex, 'important');

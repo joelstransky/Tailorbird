@@ -39,15 +39,18 @@ pub struct CandidateProfile {
 }
 
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
+/// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
 pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     let profile_json = serde_json::to_string(profile).unwrap_or_else(|_| "{}".to_string());
 
     format!(
         r#"(function() {{
     const profile = {profile_json};
-    console.log('[Tailorbird] Executing smart autofill injection...', profile);
+    console.log('[Tailorbird] Initializing Multi-Solver Autofill Engine...', profile);
 
-    // 1. Inject or update styling for autofill & unfilled field highlights
+    // ========================================================================
+    // 0. STYLES INJECTION
+    // ========================================================================
     let styleEl = document.getElementById('tailorbird-autofill-styles');
     if (!styleEl) {{
         styleEl = document.createElement('style');
@@ -92,397 +95,622 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 to {{ transform: translateY(0); opacity: 1; }}
             }}
         `;
-        document.head.appendChild(styleEl);
+        (document.head || document.documentElement).appendChild(styleEl);
     }}
 
-    // Clean up any previous unfilled highlights or toasts
     document.querySelectorAll('.tailorbird-unfilled').forEach(el => el.classList.remove('tailorbird-unfilled'));
     const oldToast = document.getElementById('tailorbird-toast-notice');
     if (oldToast) oldToast.remove();
 
-    // Framework-safe value setter
-    function setNativeValue(element, value) {{
-        if (!element) return false;
-        try {{
-            let prototype = Object.getPrototypeOf(element);
-            let descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
-            
-            // Traverse prototype chain if needed (e.g. HTMLInputElement -> HTMLElement)
-            while (prototype && !descriptor) {{
-                prototype = Object.getPrototypeOf(prototype);
-                if (prototype) {{
-                    descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+    // ========================================================================
+    // 1. FORM CONTEXT & SHARED UTILITIES
+    // ========================================================================
+    class FormContext {{
+        constructor(prof) {{
+            this.profile = prof || {{}};
+            this.filledElements = new Set();
+            this.filledCount = 0;
+
+            const nameParts = (this.profile.fullName || '').trim().split(/\s+/);
+            this.firstName = nameParts[0] || '';
+            this.lastName = nameParts.slice(1).join(' ') || '';
+
+            this.US_STATES = {{
+                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+                'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'District of Columbia',
+                'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois',
+                'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana',
+                'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota',
+                'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+                'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+                'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon',
+                'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina', 'SD': 'South Dakota',
+                'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia',
+                'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+                'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba', 'NB': 'New Brunswick',
+                'NL': 'Newfoundland and Labrador', 'NS': 'Nova Scotia', 'ON': 'Ontario',
+                'PE': 'Prince Edward Island', 'QC': 'Quebec', 'SK': 'Saskatchewan'
+            }};
+
+            this.MAJOR_CITIES_TO_STATE = {{
+                'las vegas': 'Nevada', 'reno': 'Nevada', 'henderson': 'Nevada',
+                'los angeles': 'California', 'san francisco': 'California', 'san diego': 'California',
+                'san jose': 'California', 'oakland': 'California', 'sacramento': 'California',
+                'austin': 'Texas', 'dallas': 'Texas', 'houston': 'Texas', 'san antonio': 'Texas',
+                'seattle': 'Washington', 'new york': 'New York', 'chicago': 'Illinois',
+                'denver': 'Colorado', 'boston': 'Massachusetts', 'atlanta': 'Georgia',
+                'miami': 'Florida', 'orlando': 'Florida', 'tampa': 'Florida',
+                'phoenix': 'Arizona', 'portland': 'Oregon', 'philadelphia': 'Pennsylvania',
+                'pittsburgh': 'Pennsylvania', 'salt lake city': 'Utah', 'minneapolis': 'Minnesota',
+                'detroit': 'Michigan', 'nashville': 'Tennessee', 'raleigh': 'North Carolina',
+                'charlotte': 'North Carolina', 'washington': 'District of Columbia'
+            }};
+        }}
+
+        markFilled(el) {{
+            if (!el || this.filledElements.has(el)) return false;
+            this.filledElements.add(el);
+            this.filledCount++;
+            el.classList.remove('tailorbird-unfilled');
+            el.classList.add('tailorbird-filled');
+            setTimeout(() => {{
+                el.classList.remove('tailorbird-filled');
+            }}, 2000);
+            return true;
+        }}
+
+        isEditable(el) {{
+            if (!el || el.disabled || el.readOnly) return false;
+            return el.type !== 'hidden';
+        }}
+
+        resolveStateFromLocation(loc) {{
+            if (!loc) return '';
+            const s = loc.trim().toLowerCase();
+            for (const [abbr, fullName] of Object.entries(this.US_STATES)) {{
+                if (s.includes(fullName.toLowerCase()) || new RegExp('\\b' + abbr + '\\b', 'i').test(loc)) {{
+                    return fullName;
                 }}
             }}
+            for (const [city, state] of Object.entries(this.MAJOR_CITIES_TO_STATE)) {{
+                if (s.includes(city)) return state;
+            }}
+            return '';
+        }}
 
-            if (descriptor && descriptor.set) {{
-                descriptor.set.call(element, value);
-            }} else {{
-                element.value = value;
+        resolveCountryFromLocation(loc) {{
+            if (!loc) return 'United States';
+            const s = loc.trim().toLowerCase();
+            if (s.includes('canada') || s.includes('ontario') || s.includes('quebec') || s.includes('british columbia')) {{
+                return 'Canada';
+            }}
+            if (s.includes('uk') || s.includes('united kingdom') || s.includes('england')) return 'United Kingdom';
+            return 'United States';
+        }}
+
+        resolveLabel(el) {{
+            if (!el) return '';
+            let label = '';
+
+            if (el.id) {{
+                const l1 = document.querySelector(`label[for="${{CSS.escape(el.id)}}"]`);
+                if (l1) label += ' ' + l1.textContent;
+                const l2 = document.getElementById(el.id + '-label');
+                if (l2) label += ' ' + l2.textContent;
             }}
 
-            // Dispatch focus, input, change, and blur bubbling events
-            element.dispatchEvent(new Event('focus', {{ bubbles: true, cancelable: true }}));
-            element.dispatchEvent(new Event('input', {{ bubbles: true, cancelable: true }}));
-            element.dispatchEvent(new Event('change', {{ bubbles: true, cancelable: true }}));
-            element.dispatchEvent(new Event('blur', {{ bubbles: true, cancelable: true }}));
+            const labelledBy = el.getAttribute('aria-labelledby');
+            if (labelledBy) {{
+                labelledBy.split(/\s+/).forEach(id => {{
+                    const target = document.getElementById(id);
+                    if (target) label += ' ' + target.textContent;
+                }});
+            }}
 
-            // Gentle visual highlight to indicate autofill success
-            element.classList.add('tailorbird-filled');
-            setTimeout(() => {{
-                element.classList.remove('tailorbird-filled');
-            }}, 2000);
+            const ariaLabel = el.getAttribute('aria-label');
+            if (ariaLabel) label += ' ' + ariaLabel;
+            if (el.placeholder) label += ' ' + el.placeholder;
+            if (el.name) label += ' ' + el.name;
+            if (el.id) label += ' ' + el.id;
 
-            return true;
-        }} catch (err) {{
-            console.error('[Tailorbird] Failed to set native value for element:', element, err);
+            let curr = el.parentElement;
+            for (let i = 0; i < 6 && curr && curr !== document.body; i++) {{
+                const cls = (curr.className || '').toString().toLowerCase();
+                const tag = (curr.tagName || '').toLowerCase();
+                if (
+                    cls.includes('field') || cls.includes('question') || cls.includes('input') ||
+                    cls.includes('group') || cls.includes('row') || tag === 'fieldset' || tag === 'li'
+                ) {{
+                    const innerLabels = curr.querySelectorAll('label, legend, .label, [class*="label"], [class*="title"], h1, h2, h3, h4, h5, h6');
+                    innerLabels.forEach(lbl => {{
+                        label += ' ' + lbl.textContent;
+                    }});
+                    break;
+                }}
+                curr = curr.parentElement;
+            }}
+
+            return label.replace(/[\*\:\?]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        }}
+
+        resolveSemanticTarget(labelText) {{
+            const lbl = (labelText || '').toLowerCase();
+
+            // High-priority exact identity
+            if (/preferred.*name|nickname/i.test(lbl)) {{
+                return {{ field: 'preferredName', value: this.firstName || this.profile.fullName }};
+            }}
+            if (/pronunciation|phonetic/i.test(lbl)) {{
+                return {{ field: 'namePronunciation', value: this.firstName || this.profile.fullName }};
+            }}
+            if (/first.*name|given.*name/i.test(lbl)) {{
+                return {{ field: 'firstName', value: this.firstName }};
+            }}
+            if (/last.*name|family.*name|surname/i.test(lbl)) {{
+                return {{ field: 'lastName', value: this.lastName }};
+            }}
+            if (/\bfull.*name\b|^name$/i.test(lbl) && !/company|file|user|user_name/i.test(lbl)) {{
+                return {{ field: 'fullName', value: this.profile.fullName }};
+            }}
+
+            // Contact & Links
+            if (/\bemail\b/i.test(lbl)) return {{ field: 'email', value: this.profile.email }};
+            if (/\bphone\b|\bmobile\b|\bcell\b|\btelephone\b/i.test(lbl)) return {{ field: 'phone', value: this.profile.phone }};
+            if (/linkedin/i.test(lbl)) return {{ field: 'linkedin', value: this.profile.linkedin }};
+            if (/github/i.test(lbl)) return {{ field: 'github', value: this.profile.github }};
+            if (/twitter|\bx\b.*handle|\bx\b.*profile/i.test(lbl)) {{
+                const twVal = this.profile.github ? `https://x.com/${{this.profile.github.split('/').filter(Boolean).pop()}}` : (this.profile.portfolioUrl || '');
+                return {{ field: 'twitter', value: twVal }};
+            }}
+            if (/portfolio|personal.*website|personal.*url|website/i.test(lbl)) {{
+                return {{ field: 'portfolio', value: this.profile.portfolioUrl }};
+            }}
+
+            // Location
+            if (/\bcountry\b|nationality/i.test(lbl)) {{
+                return {{ field: 'country', value: this.resolveCountryFromLocation(this.profile.location) }};
+            }}
+            if (/which.*state|\bstate\b.*province|province/i.test(lbl) && !/united states/i.test(lbl)) {{
+                return {{ field: 'state', value: this.resolveStateFromLocation(this.profile.location) }};
+            }}
+            if (/location|\bcity\b|\baddress\b/i.test(lbl) && !/ethnic/i.test(lbl)) {{
+                return {{ field: 'location', value: this.profile.location }};
+            }}
+
+            // Employment & Sponsorship
+            if (/current.*company|recent.*company|\bcurrent.*employer\b|\brecent.*employer\b|^company$|^current company$/i.test(lbl)) {{
+                return {{ field: 'currentCompany', value: this.profile.currentCompany }};
+            }}
+            if (/sponsorship|require.*visa|require.*immigration|work.*authorization.*future/i.test(lbl)) {{
+                return {{ field: 'sponsorship', value: 'No' }};
+            }}
+            if (/experience|years/i.test(lbl)) {{
+                return {{ field: 'experienceYears', value: this.profile.experienceYears }};
+            }}
+            if (/salary|compensation|pay/i.test(lbl)) {{
+                const sal = (this.profile.salaryMin && this.profile.salaryMax) ? `${{this.profile.salaryMin}} - ${{this.profile.salaryMax}}` : (this.profile.salaryMin || this.profile.salaryMax || '');
+                return {{ field: 'salary', value: sal }};
+            }}
+
+            // Demographics & EEO
+            if (/pronoun/i.test(lbl)) return {{ field: 'pronouns', value: this.profile.pronouns }};
+            if (/gender|sex\b/i.test(lbl)) return {{ field: 'gender', value: this.profile.gender }};
+            if (/hispanic|latino/i.test(lbl)) {{
+                const isHisp = (this.profile.race || '').toLowerCase().includes('hispanic');
+                return {{ field: 'hispanic', value: isHisp ? 'Yes' : 'No' }};
+            }}
+            if (/race|ethnic/i.test(lbl)) return {{ field: 'race', value: this.profile.race }};
+            if (/veteran|military/i.test(lbl)) return {{ field: 'veteranStatus', value: this.profile.veteranStatus }};
+            if (/disabilit/i.test(lbl)) return {{ field: 'disabilityStatus', value: this.profile.disabilityStatus }};
+
+            return null;
+        }}
+
+        isOptionMatch(targetVal, optVal, optText) {{
+            if (!targetVal) return false;
+            const t = targetVal.toLowerCase().trim();
+            const v = (optVal || '').toLowerCase().trim();
+            const txt = (optText || '').toLowerCase().trim();
+
+            if (v === t || txt === t) return true;
+
+            // Gender
+            if (t === 'male') {{
+                return (txt === 'male' || v === 'male' || txt === 'man' || v === 'man' || txt.startsWith('male ') || txt.startsWith('male/'));
+            }}
+            if (t === 'female') {{
+                return (txt === 'female' || v === 'female' || txt === 'woman' || v === 'woman' || txt.startsWith('female ') || txt.startsWith('female/'));
+            }}
+            if (t === 'non-binary') {{
+                return (txt.includes('non-binary') || v.includes('non-binary'));
+            }}
+
+            // Race / Ethnicity
+            if (t.includes('white')) {{
+                if (txt.includes('white') || v.includes('white') || txt.includes('caucasian')) return true;
+            }}
+            if (t.includes('hispanic') || t.includes('latino')) {{
+                if (txt.includes('hispanic') || txt.includes('latino') || txt.includes('spanish')) return true;
+            }}
+            if (t.includes('black') || t.includes('african')) {{
+                if (txt.includes('black') || txt.includes('african')) return true;
+            }}
+            if (t.includes('asian')) {{
+                if (txt.includes('asian')) return true;
+            }}
+
+            // Veteran
+            if (t.includes('not a protected veteran') || t.includes('not a veteran')) {{
+                if (txt.includes('not a protected veteran') || txt.includes('not a veteran') || v.includes('not a protected veteran')) return true;
+            }}
+            if (t.includes('one or more') || (t.includes('protected veteran') && !t.includes('not'))) {{
+                if ((txt.includes('one or more') || txt.includes('protected veteran')) && !txt.includes('not a protected veteran') && !txt.includes('not a veteran')) return true;
+            }}
+
+            // Disability
+            const isDecline = t.includes('wish to answer') || t.includes('prefer not') || t.includes('decline') || t.includes('disclose');
+            if (isDecline) {{
+                if (txt.includes('prefer not') || txt.includes('wish to answer') || txt.includes('decline') || txt.includes('disclose') || v.includes('prefer not')) return true;
+            }}
+            if (!isDecline && (t === 'yes' || t.includes('have a disability'))) {{
+                if (txt === 'yes' || v === 'yes' || (txt.includes('yes') && !txt.includes('no'))) return true;
+            }}
+            if (!isDecline && (t === 'no' || t.includes('do not have a disability') || t.includes("don't have a disability"))) {{
+                if (txt === 'no' || v === 'no' || (txt.includes('no') && !txt.includes('yes'))) return true;
+            }}
+
+            // Pronouns
+            if (t.includes('he/him')) {{
+                if (txt.includes('he/him') || v.includes('he/him') || txt.includes('he / him')) return true;
+            }}
+            if (t.includes('she/her')) {{
+                if (txt.includes('she/her') || v.includes('she/her') || txt.includes('she / her')) return true;
+            }}
+            if (t.includes('they/them')) {{
+                if (txt.includes('they/them') || v.includes('they/them') || txt.includes('they / them')) return true;
+            }}
+
+            // Sponsorship
+            if (t === 'no' && (txt === 'no' || v === 'no' || txt.startsWith('no '))) return true;
+            if (t === 'yes' && (txt === 'yes' || v === 'yes' || txt.startsWith('yes '))) return true;
+
+            // Country
+            if (t === 'united states' && (txt.includes('united states') || txt === 'usa' || v === 'us' || v === 'usa')) return true;
+
+            // General fallback
+            if (v && v.includes(t)) return true;
+            if (txt && txt.includes(t)) return true;
+
             return false;
         }}
-    }}
 
-    // Helper to test if element is visible and editable
-    function isEditable(el) {{
-        if (!el || el.disabled || el.readOnly) return false;
-        return el.type !== 'hidden';
-    }}
-
-    // Split name into first and last
-    const nameParts = (profile.fullName || '').trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    let filledCount = 0;
-    const filledElements = new Set();
-
-    function tryFill(selector, value) {{
-        if (!value) return;
-        const elements = document.querySelectorAll(selector);
-        for (const el of elements) {{
-            if (isEditable(el) && !filledElements.has(el)) {{
-                if (setNativeValue(el, value)) {{
-                    filledElements.add(el);
-                    filledCount++;
-                    console.log(`[Tailorbird] Filled [${{selector}}] with: ${{value}}`);
+        setNativeValue(element, value) {{
+            if (!element || value === undefined || value === null) return false;
+            try {{
+                let prototype = Object.getPrototypeOf(element);
+                let descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+                while (prototype && !descriptor) {{
+                    prototype = Object.getPrototypeOf(prototype);
+                    if (prototype) descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
                 }}
+
+                if (descriptor && descriptor.set) {{
+                    descriptor.set.call(element, value);
+                }} else {{
+                    element.value = value;
+                }}
+
+                element.dispatchEvent(new Event('focus', {{ bubbles: true, cancelable: true }}));
+                element.dispatchEvent(new Event('input', {{ bubbles: true, cancelable: true }}));
+                element.dispatchEvent(new Event('change', {{ bubbles: true, cancelable: true }}));
+                element.dispatchEvent(new Event('blur', {{ bubbles: true, cancelable: true }}));
+
+                this.markFilled(element);
+                return true;
+            }} catch (err) {{
+                console.error('[Tailorbird] Error setting native value:', err);
+                return false;
             }}
         }}
     }}
 
-    // 1. Full Name / First Name / Last Name
-    const hasSeparateNameInputs = 
-        document.querySelector('input[name*="first" i], input[id*="first" i], input[autocomplete="given-name"]') &&
-        document.querySelector('input[name*="last" i], input[id*="last" i], input[autocomplete="family-name"]');
+    // ========================================================================
+    // 2. SOLVER: REACT-SELECT & ARIA COMBOBOX SOLVER
+    // ========================================================================
+    class ReactSelectSolver {{
+        static selectOption(inputEl, targetVal, allowedOptions, context) {{
+            if (!inputEl || !targetVal) return false;
 
-    if (hasSeparateNameInputs && firstName && lastName) {{
-        tryFill('input[autocomplete="given-name"], input[name*="first" i], input[id*="first" i], input[placeholder*="first" i]', firstName);
-        tryFill('input[autocomplete="family-name"], input[name*="last" i], input[id*="last" i], input[placeholder*="last" i]', lastName);
-    }} else if (profile.fullName) {{
-        tryFill('input[autocomplete="name"], input[name="fullName"], input[name="name"], input[name*="name" i]:not([name*="user" i]):not([name*="company" i]):not([name*="file" i]):not([name*="first" i]):not([name*="last" i]), input[id*="name" i]:not([id*="user" i]):not([id*="company" i]):not([id*="first" i]):not([id*="last" i]), input[placeholder*="full name" i]', profile.fullName);
-    }}
-
-    // 2. Email
-    if (profile.email) {{
-        tryFill('input[type="email"], input[autocomplete="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i]', profile.email);
-    }}
-
-    // 3. Phone
-    if (profile.phone) {{
-        tryFill('input[type="tel"], input[autocomplete="tel"], input[name*="phone" i], input[id*="phone" i], input[name*="mobile" i], input[placeholder*="phone" i]', profile.phone);
-    }}
-
-    // 4. Location / City
-    if (profile.location) {{
-        tryFill('input[name="location"], input[id="location"], input[name*="location" i], input[id*="location" i], input[placeholder*="location" i], input[placeholder*="city" i], input[name*="city" i]', profile.location);
-    }}
-
-    // 5. Current Company / Organization
-    if (profile.currentCompany) {{
-        tryFill('input[name="org"], input[id="org"], input[name*="company" i], input[id*="company" i], input[placeholder*="company" i], input[name*="employer" i], input[id*="employer" i], input[name*="organization" i], input[id*="organization" i]', profile.currentCompany);
-    }}
-
-    // 6. Pronouns
-    if (profile.pronouns) {{
-        const targetPronoun = profile.pronouns.trim().toLowerCase();
-        let pronounMatched = false;
-
-        // A. Try checkboxes / radio buttons matching pronouns (e.g. Lever checkbox list)
-        const pronounInputs = document.querySelectorAll('input[name*="pronoun" i], input[id*="pronoun" i]');
-        for (const input of pronounInputs) {{
-            if (input.type === 'checkbox' || input.type === 'radio') {{
-                const inputVal = (input.value || '').toLowerCase();
-                const parentText = (input.closest('label')?.textContent || input.parentElement?.textContent || '').toLowerCase();
-                if (inputVal.includes(targetPronoun) || parentText.includes(targetPronoun)) {{
-                    input.checked = true;
-                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                    filledElements.add(input);
-                    filledCount++;
-                    pronounMatched = true;
-                    console.log(`[Tailorbird] Checked pronoun option: ${{inputVal || parentText}}`);
-                    break;
-                }}
-            }}
-        }}
-
-        // B. Try <select> dropdown for pronouns
-        if (!pronounMatched) {{
-            const pronounSelects = document.querySelectorAll('select[name*="pronoun" i], select[id*="pronoun" i]');
-            for (const sel of pronounSelects) {{
-                for (const opt of sel.options) {{
-                    const optText = (opt.text || '').toLowerCase();
-                    const optVal = (opt.value || '').toLowerCase();
-                    if (optText.includes(targetPronoun) || optVal.includes(targetPronoun)) {{
-                        sel.value = opt.value;
-                        sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                        filledElements.add(sel);
-                        filledCount++;
-                        pronounMatched = true;
+            // Strategy 1: React Fiber / memoizedProps inspection
+            try {{
+                let curr = inputEl;
+                let fiber = null;
+                for (let i = 0; i < 5 && curr; i++) {{
+                    const key = Object.keys(curr).find(k => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'));
+                    if (key && curr[key]) {{
+                        fiber = curr[key];
                         break;
                     }}
+                    curr = curr.parentElement;
                 }}
-                if (pronounMatched) break;
+
+                let traveler = fiber;
+                while (traveler) {{
+                    const props = traveler.memoizedProps;
+                    if (props) {{
+                        const p = props.selectProps || props;
+                        const opts = Array.isArray(p.options) ? p.options : (Array.isArray(allowedOptions) ? allowedOptions : null);
+                        if (opts && typeof p.onChange === 'function') {{
+                            const matchedOpt = opts.find(opt => {{
+                                const oLabel = opt.label || opt.name || opt.text || '';
+                                const oVal = opt.value || opt.id || '';
+                                return context.isOptionMatch(targetVal, String(oVal), String(oLabel));
+                            }});
+
+                            if (matchedOpt) {{
+                                p.onChange(matchedOpt, {{ action: 'select-option', option: matchedOpt }});
+                                if (typeof p.onBlur === 'function') {{
+                                    p.onBlur(new FocusEvent('blur'));
+                                }}
+                                ReactSelectSolver.invalidateHiddenInputs(inputEl, matchedOpt.value || matchedOpt.label, context);
+                                context.markFilled(inputEl);
+                                return true;
+                            }}
+                        }}
+                    }}
+                    traveler = traveler.return;
+                }}
+            }} catch (err) {{
+                console.warn('[Tailorbird] React-Select fiber attempt error:', err);
             }}
-        }}
 
-        // C. Try text inputs for pronouns (or write-in inputs)
-        if (!pronounMatched) {{
-            tryFill('input[type="text"][name*="pronoun" i], input[type="text"][id*="pronoun" i], input[type="text"][placeholder*="pronoun" i]', profile.pronouns);
-        }}
-    }}
+            // Strategy 2: DOM Simulation
+            try {{
+                const control = inputEl.closest('.select__control') || inputEl.parentElement;
+                inputEl.focus();
+                if (control) {{
+                    control.dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
+                    control.dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
+                    control.click();
+                }}
 
-    // 7. LinkedIn
-    if (profile.linkedin) {{
-        tryFill('input[name*="linkedin" i], input[id*="linkedin" i], input[placeholder*="linkedin" i], input[name*="urls[LinkedIn]" i]', profile.linkedin);
-    }}
+                inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }}));
 
-    // 8. GitHub
-    if (profile.github) {{
-        tryFill('input[name*="github" i], input[id*="github" i], input[placeholder*="github" i], input[name*="urls[GitHub]" i]', profile.github);
-    }}
-
-    // 9. Portfolio / Website
-    if (profile.portfolioUrl) {{
-        tryFill('input[name*="urls[Portfolio]" i], input[name*="portfolio" i], input[id*="portfolio" i], input[placeholder*="portfolio" i], input[name*="website" i], input[id*="website" i], input[placeholder*="website" i], input[name*="urls[Other]" i]', profile.portfolioUrl);
-    }}
-
-    // 10. Years of Experience
-    if (profile.experienceYears) {{
-        tryFill('input[name*="experience" i], input[id*="experience" i], input[name*="years" i], input[id*="years" i], input[placeholder*="years" i]', profile.experienceYears);
-
-        // Also check <select> for experience
-        const selects = document.querySelectorAll('select[name*="experience" i], select[id*="experience" i]');
-        for (const sel of selects) {{
-            if (!filledElements.has(sel)) {{
-                for (const opt of sel.options) {{
-                    if (opt.value === profile.experienceYears || opt.text.includes(profile.experienceYears)) {{
-                        sel.value = opt.value;
-                        sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                        filledElements.add(sel);
-                        filledCount++;
-                        break;
+                const renderedOptions = Array.from(document.querySelectorAll('.select__option, [id*="react-select"][role="option"], [class*="-option"]'));
+                for (const opt of renderedOptions) {{
+                    if (context.isOptionMatch(targetVal, opt.getAttribute('data-value'), opt.textContent)) {{
+                        opt.dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
+                        opt.dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
+                        opt.click();
+                        ReactSelectSolver.invalidateHiddenInputs(inputEl, targetVal, context);
+                        context.markFilled(inputEl);
+                        return true;
                     }}
                 }}
+
+                // If not found in open menu, filter by typing
+                inputEl.value = targetVal;
+                inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                const filtered = Array.from(document.querySelectorAll('.select__option, [id*="react-select"][role="option"], [class*="-option"]'));
+                if (filtered.length > 0) {{
+                    filtered[0].dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
+                    filtered[0].dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
+                    filtered[0].click();
+                    ReactSelectSolver.invalidateHiddenInputs(inputEl, targetVal, context);
+                    context.markFilled(inputEl);
+                    return true;
+                }}
+            }} catch (err) {{
+                console.warn('[Tailorbird] React-Select DOM simulation error:', err);
+            }}
+
+            return false;
+        }}
+
+        static invalidateHiddenInputs(inputEl, value, context) {{
+            const wrapper = inputEl.closest('.field-wrapper, .select-wrapper, .input-wrapper') || inputEl.parentElement;
+            if (wrapper) {{
+                const hiddenInputs = wrapper.querySelectorAll('input.remix-css-1a0ro4n-requiredInput, input[tabindex="-1"][required], input[type="hidden"]');
+                hiddenInputs.forEach(h => {{
+                    context.setNativeValue(h, value || 'selected');
+                }});
             }}
         }}
-    }}
 
-    // 11. Desired Salary / Compensation
-    if (profile.salaryMin || profile.salaryMax) {{
-        let salText = '';
-        if (profile.salaryMin && profile.salaryMax) {{
-            salText = `${{profile.salaryMin}} - ${{profile.salaryMax}}`;
-        }} else {{
-            salText = profile.salaryMin || profile.salaryMax;
-        }}
-        tryFill('input[name*="salary" i], input[id*="salary" i], input[placeholder*="salary" i], input[name*="compensation" i], input[id*="compensation" i], input[name*="pay" i]', salText);
-    }}
-
-    // Helper for dropdown/radio/text selection fields (e.g. Demographics, EEO)
-    const getFieldAndContextText = (el) => {{
-        let text = ((el.name || '') + ' ' + (el.id || '') + ' ' + (el.getAttribute('aria-label') || '') + ' ' + (el.placeholder || '')).toLowerCase();
-        let curr = el.parentElement;
-        for (let i = 0; i < 6 && curr && curr !== document.body; i++) {{
-            const classStr = (curr.className || '').toString().toLowerCase();
-            const tag = (curr.tagName || '').toLowerCase();
-            if (
-                classStr.includes('question') ||
-                classStr.includes('label') ||
-                classStr.includes('field') ||
-                classStr.includes('section') ||
-                classStr.includes('group') ||
-                tag === 'fieldset' ||
-                tag === 'li'
-            ) {{
-                // Collect text content of the enclosing question/label container
-                const containerText = (curr.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-                text += ' ' + containerText;
-                break;
-            }}
-            curr = curr.parentElement;
-        }}
-        return text;
-    }};
-
-    const isOptionMatch = (targetVal, optVal, optText) => {{
-        if (!targetVal) return false;
-        const t = targetVal.toLowerCase().trim();
-        const v = (optVal || '').toLowerCase().trim();
-        const txt = (optText || '').toLowerCase().trim();
-
-        // Exact matches
-        if (v === t || txt === t) return true;
-
-        // 1. Gender mappings (strictly prevent "male" from matching "female"!)
-        if (t === 'male') {{
-            return (txt === 'male' || v === 'male' || txt === 'man' || v === 'man' || txt.startsWith('male ') || txt.startsWith('male/'));
-        }}
-        if (t === 'female') {{
-            return (txt === 'female' || v === 'female' || txt === 'woman' || v === 'woman' || txt.startsWith('female ') || txt.startsWith('female/'));
-        }}
-        if (t === 'non-binary') {{
-            return (txt.includes('non-binary') || v.includes('non-binary'));
-        }}
-
-        // 2. Race / Ethnicity mappings
-        if (t.includes('white')) {{
-            if (txt.includes('white') || v.includes('white') || txt.includes('caucasian')) return true;
-        }}
-        if (t.includes('hispanic') || t.includes('latino')) {{
-            if (txt.includes('hispanic') || txt.includes('latino') || txt.includes('spanish')) return true;
-        }}
-        if (t.includes('black') || t.includes('african')) {{
-            if (txt.includes('black') || txt.includes('african')) return true;
-        }}
-        if (t.includes('asian')) {{
-            if (txt.includes('asian')) return true;
-        }}
-
-        // 3. Veteran mappings
-        if (t.includes('not a protected veteran') || t.includes('not a veteran')) {{
-            if (txt.includes('not a protected veteran') || txt.includes('not a veteran') || v.includes('not a protected veteran')) return true;
-        }}
-        if (t.includes('one or more') || (t.includes('protected veteran') && !t.includes('not'))) {{
-            if ((txt.includes('one or more') || txt.includes('protected veteran')) && !txt.includes('not a protected veteran') && !txt.includes('not a veteran')) return true;
-        }}
-
-        // 4. Disability mappings
-        const isTargetDecline = t.includes('wish to answer') || t.includes('prefer not') || t.includes('decline') || t.includes('disclose');
-        if (isTargetDecline) {{
-            if (txt.includes('prefer not') || txt.includes('wish to answer') || txt.includes('decline') || txt.includes('disclose') || v.includes('prefer not') || v.includes('disclose')) return true;
-        }}
-        if (!isTargetDecline && (t === 'yes' || t.includes('have a disability'))) {{
-            if (txt === 'yes' || v === 'yes' || (txt.includes('yes') && !txt.includes('no'))) return true;
-        }}
-        if (!isTargetDecline && (t === 'no' || t.includes('do not have a disability'))) {{
-            if (txt === 'no' || v === 'no' || (txt.includes('no') && !txt.includes('yes'))) return true;
-        }}
-
-        // 5. Pronoun mappings
-        if (t.includes('he/him')) {{
-            if (txt.includes('he/him') || v.includes('he/him') || txt.includes('he / him')) return true;
-        }}
-        if (t.includes('she/her')) {{
-            if (txt.includes('she/her') || v.includes('she/her') || txt.includes('she / her')) return true;
-        }}
-        if (t.includes('they/them')) {{
-            if (txt.includes('they/them') || v.includes('they/them') || txt.includes('they / them')) return true;
-        }}
-
-        // General fallback
-        if (v && v.includes(t)) return true;
-        if (txt && txt.includes(t)) return true;
-
-        return false;
-    }};
-
-    const fillChoiceField = (fieldPattern, targetVal) => {{
-        if (!targetVal) return;
-        let matched = false;
-
-        // A. Radio / Checkbox
-        const inputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
-        for (const input of inputs) {{
-            const contextText = getFieldAndContextText(input);
-            if (fieldPattern.test(contextText)) {{
-                const inputVal = input.value || '';
-                const parentText = input.closest('label')?.textContent || input.parentElement?.textContent || '';
-                if (isOptionMatch(targetVal, inputVal, parentText)) {{
-                    input.checked = true;
-                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                    filledElements.add(input);
-                    filledCount++;
-                    matched = true;
-                    console.log(`[Tailorbird] Checked option for pattern ${{fieldPattern}}: ${{inputVal || parentText}}`);
-                    break;
+        static solve(context) {{
+            const comboboxInputs = Array.from(document.querySelectorAll('input.select__input, input[role="combobox"]'));
+            for (const input of comboboxInputs) {{
+                if (context.filledElements.has(input)) continue;
+                const labelText = context.resolveLabel(input);
+                const semantic = context.resolveSemanticTarget(labelText);
+                if (semantic && semantic.value) {{
+                    ReactSelectSolver.selectOption(input, semantic.value, null, context);
                 }}
             }}
         }}
+    }}
 
-        // B. Select dropdown
-        if (!matched) {{
-            const selects = document.querySelectorAll('select');
+    // ========================================================================
+    // 3. SOLVER: GREENHOUSE ATS SPECIALIZED SOLVER
+    // ========================================================================
+    class GreenhouseAtsSolver {{
+        static canSolve() {{
+            return !!(window.__remixContext || document.getElementById('application-form') || location.hostname.includes('greenhouse.io'));
+        }}
+
+        static solve(context) {{
+            if (!window.__remixContext || !window.__remixContext.state || !window.__remixContext.state.loaderData) {{
+                return false;
+            }}
+
+            const loaderData = window.__remixContext.state.loaderData;
+            const jobPostRouteKey = Object.keys(loaderData).find(k => loaderData[k] && loaderData[k].jobPost);
+            if (!jobPostRouteKey) return false;
+
+            const jobPost = loaderData[jobPostRouteKey].jobPost;
+            console.log('[Tailorbird] Running GreenhouseAtsSolver with job schema questions:', (jobPost.questions || []).length);
+
+            // 1. Standard Fields (first_name, last_name, email, phone, country)
+            const standardMap = [
+                {{ id: 'first_name', val: context.firstName }},
+                {{ id: 'last_name', val: context.lastName }},
+                {{ id: 'email', val: context.profile.email }},
+                {{ id: 'phone', val: context.profile.phone }},
+                {{ id: 'country', val: context.resolveCountryFromLocation(context.profile.location) }}
+            ];
+
+            standardMap.forEach(item => {{
+                const el = document.getElementById(item.id);
+                if (el && item.val && !context.filledElements.has(el)) {{
+                    if (el.getAttribute('role') === 'combobox' || el.classList.contains('select__input')) {{
+                        ReactSelectSolver.selectOption(el, item.val, null, context);
+                    }} else {{
+                        context.setNativeValue(el, item.val);
+                    }}
+                }}
+            }});
+
+            // 2. Custom Job Post Questions
+            if (Array.isArray(jobPost.questions)) {{
+                jobPost.questions.forEach(q => {{
+                    if (!q.fields || !Array.isArray(q.fields)) return;
+                    const semantic = context.resolveSemanticTarget(q.label || '');
+                    if (!semantic || !semantic.value) return;
+
+                    q.fields.forEach(f => {{
+                        const el = document.getElementById(f.name);
+                        if (!el || context.filledElements.has(el)) return;
+
+                        if (f.type === 'multi_value_single_select' || el.getAttribute('role') === 'combobox' || el.classList.contains('select__input')) {{
+                            ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
+                        }} else if (f.type === 'input_text' || f.type === 'textarea') {{
+                            context.setNativeValue(el, semantic.value);
+                        }}
+                    }});
+                }});
+            }}
+
+            // 3. EEOC Sections
+            if (Array.isArray(jobPost.eeoc_sections)) {{
+                jobPost.eeoc_sections.forEach(sec => {{
+                    if (!Array.isArray(sec.questions)) return;
+                    sec.questions.forEach(q => {{
+                        if (!q.fields || !Array.isArray(q.fields)) return;
+                        const semantic = context.resolveSemanticTarget(q.label || '');
+                        if (!semantic || !semantic.value) return;
+
+                        q.fields.forEach(f => {{
+                            const el = document.getElementById(f.name);
+                            if (!el || context.filledElements.has(el)) return;
+                            ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
+                        }});
+                    }});
+                }});
+            }}
+
+            // 4. Demographic Questions Survey
+            if (jobPost.demographic_questions && Array.isArray(jobPost.demographic_questions.questions)) {{
+                jobPost.demographic_questions.questions.forEach(q => {{
+                    const el = document.getElementById(String(q.id));
+                    if (!el || context.filledElements.has(el)) return;
+
+                    const semantic = context.resolveSemanticTarget(q.name || '');
+                    if (semantic && semantic.value) {{
+                        const opts = Array.isArray(q.answer_options) ? q.answer_options.map(o => ({{ label: o.name, value: o.id }})) : null;
+                        ReactSelectSolver.selectOption(el, semantic.value, opts, context);
+                    }}
+                }});
+            }}
+
+            return true;
+        }}
+    }}
+
+    // ========================================================================
+    // 4. SOLVER: NATIVE INPUT SOLVER
+    // ========================================================================
+    class NativeInputSolver {{
+        static solve(context) {{
+            const inputs = Array.from(document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]), textarea'));
+            for (const el of inputs) {{
+                if (context.filledElements.has(el) || el.classList.contains('select__input') || el.getAttribute('role') === 'combobox') continue;
+                if (!context.isEditable(el)) continue;
+
+                const labelText = context.resolveLabel(el);
+                const semantic = context.resolveSemanticTarget(labelText);
+                if (semantic && semantic.value) {{
+                    context.setNativeValue(el, semantic.value);
+                }}
+            }}
+        }}
+    }}
+
+    // ========================================================================
+    // 5. SOLVER: NATIVE SELECT & RADIO/CHECKBOX SOLVER
+    // ========================================================================
+    class NativeSelectSolver {{
+        static solve(context) {{
+            // Select dropdowns
+            const selects = Array.from(document.querySelectorAll('select'));
             for (const sel of selects) {{
-                const contextText = getFieldAndContextText(sel);
-                if (fieldPattern.test(contextText) && !filledElements.has(sel)) {{
+                if (context.filledElements.has(sel) || !context.isEditable(sel)) continue;
+                const labelText = context.resolveLabel(sel);
+                const semantic = context.resolveSemanticTarget(labelText);
+                if (semantic && semantic.value) {{
                     for (const opt of sel.options) {{
-                        const optText = opt.text || '';
-                        const optVal = opt.value || '';
-                        if (isOptionMatch(targetVal, optVal, optText)) {{
+                        if (context.isOptionMatch(semantic.value, opt.value, opt.text)) {{
                             sel.value = opt.value;
+                            sel.dispatchEvent(new Event('input', {{ bubbles: true }}));
                             sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                            filledElements.add(sel);
-                            filledCount++;
-                            matched = true;
-                            console.log(`[Tailorbird] Selected dropdown option for pattern ${{fieldPattern}}: ${{optText || optVal}}`);
+                            context.markFilled(sel);
                             break;
                         }}
                     }}
-                    if (matched) break;
+                }}
+            }}
+
+            // Radio / Checkbox
+            const checkables = Array.from(document.querySelectorAll('input[type="radio"], input[type="checkbox"]'));
+            for (const input of checkables) {{
+                if (context.filledElements.has(input) || input.checked) continue;
+                const labelText = context.resolveLabel(input);
+                const semantic = context.resolveSemanticTarget(labelText);
+                if (semantic && semantic.value) {{
+                    const parentText = input.closest('label')?.textContent || input.parentElement?.textContent || '';
+                    if (context.isOptionMatch(semantic.value, input.value, parentText)) {{
+                        input.checked = true;
+                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                        context.markFilled(input);
+                    }}
                 }}
             }}
         }}
-
-        // C. Text input
-        if (!matched) {{
-            const textInputs = document.querySelectorAll('input[type="text"], input:not([type])');
-            for (const input of textInputs) {{
-                const contextText = getFieldAndContextText(input);
-                if (fieldPattern.test(contextText) && !filledElements.has(input)) {{
-                    input.value = targetVal;
-                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                    input.classList.add('tailorbird-filled');
-                    filledElements.add(input);
-                    filledCount++;
-                    break;
-                }}
-            }}
-        }}
-    }};
-
-    // 12. Demographics / EEO Self-Identification
-    if (profile.gender) {{
-        fillChoiceField(/gender|sex\b/i, profile.gender);
-    }}
-    if (profile.race) {{
-        fillChoiceField(/race|ethnic/i, profile.race);
-    }}
-    if (profile.veteranStatus) {{
-        fillChoiceField(/veteran|military/i, profile.veteranStatus);
-    }}
-    if (profile.disabilityStatus) {{
-        fillChoiceField(/disabilit/i, profile.disabilityStatus);
-    }}
-    if (profile.pronouns) {{
-        fillChoiceField(/pronoun/i, profile.pronouns);
     }}
 
-    // 13. Highlight remaining unfilled form fields
+    // ========================================================================
+    // 6. MASTER ORCHESTRATOR
+    // ========================================================================
+    const context = new FormContext(profile);
+
+    // Run specialized ATS solver first if applicable
+    if (GreenhouseAtsSolver.canSolve()) {{
+        GreenhouseAtsSolver.solve(context);
+    }}
+
+    // Run React-Select solver for any remaining custom comboboxes
+    ReactSelectSolver.solve(context);
+
+    // Run Native Input & Select solvers
+    NativeInputSolver.solve(context);
+    NativeSelectSolver.solve(context);
+
+    // ========================================================================
+    // 7. UNFILLED HIGHLIGHTS & TOAST NOTIFICATION
+    // ========================================================================
     const allFormControls = Array.from(document.querySelectorAll('input, select, textarea'));
     let unfilledCount = 0;
 
-    // Track which radio/checkbox groups already have at least one selection
     const checkedGroups = new Set();
     allFormControls.forEach(el => {{
         if ((el.type === 'radio' || el.type === 'checkbox') && el.name && el.checked) {{
@@ -491,46 +719,41 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }});
 
     allFormControls.forEach(el => {{
-        // Skip hidden, button, submit, reset, search controls
         if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button' || el.type === 'reset') return;
         if (el.type === 'search' || el.getAttribute('role') === 'search') return;
-        // Skip non-visible elements (unless file input which often has 0 dimensions)
+        if (el.classList.contains('remix-css-1a0ro4n-requiredInput') || el.tabIndex === -1 && el.getAttribute('aria-hidden') === 'true') return;
         if (el.type !== 'file' && el.offsetParent === null && el.getClientRects().length === 0) return;
 
         let isUnfilled = false;
         if (el.type === 'radio' || el.type === 'checkbox') {{
             if (el.name) {{
-                if (!checkedGroups.has(el.name)) {{
-                    isUnfilled = true;
-                }}
+                if (!checkedGroups.has(el.name)) isUnfilled = true;
             }} else if (!el.checked) {{
                 isUnfilled = true;
             }}
         }} else if (el.tagName === 'SELECT') {{
-            if (el.selectedIndex <= 0 || !el.value || el.value.trim() === '') {{
-                isUnfilled = true;
-            }}
+            if (el.selectedIndex <= 0 || !el.value || el.value.trim() === '') isUnfilled = true;
+        }} else if (el.classList.contains('select__input') || el.getAttribute('role') === 'combobox') {{
+            const wrapper = el.closest('.select__control, .field-wrapper');
+            const hasValuePill = wrapper && wrapper.querySelector('.select__single-value, [class*="singleValue"]');
+            if (!hasValuePill) isUnfilled = true;
         }} else {{
-            // Text, email, tel, number, url, textarea, file
-            if (!el.value || el.value.trim() === '') {{
-                isUnfilled = true;
-            }}
+            if (!el.value || el.value.trim() === '') isUnfilled = true;
         }}
 
-        if (isUnfilled && !filledElements.has(el)) {{
+        if (isUnfilled && !context.filledElements.has(el)) {{
             el.classList.add('tailorbird-unfilled');
             unfilledCount++;
 
-            // Dynamic listener: clear highlight as soon as the user enters or selects a value
             if (!el._tailorbirdListenerAttached) {{
                 el._tailorbirdListenerAttached = true;
                 const clearHighlight = () => {{
                     let nowFilled = false;
                     if (el.type === 'radio' || el.type === 'checkbox') {{
                         if (el.name) {{
-                            const anyChecked = document.querySelector(`input[name="${{el.name}}"]:checked`);
+                            const anyChecked = document.querySelector(`input[name="${{CSS.escape(el.name)}}"]:checked`);
                             if (anyChecked) {{
-                                document.querySelectorAll(`input[name="${{el.name}}"]`).forEach(inp => inp.classList.remove('tailorbird-unfilled'));
+                                document.querySelectorAll(`input[name="${{CSS.escape(el.name)}}"]`).forEach(inp => inp.classList.remove('tailorbird-unfilled'));
                                 updateToast();
                                 return;
                             }}
@@ -554,7 +777,6 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         }}
     }});
 
-    // Live updater to keep toast in sync and remove it only when 0 unfilled fields remain
     function updateToast() {{
         const toast = document.getElementById('tailorbird-toast-notice');
         if (!toast) return;
@@ -598,12 +820,11 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         }}
     }}
 
-    // 12. Display unobtrusive toast notification (stays visible while unfilled fields exist)
     const toast = document.createElement('div');
     toast.id = 'tailorbird-toast-notice';
     if (unfilledCount > 0) {{
         toast.innerHTML = `
-            <span>⚡ <strong>${{filledCount}}</strong> field${{filledCount === 1 ? '' : 's'}} autofilled</span>
+            <span>⚡ <strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
             <span style="color: #64748b;">•</span>
             <span id="tailorbird-unfilled-count" style="color: #f59e0b;">⚠️ <strong>${{unfilledCount}}</strong> remaining marked in amber</span>
             <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
@@ -611,7 +832,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }} else {{
         toast.style.borderColor = '#10b981';
         toast.innerHTML = `
-            <span>⚡ <strong>${{filledCount}}</strong> field${{filledCount === 1 ? '' : 's'}} autofilled</span>
+            <span>⚡ <strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
             <span style="color: #64748b;">•</span>
             <span style="color: #10b981;">✅ <strong>All fields complete!</strong></span>
             <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
@@ -626,8 +847,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }}
     document.body.appendChild(toast);
 
-    console.log(`[Tailorbird] Completed autofill: ${{filledCount}} populated, ${{unfilledCount}} unfilled highlighted.`);
-    return filledCount;
+    console.log(`[Tailorbird] Completed autofill: ${{context.filledCount}} populated, ${{unfilledCount}} unfilled highlighted.`);
+    return context.filledCount;
 }})();"#
     )
 }
@@ -984,3 +1205,40 @@ pub fn generate_context_menu_script(
 }})();"#
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_autofill_script_contains_solvers() {
+        let profile = CandidateProfile {
+            full_name: "Joel Stransky".to_string(),
+            pronouns: "He/him".to_string(),
+            email: "stranskydesign@gmail.com".to_string(),
+            phone: "(915) 474-2746".to_string(),
+            location: "Las Vegas".to_string(),
+            current_company: "College Loan Corporation".to_string(),
+            linkedin: "https://www.linkedin.com/in/joelstransky/".to_string(),
+            github: "https://github.com/joelstransky".to_string(),
+            portfolio_url: "https://joelstransky.netlify.app/".to_string(),
+            experience_years: "15".to_string(),
+            gender: "Male".to_string(),
+            race: "White".to_string(),
+            veteran_status: "I am not a protected veteran".to_string(),
+            disability_status: "No, I don't have a disability".to_string(),
+            ..Default::default()
+        };
+
+        let script = generate_autofill_script(&profile);
+        assert!(script.contains("FormContext"));
+        assert!(script.contains("ReactSelectSolver"));
+        assert!(script.contains("GreenhouseAtsSolver"));
+        assert!(script.contains("NativeInputSolver"));
+        assert!(script.contains("NativeSelectSolver"));
+        assert!(script.contains("Joel Stransky"));
+        assert!(script.contains("College Loan Corporation"));
+        assert!(script.contains("Las Vegas"));
+    }
+}
+

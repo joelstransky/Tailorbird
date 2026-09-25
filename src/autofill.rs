@@ -116,8 +116,87 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 z-index: 2147483647;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 10px;
+                box-sizing: border-box;
                 animation: tbToastIn 0.3s ease-out;
+                transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                            transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                            border-radius 0.35s ease,
+                            padding 0.35s ease,
+                            background-color 0.2s ease,
+                            box-shadow 0.35s ease;
+            }}
+            #tailorbird-toast-notice .tb-toast-bolt {{
+                font-size: 15px;
+                line-height: 1;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                user-select: none;
+                flex-shrink: 0;
+                transition: transform 0.2s ease, filter 0.2s ease;
+            }}
+            #tailorbird-toast-notice .tb-toast-content {{
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                white-space: nowrap;
+                opacity: 1;
+                max-width: 600px;
+                transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+                overflow: hidden;
+            }}
+            #tailorbird-toast-notice .tb-toast-close-btn {{
+                background: none;
+                border: none;
+                color: #9ca3af;
+                font-size: 13px;
+                cursor: pointer;
+                padding: 0 4px;
+                margin-left: 4px;
+                line-height: 1;
+                opacity: 1;
+                max-width: 30px;
+                transition: opacity 0.2s ease, max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+                overflow: hidden;
+                flex-shrink: 0;
+            }}
+            #tailorbird-toast-notice .tb-toast-close-btn:hover {{
+                color: #ffffff;
+            }}
+
+            /* Shelf collapsed state */
+            #tailorbird-toast-notice.tb-collapsed {{
+                right: 0 !important;
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                border-right: none !important;
+                padding: 9px 12px 9px 11px !important;
+                cursor: pointer !important;
+                gap: 0 !important;
+                box-shadow: -4px 6px 20px rgba(0,0,0,0.7) !important;
+            }}
+            #tailorbird-toast-notice.tb-collapsed:hover {{
+                transform: translateX(-4px);
+                background: #2a2a2a;
+            }}
+            #tailorbird-toast-notice.tb-collapsed .tb-toast-bolt {{
+                cursor: pointer;
+                transform: scale(1.2);
+                filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+            }}
+            #tailorbird-toast-notice.tb-collapsed .tb-toast-content {{
+                max-width: 0 !important;
+                opacity: 0 !important;
+                margin: 0 !important;
+                pointer-events: none !important;
+            }}
+            #tailorbird-toast-notice.tb-collapsed .tb-toast-close-btn {{
+                max-width: 0 !important;
+                opacity: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                pointer-events: none !important;
             }}
             @keyframes tbToastIn {{
                 from {{ transform: translateY(16px); opacity: 0; }}
@@ -900,6 +979,18 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         }}, 1500);
     }}
 
+    function collapseToast(t) {{
+        if (!t) return;
+        t.classList.add('tb-collapsed');
+        t.setAttribute('title', 'Expand Tailorbird autofill notice');
+    }}
+
+    function expandToast(t) {{
+        if (!t) return;
+        t.classList.remove('tb-collapsed');
+        t.removeAttribute('title');
+    }}
+
     function updateToast() {{
         const toast = document.getElementById('tailorbird-toast-notice');
         if (!toast) return;
@@ -914,12 +1005,25 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             }}
         }} else {{
             toast.style.borderColor = '#10b981';
+            expandToast(toast);
             toast.innerHTML = `
-                <span style="color: #10b981;">✅ <strong>All fields complete!</strong></span>
-                <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
+                <div class="tb-toast-bolt" id="tb-toast-bolt" style="font-size: 15px;">⚡</div>
+                <div class="tb-toast-content">
+                    <span><strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
+                    <span style="color: #64748b;">•</span>
+                    <span style="color: #10b981;">✅ <strong>All fields complete!</strong></span>
+                </div>
+                <button class="tb-toast-close-btn" id="tb-toast-close" type="button" title="Collapse to shelf">✕</button>
             `;
+            const closeBtn = toast.querySelector('#tb-toast-close');
+            if (closeBtn) {{
+                closeBtn.addEventListener('click', (e) => {{
+                    e.stopPropagation();
+                    collapseToast(toast);
+                }});
+            }}
             setTimeout(() => {{
-                if (toast.parentElement) {{
+                if (toast.parentElement && !toast.classList.contains('tb-collapsed')) {{
                     toast.style.transition = 'opacity 0.4s ease';
                     toast.style.opacity = '0';
                     setTimeout(() => toast.remove(), 400);
@@ -930,22 +1034,32 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
 
     const toast = document.createElement('div');
     toast.id = 'tailorbird-toast-notice';
+
+    toast.addEventListener('click', () => {{
+        if (toast.classList.contains('tb-collapsed')) {{
+            expandToast(toast);
+        }}
+    }});
+
     if (unfilledCount > 0) {{
         toast.innerHTML = `
-            <span>⚡ <strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
-            <span style="color: #64748b;">•</span>
-            <span id="tailorbird-unfilled-count" style="color: #f59e0b; display: inline-flex; align-items: center; gap: 6px;">
-                <span class="tb-unfilled-text">⚠️ <strong>${{unfilledCount}}</strong> remaining</span>
-                <span class="tb-nav-group" style="display: inline-flex; gap: 3px; align-items: center; margin-left: 2px;">
-                    <button class="tb-nav-btn" id="tb-nav-prev" type="button" title="Scroll to previous unfilled field" aria-label="Previous unfilled field">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    </button>
-                    <button class="tb-nav-btn" id="tb-nav-next" type="button" title="Scroll to next unfilled field" aria-label="Next unfilled field">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
+            <div class="tb-toast-bolt" id="tb-toast-bolt">⚡</div>
+            <div class="tb-toast-content">
+                <span><strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
+                <span style="color: #64748b;">•</span>
+                <span id="tailorbird-unfilled-count" style="color: #f59e0b; display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="tb-unfilled-text">⚠️ <strong>${{unfilledCount}}</strong> remaining</span>
+                    <span class="tb-nav-group" style="display: inline-flex; gap: 3px; align-items: center; margin-left: 2px;">
+                        <button class="tb-nav-btn" id="tb-nav-prev" type="button" title="Scroll to previous unfilled field" aria-label="Previous unfilled field">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </button>
+                        <button class="tb-nav-btn" id="tb-nav-next" type="button" title="Scroll to next unfilled field" aria-label="Next unfilled field">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                    </span>
                 </span>
-            </span>
-            <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
+            </div>
+            <button class="tb-toast-close-btn" id="tb-toast-close" type="button" title="Collapse to shelf">✕</button>
         `;
 
         const prevBtn = toast.querySelector('#tb-nav-prev');
@@ -953,16 +1067,56 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
 
         const nextBtn = toast.querySelector('#tb-nav-next');
         if (nextBtn) nextBtn.addEventListener('click', (e) => {{ e.stopPropagation(); navigateUnfilled('next'); }});
+
+        const closeBtn = toast.querySelector('#tb-toast-close');
+        if (closeBtn) {{
+            closeBtn.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                collapseToast(toast);
+            }});
+        }}
+
+        const bolt = toast.querySelector('#tb-toast-bolt');
+        if (bolt) {{
+            bolt.addEventListener('click', (e) => {{
+                if (toast.classList.contains('tb-collapsed')) {{
+                    e.stopPropagation();
+                    expandToast(toast);
+                }}
+            }});
+        }}
     }} else {{
         toast.style.borderColor = '#10b981';
         toast.innerHTML = `
-            <span>⚡ <strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
-            <span style="color: #64748b;">•</span>
-            <span style="color: #10b981;">✅ <strong>All fields complete!</strong></span>
-            <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
+            <div class="tb-toast-bolt" id="tb-toast-bolt" style="font-size: 15px;">⚡</div>
+            <div class="tb-toast-content">
+                <span><strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
+                <span style="color: #64748b;">•</span>
+                <span style="color: #10b981;">✅ <strong>All fields complete!</strong></span>
+            </div>
+            <button class="tb-toast-close-btn" id="tb-toast-close" type="button" title="Collapse to shelf">✕</button>
         `;
+
+        const closeBtn = toast.querySelector('#tb-toast-close');
+        if (closeBtn) {{
+            closeBtn.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                collapseToast(toast);
+            }});
+        }}
+
+        const bolt = toast.querySelector('#tb-toast-bolt');
+        if (bolt) {{
+            bolt.addEventListener('click', (e) => {{
+                if (toast.classList.contains('tb-collapsed')) {{
+                    e.stopPropagation();
+                    expandToast(toast);
+                }}
+            }});
+        }}
+
         setTimeout(() => {{
-            if (toast.parentElement) {{
+            if (toast.parentElement && !toast.classList.contains('tb-collapsed')) {{
                 toast.style.transition = 'opacity 0.4s ease';
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 400);

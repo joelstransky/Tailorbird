@@ -40,11 +40,12 @@ pub struct CandidateProfile {
 
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
+/// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
 pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     let profile_json = serde_json::to_string(profile).unwrap_or_else(|_| "{}".to_string());
 
     format!(
-        r#"(function() {{
+        r#"(async function() {{
     const profile = {profile_json};
     console.log('[Tailorbird] Initializing Multi-Solver Autofill Engine...', profile);
 
@@ -309,8 +310,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         isOptionMatch(targetVal, optVal, optText) {{
             if (!targetVal) return false;
             const t = targetVal.toLowerCase().trim();
-            const v = (optVal || '').toLowerCase().trim();
-            const txt = (optText || '').toLowerCase().trim();
+            const v = (optVal !== undefined && optVal !== null) ? String(optVal).toLowerCase().trim() : '';
+            const txt = (optText !== undefined && optText !== null) ? String(optText).toLowerCase().trim() : '';
 
             if (v === t || txt === t) return true;
 
@@ -370,7 +371,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 if (txt.includes('they/them') || v.includes('they/them') || txt.includes('they / them')) return true;
             }}
 
-            // Sponsorship
+            // Sponsorship & Hispanic Yes/No
             if (t === 'no' && (txt === 'no' || v === 'no' || txt.startsWith('no '))) return true;
             if (t === 'yes' && (txt === 'yes' || v === 'yes' || txt.startsWith('yes '))) return true;
 
@@ -418,14 +419,14 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     // 2. SOLVER: REACT-SELECT & ARIA COMBOBOX SOLVER
     // ========================================================================
     class ReactSelectSolver {{
-        static selectOption(inputEl, targetVal, allowedOptions, context) {{
+        static async selectOption(inputEl, targetVal, allowedOptions, context) {{
             if (!inputEl || !targetVal) return false;
 
             // Strategy 1: React Fiber / memoizedProps inspection
             try {{
                 let curr = inputEl;
                 let fiber = null;
-                for (let i = 0; i < 5 && curr; i++) {{
+                for (let i = 0; i < 6 && curr; i++) {{
                     const key = Object.keys(curr).find(k => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'));
                     if (key && curr[key]) {{
                         fiber = curr[key];
@@ -438,23 +439,31 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 while (traveler) {{
                     const props = traveler.memoizedProps;
                     if (props) {{
-                        const p = props.selectProps || props;
-                        const opts = Array.isArray(p.options) ? p.options : (Array.isArray(allowedOptions) ? allowedOptions : null);
-                        if (opts && typeof p.onChange === 'function') {{
-                            const matchedOpt = opts.find(opt => {{
-                                const oLabel = opt.label || opt.name || opt.text || '';
-                                const oVal = opt.value || opt.id || '';
-                                return context.isOptionMatch(targetVal, String(oVal), String(oLabel));
-                            }});
+                        // CRITICAL: Must be the Select component itself or child with selectProps!
+                        // Do NOT call onChange on DOM <input> element's own native event props!
+                        const selectProps = props.selectProps || (Array.isArray(props.options) ? props : null);
+                        if (selectProps && typeof selectProps.onChange === 'function') {{
+                            const opts = (Array.isArray(selectProps.options) && selectProps.options.length > 0)
+                                ? selectProps.options
+                                : allowedOptions;
 
-                            if (matchedOpt) {{
-                                p.onChange(matchedOpt, {{ action: 'select-option', option: matchedOpt }});
-                                if (typeof p.onBlur === 'function') {{
-                                    p.onBlur(new FocusEvent('blur'));
+                            if (Array.isArray(opts)) {{
+                                const matchedOpt = opts.find(opt => {{
+                                    const oLabel = opt.label || opt.name || opt.text || '';
+                                    const oVal = opt.value !== undefined ? opt.value : (opt.id !== undefined ? opt.id : '');
+                                    return context.isOptionMatch(targetVal, String(oVal), String(oLabel));
+                                }});
+
+                                if (matchedOpt) {{
+                                    const valToPass = selectProps.isMulti ? [matchedOpt] : matchedOpt;
+                                    selectProps.onChange(valToPass, {{ action: 'select-option', option: matchedOpt }});
+                                    if (typeof selectProps.onBlur === 'function') {{
+                                        selectProps.onBlur(new FocusEvent('blur'));
+                                    }}
+                                    ReactSelectSolver.invalidateHiddenInputs(inputEl, matchedOpt.value || matchedOpt.id || matchedOpt.label, context);
+                                    context.markFilled(inputEl);
+                                    return true;
                                 }}
-                                ReactSelectSolver.invalidateHiddenInputs(inputEl, matchedOpt.value || matchedOpt.label, context);
-                                context.markFilled(inputEl);
-                                return true;
                             }}
                         }}
                     }}
@@ -464,44 +473,72 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 console.warn('[Tailorbird] React-Select fiber attempt error:', err);
             }}
 
-            // Strategy 2: DOM Simulation
+            // Strategy 2: Asynchronous DOM Simulation with guaranteed menu closure
             try {{
                 const control = inputEl.closest('.select__control') || inputEl.parentElement;
                 inputEl.focus();
+
+                // 1. Open dropdown
                 if (control) {{
                     control.dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
                     control.dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
                     control.click();
                 }}
-
                 inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, bubbles: true }}));
 
+                // 2. Wait for React to render the menu asynchronously (prevents race condition)
+                await new Promise(r => setTimeout(r, 80));
+
+                // 3. Search options in mounted menu
+                let didSelect = false;
                 const renderedOptions = Array.from(document.querySelectorAll('.select__option, [id*="react-select"][role="option"], [class*="-option"]'));
                 for (const opt of renderedOptions) {{
                     if (context.isOptionMatch(targetVal, opt.getAttribute('data-value'), opt.textContent)) {{
                         opt.dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
                         opt.dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
                         opt.click();
+                        didSelect = true;
                         ReactSelectSolver.invalidateHiddenInputs(inputEl, targetVal, context);
                         context.markFilled(inputEl);
-                        return true;
+                        await new Promise(r => setTimeout(r, 40));
+                        break;
                     }}
                 }}
 
-                // If not found in open menu, filter by typing
-                inputEl.value = targetVal;
-                inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                const filtered = Array.from(document.querySelectorAll('.select__option, [id*="react-select"][role="option"], [class*="-option"]'));
-                if (filtered.length > 0) {{
-                    filtered[0].dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
-                    filtered[0].dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
-                    filtered[0].click();
-                    ReactSelectSolver.invalidateHiddenInputs(inputEl, targetVal, context);
-                    context.markFilled(inputEl);
-                    return true;
+                // If not found in default view, try typing filter
+                if (!didSelect) {{
+                    inputEl.value = targetVal;
+                    inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    await new Promise(r => setTimeout(r, 60));
+
+                    const filtered = Array.from(document.querySelectorAll('.select__option, [id*="react-select"][role="option"], [class*="-option"]'));
+                    if (filtered.length > 0) {{
+                        filtered[0].dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
+                        filtered[0].dispatchEvent(new MouseEvent('mouseup', {{ bubbles: true, cancelable: true, view: window }}));
+                        filtered[0].click();
+                        didSelect = true;
+                        ReactSelectSolver.invalidateHiddenInputs(inputEl, targetVal, context);
+                        context.markFilled(inputEl);
+                        await new Promise(r => setTimeout(r, 40));
+                    }}
                 }}
+
+                // 4. GUARANTEE: NEVER leave any menu open!
+                const menuEl = document.querySelector('.select__menu, [class*="-menu"]');
+                if (menuEl) {{
+                    inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }}));
+                    if (control) {{
+                        control.dispatchEvent(new MouseEvent('mousedown', {{ bubbles: true, cancelable: true, view: window }}));
+                    }}
+                    inputEl.blur();
+                    await new Promise(r => setTimeout(r, 30));
+                }}
+
+                return didSelect;
             }} catch (err) {{
                 console.warn('[Tailorbird] React-Select DOM simulation error:', err);
+                inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }}));
+                inputEl.blur();
             }}
 
             return false;
@@ -517,14 +554,14 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             }}
         }}
 
-        static solve(context) {{
+        static async solve(context) {{
             const comboboxInputs = Array.from(document.querySelectorAll('input.select__input, input[role="combobox"]'));
             for (const input of comboboxInputs) {{
                 if (context.filledElements.has(input)) continue;
                 const labelText = context.resolveLabel(input);
                 const semantic = context.resolveSemanticTarget(labelText);
                 if (semantic && semantic.value) {{
-                    ReactSelectSolver.selectOption(input, semantic.value, null, context);
+                    await ReactSelectSolver.selectOption(input, semantic.value, null, context);
                 }}
             }}
         }}
@@ -538,7 +575,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             return !!(window.__remixContext || document.getElementById('application-form') || location.hostname.includes('greenhouse.io'));
         }}
 
-        static solve(context) {{
+        static async solve(context) {{
             if (!window.__remixContext || !window.__remixContext.state || !window.__remixContext.state.loaderData) {{
                 return false;
             }}
@@ -559,67 +596,82 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 {{ id: 'country', val: context.resolveCountryFromLocation(context.profile.location) }}
             ];
 
-            standardMap.forEach(item => {{
+            for (const item of standardMap) {{
                 const el = document.getElementById(item.id);
                 if (el && item.val && !context.filledElements.has(el)) {{
                     if (el.getAttribute('role') === 'combobox' || el.classList.contains('select__input')) {{
-                        ReactSelectSolver.selectOption(el, item.val, null, context);
+                        await ReactSelectSolver.selectOption(el, item.val, null, context);
                     }} else {{
                         context.setNativeValue(el, item.val);
                     }}
                 }}
-            }});
+            }}
 
             // 2. Custom Job Post Questions
             if (Array.isArray(jobPost.questions)) {{
-                jobPost.questions.forEach(q => {{
-                    if (!q.fields || !Array.isArray(q.fields)) return;
+                for (const q of jobPost.questions) {{
+                    if (!q.fields || !Array.isArray(q.fields)) continue;
                     const semantic = context.resolveSemanticTarget(q.label || '');
-                    if (!semantic || !semantic.value) return;
+                    if (!semantic || !semantic.value) continue;
 
-                    q.fields.forEach(f => {{
+                    for (const f of q.fields) {{
                         const el = document.getElementById(f.name);
-                        if (!el || context.filledElements.has(el)) return;
+                        if (!el || context.filledElements.has(el)) continue;
 
                         if (f.type === 'multi_value_single_select' || el.getAttribute('role') === 'combobox' || el.classList.contains('select__input')) {{
-                            ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
+                            await ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
                         }} else if (f.type === 'input_text' || f.type === 'textarea') {{
                             context.setNativeValue(el, semantic.value);
                         }}
-                    }});
-                }});
+                    }}
+                }}
             }}
 
             // 3. EEOC Sections
             if (Array.isArray(jobPost.eeoc_sections)) {{
-                jobPost.eeoc_sections.forEach(sec => {{
-                    if (!Array.isArray(sec.questions)) return;
-                    sec.questions.forEach(q => {{
-                        if (!q.fields || !Array.isArray(q.fields)) return;
+                for (const sec of jobPost.eeoc_sections) {{
+                    if (!Array.isArray(sec.questions)) continue;
+                    for (const q of sec.questions) {{
+                        if (!q.fields || !Array.isArray(q.fields)) continue;
                         const semantic = context.resolveSemanticTarget(q.label || '');
-                        if (!semantic || !semantic.value) return;
+                        if (!semantic || !semantic.value) continue;
 
-                        q.fields.forEach(f => {{
+                        for (const f of q.fields) {{
                             const el = document.getElementById(f.name);
-                            if (!el || context.filledElements.has(el)) return;
-                            ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
-                        }});
-                    }});
-                }});
+                            if (!el || context.filledElements.has(el)) continue;
+                            await ReactSelectSolver.selectOption(el, semantic.value, f.values, context);
+                        }}
+                    }}
+                }}
             }}
 
-            // 4. Demographic Questions Survey
+            // 4. Standard EEOC specific field IDs
+            const eeocFields = [
+                {{ id: 'gender', target: context.profile.gender }},
+                {{ id: 'hispanic_ethnicity', target: (context.profile.race || '').toLowerCase().includes('hispanic') ? 'Yes' : 'No' }},
+                {{ id: 'veteran_status', target: context.profile.veteranStatus }},
+                {{ id: 'race', target: context.profile.race }}
+            ];
+
+            for (const item of eeocFields) {{
+                const el = document.getElementById(item.id);
+                if (el && item.target && !context.filledElements.has(el)) {{
+                    await ReactSelectSolver.selectOption(el, item.target, null, context);
+                }}
+            }}
+
+            // 5. Demographic Questions Survey
             if (jobPost.demographic_questions && Array.isArray(jobPost.demographic_questions.questions)) {{
-                jobPost.demographic_questions.questions.forEach(q => {{
+                for (const q of jobPost.demographic_questions.questions) {{
                     const el = document.getElementById(String(q.id));
-                    if (!el || context.filledElements.has(el)) return;
+                    if (!el || context.filledElements.has(el)) continue;
 
                     const semantic = context.resolveSemanticTarget(q.name || '');
                     if (semantic && semantic.value) {{
                         const opts = Array.isArray(q.answer_options) ? q.answer_options.map(o => ({{ label: o.name, value: o.id }})) : null;
-                        ReactSelectSolver.selectOption(el, semantic.value, opts, context);
+                        await ReactSelectSolver.selectOption(el, semantic.value, opts, context);
                     }}
-                }});
+                }}
             }}
 
             return true;
@@ -695,11 +747,11 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
 
     // Run specialized ATS solver first if applicable
     if (GreenhouseAtsSolver.canSolve()) {{
-        GreenhouseAtsSolver.solve(context);
+        await GreenhouseAtsSolver.solve(context);
     }}
 
     // Run React-Select solver for any remaining custom comboboxes
-    ReactSelectSolver.solve(context);
+    await ReactSelectSolver.solve(context);
 
     // Run Native Input & Select solvers
     NativeInputSolver.solve(context);
@@ -734,8 +786,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         }} else if (el.tagName === 'SELECT') {{
             if (el.selectedIndex <= 0 || !el.value || el.value.trim() === '') isUnfilled = true;
         }} else if (el.classList.contains('select__input') || el.getAttribute('role') === 'combobox') {{
-            const wrapper = el.closest('.select__control, .field-wrapper');
-            const hasValuePill = wrapper && wrapper.querySelector('.select__single-value, [class*="singleValue"]');
+            const wrapper = el.closest('.select__control, .field-wrapper, .select-wrapper');
+            const hasValuePill = wrapper && wrapper.querySelector('.select__single-value, .select__multi-value, [class*="singleValue"], [class*="multiValue"]');
             if (!hasValuePill) isUnfilled = true;
         }} else {{
             if (!el.value || el.value.trim() === '') isUnfilled = true;

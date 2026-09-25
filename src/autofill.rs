@@ -73,6 +73,34 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 outline: 2px solid #3b82f6 !important;
                 box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
             }}
+            .tailorbird-scrolled-focus {{
+                box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.6) !important;
+                outline: 2px solid #f59e0b !important;
+                transition: box-shadow 0.2s ease, outline 0.2s ease !important;
+            }}
+            .tb-nav-btn {{
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.09);
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                color: #e5e7eb;
+                border-radius: 4px;
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                padding: 0;
+                line-height: 1;
+                transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+            }}
+            .tb-nav-btn:hover {{
+                background: rgba(245, 158, 11, 0.25);
+                border-color: #f59e0b;
+                color: #f59e0b;
+            }}
+            .tb-nav-btn:active {{
+                transform: scale(0.92);
+            }}
             #tailorbird-toast-notice {{
                 position: fixed;
                 bottom: 24px;
@@ -829,32 +857,60 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         }}
     }});
 
+    let currentUnfilledIndex = -1;
+
+    function getUnfilledTargets() {{
+        const elements = Array.from(document.querySelectorAll('.tailorbird-unfilled'));
+        const seenGroups = new Set();
+        const targets = [];
+        for (const el of elements) {{
+            if (el.type === 'radio' || el.type === 'checkbox') {{
+                if (el.name) {{
+                    if (seenGroups.has(el.name)) continue;
+                    seenGroups.add(el.name);
+                }}
+            }}
+            targets.push(el);
+        }}
+        return targets;
+    }}
+
+    function navigateUnfilled(direction) {{
+        const targets = getUnfilledTargets();
+        if (targets.length === 0) return;
+
+        if (direction === 'next') {{
+            currentUnfilledIndex = (currentUnfilledIndex + 1) % targets.length;
+        }} else {{
+            currentUnfilledIndex = (currentUnfilledIndex - 1 + targets.length) % targets.length;
+        }}
+
+        const target = targets[currentUnfilledIndex];
+        const scrollTarget = target.closest('.field-wrapper, .select, .input-wrapper, fieldset, li') || target;
+        scrollTarget.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+
+        try {{
+            target.focus({{ preventScroll: true }});
+        }} catch (e) {{}}
+
+        const highlightEl = target.closest('.select__control') || target;
+        highlightEl.classList.add('tailorbird-scrolled-focus');
+        setTimeout(() => {{
+            highlightEl.classList.remove('tailorbird-scrolled-focus');
+        }}, 1500);
+    }}
+
     function updateToast() {{
         const toast = document.getElementById('tailorbird-toast-notice');
         if (!toast) return;
 
-        const remainingElements = Array.from(document.querySelectorAll('.tailorbird-unfilled'));
-        const countedGroups = new Set();
-        let remainingCount = 0;
-        for (const elem of remainingElements) {{
-            if (elem.type === 'radio' || elem.type === 'checkbox') {{
-                if (elem.name) {{
-                    if (!countedGroups.has(elem.name)) {{
-                        countedGroups.add(elem.name);
-                        remainingCount++;
-                    }}
-                }} else {{
-                    remainingCount++;
-                }}
-            }} else {{
-                remainingCount++;
-            }}
-        }}
+        const targets = getUnfilledTargets();
+        const remainingCount = targets.length;
 
         if (remainingCount > 0) {{
-            const countSpan = toast.querySelector('#tailorbird-unfilled-count');
-            if (countSpan) {{
-                countSpan.innerHTML = `⚠️ <strong>${{remainingCount}}</strong> remaining marked in amber`;
+            const countText = toast.querySelector('.tb-unfilled-text');
+            if (countText) {{
+                countText.innerHTML = `⚠️ <strong>${{remainingCount}}</strong> remaining`;
             }}
         }} else {{
             toast.style.borderColor = '#10b981';
@@ -878,9 +934,25 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         toast.innerHTML = `
             <span>⚡ <strong>${{context.filledCount}}</strong> field${{context.filledCount === 1 ? '' : 's'}} autofilled</span>
             <span style="color: #64748b;">•</span>
-            <span id="tailorbird-unfilled-count" style="color: #f59e0b;">⚠️ <strong>${{unfilledCount}}</strong> remaining marked in amber</span>
+            <span id="tailorbird-unfilled-count" style="color: #f59e0b; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="tb-unfilled-text">⚠️ <strong>${{unfilledCount}}</strong> remaining</span>
+                <span class="tb-nav-group" style="display: inline-flex; gap: 3px; align-items: center; margin-left: 2px;">
+                    <button class="tb-nav-btn" id="tb-nav-prev" type="button" title="Scroll to previous unfilled field" aria-label="Previous unfilled field">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </button>
+                    <button class="tb-nav-btn" id="tb-nav-next" type="button" title="Scroll to next unfilled field" aria-label="Next unfilled field">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </span>
+            </span>
             <button style="background:none; border:none; color:#9ca3af; font-size:13px; cursor:pointer; margin-left:6px; padding:0 4px;" onclick="this.parentElement.remove()">✕</button>
         `;
+
+        const prevBtn = toast.querySelector('#tb-nav-prev');
+        if (prevBtn) prevBtn.addEventListener('click', (e) => {{ e.stopPropagation(); navigateUnfilled('prev'); }});
+
+        const nextBtn = toast.querySelector('#tb-nav-next');
+        if (nextBtn) nextBtn.addEventListener('click', (e) => {{ e.stopPropagation(); navigateUnfilled('next'); }});
     }} else {{
         toast.style.borderColor = '#10b981';
         toast.innerHTML = `

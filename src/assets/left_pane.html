@@ -1628,16 +1628,16 @@
 
         <!-- Tab 1: Work History View -->
         <div id="tabViewHistory" class="wh-tab-view">
-          <!-- Linked Resume source bar (Equal Height & Alignment) -->
+          <!-- Linked Resume source bar -->
           <div class="resume-source-bar">
-            <input type="text" id="resumeSource" placeholder="Link PDF, TXT, or Google Doc URL...">
-            <button class="resume-source-btn resume-source-btn-browse" id="btnBrowseResume" title="Browse local file" type="button">
+            <input type="text" id="resumeSource" placeholder="Select local Resume file (PDF, Word, TXT)...">
+            <button class="resume-source-btn resume-source-btn-browse" id="btnBrowseResume" title="Browse local resume file" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
               </svg>
               <span>Browse</span>
             </button>
-            <button class="resume-source-btn resume-source-btn-scan" id="btnImportResume" title="Import & scan resume" type="button">
+            <button class="resume-source-btn resume-source-btn-scan" id="btnImportResume" title="Scan positions into Work History" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
                 <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
@@ -1646,6 +1646,17 @@
                 <line x1="7" y1="12" x2="17" y2="12"></line>
               </svg>
               <span>Scan</span>
+            </button>
+          </div>
+
+          <!-- Linked Cover Letter source bar -->
+          <div class="resume-source-bar" style="margin-bottom: 8px;">
+            <input type="text" id="coverLetterSource" placeholder="Select local Cover Letter file (PDF, Word, TXT)...">
+            <button class="resume-source-btn resume-source-btn-browse" id="btnBrowseCoverLetter" title="Browse local cover letter file" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Browse</span>
             </button>
           </div>
 
@@ -1660,7 +1671,7 @@
             <div class="scan-callout-body">
               <div class="scan-callout-title">Fast-Track Your Work History</div>
               <div class="scan-callout-desc">
-                Instead of typing everything in manually, link or browse your resume above and click <strong>Scan</strong> to auto-fill your positions and achievements!
+                Instead of typing everything in manually, browse your resume file above and click <strong>Scan</strong> to auto-fill your positions and achievements!
               </div>
             </div>
           </div>
@@ -2084,7 +2095,9 @@
         gender: getGender(),
         race: getRace(),
         veteranStatus: getVeteranStatus(),
-        disabilityStatus: getDisabilityStatus()
+        disabilityStatus: getDisabilityStatus(),
+        resumePath: resumeSourceInput ? resumeSourceInput.value.trim() : '',
+        coverLetterPath: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : ''
       };
       sendIpc('AUTOFILL', { data });
     }
@@ -2093,8 +2106,9 @@
       if (el) el.addEventListener('click', handleAutofill);
     });
 
-    // --- Resume & Work History ---
+    // --- Resume, Cover Letter & Work History ---
     const resumeSourceInput = document.getElementById('resumeSource');
+    const coverLetterSourceInput = document.getElementById('coverLetterSource');
     const workHistoryList = document.getElementById('workHistoryList');
     const confirmModal = document.getElementById('confirmModal');
 
@@ -2102,15 +2116,61 @@
       sendIpc('PICK_RESUME_FILE');
     });
 
+    const btnBrowseCoverLetter = document.getElementById('btnBrowseCoverLetter');
+    if (btnBrowseCoverLetter) {
+      btnBrowseCoverLetter.addEventListener('click', () => {
+        sendIpc('PICK_COVER_LETTER_FILE');
+      });
+    }
+
+    function validateLocalFileInput(inputEl, fieldName) {
+      const val = inputEl.value.trim();
+      if (val.startsWith('http://') || val.startsWith('https://') || val.includes('docs.google.com')) {
+        showErrorAlert(
+          `${fieldName} must be a local file on your computer (PDF, Word, or TXT). Job forms cannot attach Google Doc URLs. Please download your document as a PDF/Word file and click Browse.`,
+          'Local File Required'
+        );
+        inputEl.value = '';
+        saveAllData();
+        return false;
+      }
+      return true;
+    }
+
+    resumeSourceInput.addEventListener('change', () => {
+      if (validateLocalFileInput(resumeSourceInput, 'Resume')) {
+        saveAllData();
+      }
+    });
+
+    if (coverLetterSourceInput) {
+      coverLetterSourceInput.addEventListener('change', () => {
+        if (validateLocalFileInput(coverLetterSourceInput, 'Cover Letter')) {
+          saveAllData();
+        }
+      });
+    }
+
     window.setResumePath = function(path) {
       resumeSourceInput.value = path;
+      updateCandidateSummaryUI();
       saveAllData();
+    };
+
+    window.setCoverLetterPath = function(path) {
+      if (coverLetterSourceInput) {
+        coverLetterSourceInput.value = path;
+        saveAllData();
+      }
     };
 
     function handleScanResume() {
       const source = resumeSourceInput.value.trim();
       if (!source) {
-        showErrorAlert('Please select a local resume file or paste a public Google Doc URL.', 'No Resume Specified');
+        showErrorAlert('Please browse and select a local resume file (PDF, TXT, or MD) to scan.', 'No Resume Specified');
+        return;
+      }
+      if (!validateLocalFileInput(resumeSourceInput, 'Resume')) {
         return;
       }
 
@@ -2870,9 +2930,12 @@
         setDisabilityStatus('');
       }
 
-      // 2. Resume Source
+      // 2. Resume & Cover Letter Source
       if (data.resumeSource !== undefined && data.resumeSource !== null && data.resumeSource !== '') {
         resumeSourceInput.value = data.resumeSource;
+      }
+      if (data.coverLetterSource !== undefined && data.coverLetterSource !== null && data.coverLetterSource !== '' && coverLetterSourceInput) {
+        coverLetterSourceInput.value = data.coverLetterSource;
       }
 
       // 3. Work History
@@ -2976,6 +3039,13 @@
       saveAllData();
     };
 
+    window.setCoverLetterPath = function(path) {
+      if (coverLetterSourceInput) {
+        coverLetterSourceInput.value = path;
+        saveAllData();
+      }
+    };
+
     window.setWorkHistory = function(entries) {
       workHistory = entries || [];
       renderWorkHistory();
@@ -3031,6 +3101,7 @@
       sendIpc('SAVE_DATA', {
         candidateProfile,
         resumeSource: resumeSourceInput.value.trim(),
+        coverLetterSource: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : '',
         workHistory,
         specialFields,
         prospects,

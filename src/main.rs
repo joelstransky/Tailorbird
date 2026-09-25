@@ -22,6 +22,7 @@ use wry::{
 use crate::autofill::{generate_autofill_script, generate_context_menu_script, CandidateProfile};
 use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
+use base64::Engine;
 
 const LEFT_PANE_WIDTH: f64 = 420.0;
 const TOOLBAR_HEIGHT: f64 = 78.0;
@@ -433,6 +434,8 @@ enum IpcMessage {
     Home,
     #[serde(rename = "PICK_RESUME_FILE")]
     PickResumeFile,
+    #[serde(rename = "PICK_COVER_LETTER_FILE")]
+    PickCoverLetterFile,
     #[serde(rename = "IMPORT_RESUME")]
     ImportResume { source: String },
     #[serde(rename = "SCRAPE_CURRENT_PAGE")]
@@ -458,6 +461,8 @@ enum IpcMessage {
         candidate_profile: Option<CandidateProfile>,
         #[serde(rename = "resumeSource")]
         resume_source: String,
+        #[serde(default, rename = "coverLetterSource")]
+        cover_letter_source: String,
         #[serde(rename = "workHistory")]
         work_history: Vec<WorkHistoryEntry>,
         #[serde(default, rename = "specialFields")]
@@ -687,8 +692,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             move |req| {
                 let body = req.body();
                 match serde_json::from_str::<IpcMessage>(body) {
-                    Ok(IpcMessage::Autofill { data }) => {
+                    Ok(IpcMessage::Autofill { mut data }) => {
                         println!("[Tailorbird Host] Triggering AUTOFILL for: {}", data.full_name);
+
+                        // Attach Resume file bytes if local path exists
+                        if !data.resume_path.trim().is_empty() {
+                            let p = std::path::Path::new(data.resume_path.trim());
+                            if p.exists() && p.is_file() {
+                                if let Ok(bytes) = std::fs::read(p) {
+                                    let file_name = p.file_name().and_then(|s| s.to_str()).unwrap_or("Resume.pdf").to_string();
+                                    let mime_type = match p.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase().as_str() {
+                                        "pdf" => "application/pdf",
+                                        "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "doc" => "application/msword",
+                                        "txt" => "text/plain",
+                                        "md" => "text/markdown",
+                                        _ => "application/octet-stream",
+                                    }.to_string();
+                                    let base64_data = base64::prelude::BASE64_STANDARD.encode(&bytes);
+                                    data.resume_file = Some(crate::autofill::FilePayload {
+                                        file_name,
+                                        mime_type,
+                                        base64_data,
+                                    });
+                                    println!("[Tailorbird Host] Loaded resume attachment: {} ({} bytes)", p.display(), bytes.len());
+                                }
+                            }
+                        }
+
+                        // Attach Cover Letter file bytes if local path exists
+                        if !data.cover_letter_path.trim().is_empty() {
+                            let p = std::path::Path::new(data.cover_letter_path.trim());
+                            if p.exists() && p.is_file() {
+                                if let Ok(bytes) = std::fs::read(p) {
+                                    let file_name = p.file_name().and_then(|s| s.to_str()).unwrap_or("Cover_Letter.pdf").to_string();
+                                    let mime_type = match p.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase().as_str() {
+                                        "pdf" => "application/pdf",
+                                        "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "doc" => "application/msword",
+                                        "txt" => "text/plain",
+                                        "md" => "text/markdown",
+                                        _ => "application/octet-stream",
+                                    }.to_string();
+                                    let base64_data = base64::prelude::BASE64_STANDARD.encode(&bytes);
+                                    data.cover_letter_file = Some(crate::autofill::FilePayload {
+                                        file_name,
+                                        mime_type,
+                                        base64_data,
+                                    });
+                                    println!("[Tailorbird Host] Loaded cover letter attachment: {} ({} bytes)", p.display(), bytes.len());
+                                }
+                            }
+                        }
+
                         let injection_script = generate_autofill_script(&data);
 
                         if let Ok(guard) = tabs_holder.lock() {
@@ -725,6 +781,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             if let Ok(guard) = left_holder.lock() {
                                 if let Some(ref left_wv) = *guard {
                                     let js = format!("if (window.setResumePath) {{ window.setResumePath({}); }}", serde_json::to_string(&path_str).unwrap_or_default());
+                                    let _ = left_wv.evaluate_script(&js);
+                                }
+                            }
+                        }
+                    }
+                    Ok(IpcMessage::PickCoverLetterFile) => {
+                        if let Some(file) = rfd::FileDialog::new()
+                            .set_title("Select Cover Letter File")
+                            .add_filter("Cover Letter Files", &["pdf", "docx", "doc", "txt", "md"])
+                            .pick_file()
+                        {
+                            let path_str = file.to_string_lossy().to_string();
+                            println!("[Tailorbird Host] Selected cover letter file: {}", path_str);
+                            if let Ok(guard) = left_holder.lock() {
+                                if let Some(ref left_wv) = *guard {
+                                    let js = format!("if (window.setCoverLetterPath) {{ window.setCoverLetterPath({}); }}", serde_json::to_string(&path_str).unwrap_or_default());
                                     let _ = left_wv.evaluate_script(&js);
                                 }
                             }
@@ -837,6 +909,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::SaveData {
                         candidate_profile,
                         resume_source,
+                        cover_letter_source,
                         work_history,
                         special_fields,
                         prospects,
@@ -851,6 +924,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let data = AppData {
                             candidate_profile,
                             resume_source,
+                            cover_letter_source,
                             work_history,
                             special_fields,
                             prospects,

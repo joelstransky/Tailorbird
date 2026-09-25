@@ -3,6 +3,14 @@ use crate::prospect::SpecialField;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
+pub struct FilePayload {
+    pub file_name: String,
+    pub mime_type: String,
+    pub base64_data: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct CandidateProfile {
     #[serde(default)]
     pub full_name: String,
@@ -36,6 +44,14 @@ pub struct CandidateProfile {
     pub veteran_status: String,
     #[serde(default)]
     pub disability_status: String,
+    #[serde(default)]
+    pub resume_path: String,
+    #[serde(default)]
+    pub cover_letter_path: String,
+    #[serde(default)]
+    pub resume_file: Option<FilePayload>,
+    #[serde(default)]
+    pub cover_letter_file: Option<FilePayload>,
 }
 
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
@@ -854,6 +870,96 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     }}
 
     // ========================================================================
+    // 5b. FILE ATTACHMENT SOLVER (Resume & Cover Letter)
+    // ========================================================================
+    class FileAttachmentSolver {{
+        static createFile(filePayload) {{
+            if (!filePayload || !filePayload.base64Data) return null;
+            try {{
+                const binaryString = atob(filePayload.base64Data);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {{
+                    bytes[i] = binaryString.charCodeAt(i);
+                }}
+                return new File([bytes], filePayload.fileName || 'document.pdf', {{
+                    type: filePayload.mimeType || 'application/octet-stream',
+                    lastModified: Date.now()
+                }});
+            }} catch (err) {{
+                console.error('[Tailorbird] Error decoding attachment file:', err);
+                return null;
+            }}
+        }}
+
+        static setFileInput(inputEl, fileObj) {{
+            if (!inputEl || !fileObj) return false;
+            try {{
+                const dt = new DataTransfer();
+                dt.items.add(fileObj);
+                inputEl.files = dt.files;
+                inputEl.dispatchEvent(new Event('input', {{ bubbles: true, cancelable: true }}));
+                inputEl.dispatchEvent(new Event('change', {{ bubbles: true, cancelable: true }}));
+                return true;
+            }} catch (err) {{
+                console.warn('[Tailorbird] Failed setting files on input:', err);
+                return false;
+            }}
+        }}
+
+        static solve(context) {{
+            const resumeFile = FileAttachmentSolver.createFile(context.profile.resumeFile);
+            const coverLetterFile = FileAttachmentSolver.createFile(context.profile.coverLetterFile);
+
+            if (!resumeFile && !coverLetterFile) return;
+
+            const fileInputs = Array.from(document.querySelectorAll('input[type="file"]'));
+            for (const input of fileInputs) {{
+                if (context.filledElements.has(input)) continue;
+
+                const labelText = (
+                    (input.id || '') + ' ' +
+                    (input.name || '') + ' ' +
+                    (input.getAttribute('aria-label') || '') + ' ' +
+                    context.resolveLabel(input)
+                ).toLowerCase();
+
+                // Cover letter check first (so "cover letter" doesn't get confused with generic terms)
+                if (/cover\s*letter|cover_letter|\bcover\b/i.test(labelText)) {{
+                    if (coverLetterFile) {{
+                        if (FileAttachmentSolver.setFileInput(input, coverLetterFile)) {{
+                            context.markFilled(input);
+                            console.log('[Tailorbird] Attached Cover Letter to file input:', input);
+                        }}
+                    }}
+                }} else if (/resume|\bcv\b|curriculum/i.test(labelText)) {{
+                    if (resumeFile) {{
+                        if (FileAttachmentSolver.setFileInput(input, resumeFile)) {{
+                            context.markFilled(input);
+                            console.log('[Tailorbird] Attached Resume to file input:', input);
+                        }}
+                    }}
+                }}
+            }}
+
+            // Fallback: If only 1 file input exists on page and resumeFile is present, attach resume
+            if (resumeFile) {{
+                const remainingFileInputs = fileInputs.filter(inp => !context.filledElements.has(inp));
+                if (remainingFileInputs.length === 1) {{
+                    const single = remainingFileInputs[0];
+                    const labelText = ((single.id || '') + ' ' + (single.name || '') + ' ' + context.resolveLabel(single)).toLowerCase();
+                    if (!/cover/i.test(labelText)) {{
+                        if (FileAttachmentSolver.setFileInput(single, resumeFile)) {{
+                            context.markFilled(single);
+                            console.log('[Tailorbird] Attached Resume to single remaining file input:', single);
+                        }}
+                    }}
+                }}
+            }}
+        }}
+    }}
+
+    // ========================================================================
     // 6. MASTER ORCHESTRATOR
     // ========================================================================
     const context = new FormContext(profile);
@@ -869,6 +975,9 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
     // Run Native Input & Select solvers
     NativeInputSolver.solve(context);
     NativeSelectSolver.solve(context);
+
+    // Run File Attachment solver
+    FileAttachmentSolver.solve(context);
 
     // ========================================================================
     // 7. UNFILLED HIGHLIGHTS & TOAST NOTIFICATION
@@ -890,7 +999,9 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
         if (el.type !== 'file' && el.offsetParent === null && el.getClientRects().length === 0) return;
 
         let isUnfilled = false;
-        if (el.type === 'radio' || el.type === 'checkbox') {{
+        if (el.type === 'file') {{
+            if (!el.files || el.files.length === 0) isUnfilled = true;
+        }} else if (el.type === 'radio' || el.type === 'checkbox') {{
             if (el.name) {{
                 if (!checkedGroups.has(el.name)) isUnfilled = true;
             }} else if (!el.checked) {{
@@ -914,7 +1025,9 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 el._tailorbirdListenerAttached = true;
                 const clearHighlight = () => {{
                     let nowFilled = false;
-                    if (el.type === 'radio' || el.type === 'checkbox') {{
+                    if (el.type === 'file') {{
+                        nowFilled = el.files && el.files.length > 0;
+                    }} else if (el.type === 'radio' || el.type === 'checkbox') {{
                         if (el.name) {{
                             const anyChecked = document.querySelector(`input[name="${{CSS.escape(el.name)}}"]:checked`);
                             if (anyChecked) {{
@@ -1520,6 +1633,7 @@ mod tests {
         assert!(script.contains("GreenhouseAtsSolver"));
         assert!(script.contains("NativeInputSolver"));
         assert!(script.contains("NativeSelectSolver"));
+        assert!(script.contains("FileAttachmentSolver"));
         assert!(script.contains("Joel Stransky"));
         assert!(script.contains("College Loan Corporation"));
         assert!(script.contains("Las Vegas"));

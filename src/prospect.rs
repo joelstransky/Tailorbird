@@ -98,6 +98,8 @@ pub struct AppData {
     #[serde(default)]
     pub resume_source: String,
     #[serde(default)]
+    pub cover_letter_source: String,
+    #[serde(default)]
     pub work_history: Vec<WorkHistoryEntry>,
     #[serde(default)]
     pub special_fields: Vec<SpecialField>,

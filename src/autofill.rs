@@ -120,9 +120,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 box-sizing: border-box;
                 animation: tbToastIn 0.3s ease-out;
                 transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                            transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                             border-radius 0.35s ease,
-                            padding 0.35s ease,
+                            padding 0.2s cubic-bezier(0.16, 1, 0.3, 1),
                             background-color 0.2s ease,
                             box-shadow 0.35s ease;
             }}
@@ -168,6 +167,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             /* Shelf collapsed state */
             #tailorbird-toast-notice.tb-collapsed {{
                 right: 0 !important;
+                transform: none !important;
                 border-top-right-radius: 0 !important;
                 border-bottom-right-radius: 0 !important;
                 border-right: none !important;
@@ -177,13 +177,19 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 box-shadow: -4px 6px 20px rgba(0,0,0,0.7) !important;
             }}
             #tailorbird-toast-notice.tb-collapsed:hover {{
-                transform: translateX(-4px);
+                transform: none !important;
+                padding-left: 19px !important;
                 background: #2a2a2a;
             }}
             #tailorbird-toast-notice.tb-collapsed .tb-toast-bolt {{
                 cursor: pointer;
-                transform: scale(1.2);
-                filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+                transition: transform 0.2s ease, filter 0.2s ease;
+            }}
+            #tailorbird-toast-notice.tb-collapsed:hover .tb-toast-bolt {{
+                transform: scale(1.22);
+                filter: drop-shadow(0 0 7px rgba(245, 158, 11, 0.7));
             }}
             #tailorbird-toast-notice.tb-collapsed .tb-toast-content {{
                 max-width: 0 !important;

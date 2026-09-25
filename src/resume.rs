@@ -330,46 +330,46 @@ mod tests {
     #[test]
     fn test_parse_work_history_sample() {
         let resume_text = r#"
-JOEL STRANSKY
+ALEX MERCER
 Senior Software Engineer
-stranskydesign@gmail.com
+alex.mercer@example.com
 
 EXPERIENCE
 
-Frontend Web Developer | Vegas.com | September 2019 – March 2020
+Frontend Web Developer | Apex Media Corp | September 2019 – March 2020
 ○  Increased conversion rates through data-driven A/B testing of high-traffic pages.
 ○  Established formal testing and component patterns improving code stability across React and legacy
 codebases.
 
-Frontend Developer III | Konami Gaming Inc. | June 2018 – September 2019
+Frontend Developer III | Nexus Gaming Technologies | June 2018 – September 2019
 ○  Revolutionized 20-year-old Java interfaces by engineering a React-based thick client with embedded
 Chromium.
 ○  Eliminated substantial Oracle licensing costs by researching and deploying an open-source Chromium
 integration framework for Java.
 ○  Served as the resident React lead, standardizing production pipelines and DevOps best practices.
 
-Ed Tech Course Designer | 1Prospect Technologies | October 2017 – February 2018
+Ed Tech Course Designer | Global Learning Systems | October 2017 – February 2018
 ○  Designed mission-critical UI for instructional modules.
 
 EDUCATION
 
-Full Sail University - B.S. Game Art
+State University - B.S. Computer Science
 "#;
 
         let entries = parse_work_history(resume_text);
         assert_eq!(entries.len(), 3);
 
-        // Verify Konami entry
-        let konami = &entries[1];
-        assert_eq!(konami.role, "Frontend Developer III");
-        assert_eq!(konami.company, "Konami Gaming Inc.");
-        assert_eq!(konami.start_date, "June 2018");
-        assert_eq!(konami.end_date, "September 2019");
+        // Verify middle entry
+        let middle_job = &entries[1];
+        assert_eq!(middle_job.role, "Frontend Developer III");
+        assert_eq!(middle_job.company, "Nexus Gaming Technologies");
+        assert_eq!(middle_job.start_date, "June 2018");
+        assert_eq!(middle_job.end_date, "September 2019");
 
         // Verify that the bullet point with "20-year-old" was NOT split into a new entry
-        assert!(konami.summary.contains("Revolutionized 20-year-old Java interfaces by engineering a React-based thick client with embedded Chromium."));
-        assert!(konami.summary.contains("Eliminated substantial Oracle licensing costs"));
-        assert!(konami.summary.contains("Served as the resident React lead"));
+        assert!(middle_job.summary.contains("Revolutionized 20-year-old Java interfaces by engineering a React-based thick client with embedded Chromium."));
+        assert!(middle_job.summary.contains("Eliminated substantial Oracle licensing costs"));
+        assert!(middle_job.summary.contains("Served as the resident React lead"));
     }
 }
 

@@ -448,7 +448,7 @@
                                   "id": "oHq46",
                                   "name": "Name",
                                   "fill": "#F8FAFC",
-                                  "content": "Joel Stransky",
+                                  "content": "Alex Mercer",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "bold"
@@ -458,7 +458,7 @@
                                   "id": "xavqN",
                                   "name": "Sub",
                                   "fill": "#94A3B8",
-                                  "content": "Senior Developer • Las Vegas, NV",
+                                  "content": "Staff Software Engineer • San Francisco, CA",
                                   "fontFamily": "Inter",
                                   "fontSize": 10,
                                   "fontWeight": "normal"
@@ -2424,7 +2424,7 @@
                   "id": "wu7LT",
                   "name": "S2",
                   "fill": "#71717A",
-                  "content": "Profile: Joel Stransky",
+                  "content": "Profile: Alex Mercer",
                   "fontFamily": "Inter",
                   "fontSize": 10,
                   "fontWeight": "normal"

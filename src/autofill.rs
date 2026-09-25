@@ -1647,18 +1647,18 @@ mod tests {
     #[test]
     fn test_generate_autofill_script_contains_solvers() {
         let profile = CandidateProfile {
-            full_name: "Joel Stransky".to_string(),
-            pronouns: "He/him".to_string(),
-            email: "stranskydesign@gmail.com".to_string(),
-            phone: "(915) 474-2746".to_string(),
-            location: "Las Vegas".to_string(),
-            current_company: "College Loan Corporation".to_string(),
-            linkedin: "https://www.linkedin.com/in/joelstransky/".to_string(),
-            github: "https://github.com/joelstransky".to_string(),
-            portfolio_url: "https://joelstransky.netlify.app/".to_string(),
-            experience_years: "15".to_string(),
-            gender: "Male".to_string(),
-            race: "White".to_string(),
+            full_name: "Alex Mercer".to_string(),
+            pronouns: "They/them".to_string(),
+            email: "alex.mercer.dev@example.com".to_string(),
+            phone: "(555) 019-2834".to_string(),
+            location: "San Francisco, CA".to_string(),
+            current_company: "Apex Cloud Technologies".to_string(),
+            linkedin: "https://www.linkedin.com/in/alexmercer-dev/".to_string(),
+            github: "https://github.com/alexmercer".to_string(),
+            portfolio_url: "https://alexmercer.dev/".to_string(),
+            experience_years: "10".to_string(),
+            gender: "Non-binary".to_string(),
+            race: "Decline to specify".to_string(),
             veteran_status: "I am not a protected veteran".to_string(),
             disability_status: "No, I don't have a disability".to_string(),
             ..Default::default()
@@ -1671,9 +1671,9 @@ mod tests {
         assert!(script.contains("NativeInputSolver"));
         assert!(script.contains("NativeSelectSolver"));
         assert!(script.contains("FileAttachmentSolver"));
-        assert!(script.contains("Joel Stransky"));
-        assert!(script.contains("College Loan Corporation"));
-        assert!(script.contains("Las Vegas"));
+        assert!(script.contains("Alex Mercer"));
+        assert!(script.contains("Apex Cloud Technologies"));
+        assert!(script.contains("San Francisco, CA"));
     }
 }
 

@@ -60,22 +60,131 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
     try {
         const url = window.location.href;
         const title = document.title || '';
+        const hostname = window.location.hostname.toLowerCase();
 
-        const ogTitle = document.querySelector('meta[property="og:title"]')?.content;
-        const ogSite = document.querySelector('meta[property="og:site_name"]')?.content;
+        const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
+        const ogSite = document.querySelector('meta[property="og:site_name"]')?.content || '';
 
+        let jobTitle = '';
+        let company = '';
+
+        // 1. Check Schema.org / JSON-LD structured data first (highest accuracy)
+        try {
+            const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+            for (const s of scripts) {
+                try {
+                    const parsed = JSON.parse(s.innerText || s.textContent || '{}');
+                    const items = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
+                    for (const item of items) {
+                        if (item && (item['@type'] === 'JobPosting' || item['@type'] === 'jobPosting')) {
+                            if (!jobTitle && item.title) jobTitle = item.title.trim();
+                            if (!company && item.hiringOrganization && item.hiringOrganization.name) {
+                                company = item.hiringOrganization.name.trim();
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        } catch(e) {}
+
+        // 2. LinkedIn-specific extraction
+        if (hostname.includes('linkedin.com')) {
+            // Selectors for company on LinkedIn (public & authenticated)
+            if (!company) {
+                const liCompanyElem = document.querySelector(
+                    'a.topcard__org-name-link, ' +
+                    '.topcard__flavor--black-link, ' +
+                    'a[data-tracking-control-name="public_jobs_topcard-org-name"], ' +
+                    '.job-details-jobs-unified-top-card__company-name a, ' +
+                    '.job-details-jobs-unified-top-card__company-name, ' +
+                    '.jobs-unified-top-card__company-name a, ' +
+                    '.jobs-unified-top-card__company-name, ' +
+                    '.sub-nav-cta__optional-url, ' +
+                    '.topcard__flavor-row a[href*="/company/"], ' +
+                    'a[href*="linkedin.com/company/"], ' +
+                    '.jobs-company__box .jobs-company__name'
+                );
+                if (liCompanyElem) {
+                    const txt = liCompanyElem.innerText?.trim();
+                    if (txt && txt.toLowerCase() !== 'linkedin') {
+                        company = txt;
+                    }
+                }
+            }
+
+            // Selectors for job title on LinkedIn
+            if (!jobTitle) {
+                const liTitleElem = document.querySelector(
+                    'h1.top-card-layout__title, ' +
+                    'h1.topcard__title, ' +
+                    'h1.job-details-jobs-unified-top-card__job-title, ' +
+                    '.jobs-unified-top-card__job-title, ' +
+                    'h2.top-card-layout__title'
+                );
+                if (liTitleElem) {
+                    jobTitle = liTitleElem.innerText?.trim();
+                }
+            }
+
+            // Title parsing for LinkedIn: "Company hiring Job Title in Location | LinkedIn"
+            const candidateTitle = ogTitle || title;
+            const liHiringMatch = candidateTitle.match(/^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+[^|]+)?(?:\s*\|\s*LinkedIn)?$/i);
+            if (liHiringMatch) {
+                if (!company) company = liHiringMatch[1].trim();
+                if (!jobTitle) jobTitle = liHiringMatch[2].trim();
+            }
+
+            // Title parsing: "Job Title at Company | LinkedIn"
+            const liAtMatch = candidateTitle.match(/^(.+?)\s+at\s+([^|–-]+)/i);
+            if (liAtMatch) {
+                if (!jobTitle) jobTitle = liAtMatch[1].trim();
+                if (!company) company = liAtMatch[2].trim();
+            }
+
+            // Fallback from canonical URL: /jobs/view/job-title-at-company-12345
+            if (!company || !jobTitle) {
+                const canonical = document.querySelector('link[rel="canonical"]')?.href || url;
+                const matchSlug = canonical.match(/\/jobs\/view\/([a-zA-Z0-9-]+)-at-([a-zA-Z0-9-]+)-\d+/);
+                if (matchSlug) {
+                    if (!company) {
+                        company = matchSlug[2].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    }
+                    if (!jobTitle) {
+                        jobTitle = matchSlug[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    }
+                }
+            }
+        }
+
+        // 3. General ATS & DOM element fallbacks
         const ghTitle = document.querySelector('.app-title')?.innerText?.trim();
         const ghCompany = document.querySelector('.company-name')?.innerText?.trim();
-
         const leverTitle = document.querySelector('.posting-headline h2')?.innerText?.trim();
         const ashbyTitle = document.querySelector('h1')?.innerText?.trim();
         const badgeCompany = document.querySelector('.company-badge')?.innerText?.trim();
         const compElem = document.querySelector('.company-name, .company, [class*="company-name"], [class*="companyName"]')?.innerText?.trim();
         const h1 = document.querySelector('h1')?.innerText?.trim();
 
-        let jobTitle = ghTitle || leverTitle || ashbyTitle || h1 || ogTitle || title;
-        let company = badgeCompany || ghCompany || compElem || ogSite || '';
+        if (!jobTitle) {
+            jobTitle = ghTitle || leverTitle || ashbyTitle || h1 || ogTitle || title;
+        }
 
+        if (!company) {
+            company = badgeCompany || ghCompany || compElem || '';
+        }
+
+        // Filter out job board platform names from company
+        const jobBoardPlatforms = ['linkedin', 'indeed', 'glassdoor', 'ziprecruiter', 'dice', 'monster', 'careerbuilder', 'simplyhired', 'builtin'];
+        if (company && jobBoardPlatforms.includes(company.toLowerCase().trim())) {
+            company = '';
+        }
+
+        // If company still empty, check ogSite (only if not a job board platform!)
+        if (!company && ogSite && !jobBoardPlatforms.includes(ogSite.toLowerCase().trim())) {
+            company = ogSite.trim();
+        }
+
+        // 4. Title string splitting heuristics
         if (!company) {
             if (title.includes(' at ')) {
                 company = title.split(' at ')[1].split(/[-–|]/)[0].trim();
@@ -93,17 +202,30 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
             } else if (title.includes(' | ')) {
                 const parts = title.split(' | ');
                 if (parts.length > 1) {
-                    if (parts[1].trim().toLowerCase() === jobTitle.toLowerCase()) {
-                        company = parts[0].trim();
-                    } else {
-                        company = parts[parts.length - 1].trim();
+                    const first = parts[0].trim();
+                    const last = parts[parts.length - 1].trim();
+                    if (!jobBoardPlatforms.includes(last.toLowerCase())) {
+                        company = last;
+                    } else if (!jobBoardPlatforms.includes(first.toLowerCase())) {
+                        company = first;
                     }
                 }
             }
         }
 
+        // Final sanitation
+        if (company && jobBoardPlatforms.includes(company.toLowerCase().trim())) {
+            company = '';
+        }
+
         if (jobTitle.includes(' at ')) {
             jobTitle = jobTitle.split(' at ')[0].trim();
+        }
+        if (jobTitle.includes(' | ')) {
+            const p = jobTitle.split(' | ');
+            if (jobBoardPlatforms.includes(p[p.length - 1].trim().toLowerCase())) {
+                jobTitle = p[0].trim();
+            }
         }
 
         if (window.ipc && typeof window.ipc.postMessage === 'function') {
@@ -120,6 +242,142 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
         console.error("Tailorbird scrape error:", e);
     }
 })();"#;
+
+const WINDOW_HOOKS_SCRIPT: &str = r#"(function() {
+    if (window.__TAILORBIRD_WINDOW_HOOKS_INSTALLED__) return;
+    window.__TAILORBIRD_WINDOW_HOOKS_INSTALLED__ = true;
+
+    function unwrapUrl(dest) {
+        if (!dest) return '';
+        if (dest.includes('linkedin.com/safety/go') && dest.includes('url=')) {
+            try {
+                const parsed = new URL(dest, window.location.href);
+                const real = parsed.searchParams.get('url');
+                if (real) return real;
+            } catch(e) {}
+        }
+        return dest;
+    }
+
+    function openInTailorbird(destUrl) {
+        if (!destUrl || destUrl === 'about:blank') return;
+        const clean = unwrapUrl(destUrl);
+        // Do not open empty safety/go placeholders without url parameter
+        if (clean.includes('linkedin.com/safety/go') && !clean.includes('url=')) {
+            return;
+        }
+        if (window.ipc && typeof window.ipc.postMessage === 'function') {
+            window.ipc.postMessage(JSON.stringify({
+                action: "OPEN_NEW_TAB",
+                url: clean
+            }));
+        }
+    }
+
+    // Intercept window.open so async handlers (e.g. LinkedIn's Apply button popup blocker bypass)
+    // can set win.location.href or win.location.replace without failing or losing the destination URL
+    const originalWindowOpen = window.open;
+    window.open = function(url, target, features) {
+        const initialUrl = url ? String(url).trim() : '';
+
+        if (initialUrl && initialUrl !== 'about:blank') {
+            openInTailorbird(initialUrl);
+        }
+
+        const winProxy = {
+            closed: false,
+            name: target || '',
+            opener: window,
+            focus: function() {},
+            blur: function() {},
+            close: function() { this.closed = true; },
+            postMessage: function() {},
+            location: {
+                _href: initialUrl,
+                set href(newVal) {
+                    this._href = newVal;
+                    openInTailorbird(newVal);
+                },
+                get href() {
+                    return this._href;
+                },
+                replace: function(newVal) {
+                    this.href = newVal;
+                },
+                assign: function(newVal) {
+                    this.href = newVal;
+                },
+                toString: function() {
+                    return this._href;
+                }
+            },
+            document: {
+                write: function() {},
+                writeln: function() {},
+                close: function() {}
+            }
+        };
+
+        return winProxy;
+    };
+
+    // Auto-unwrap safety/go on any link clicks
+    document.addEventListener('click', function(e) {
+        const a = e.target.closest('a');
+        if (a && a.href && a.href.includes('linkedin.com/safety/go') && a.href.includes('url=')) {
+            const clean = unwrapUrl(a.href);
+            if (clean && clean !== a.href) {
+                a.href = clean;
+            }
+        }
+    }, true);
+})();"#;
+
+fn decode_percent(s: &str) -> String {
+    let mut bytes = Vec::new();
+    let mut chars = s.bytes();
+    while let Some(b) = chars.next() {
+        if b == b'%' {
+            let h1 = chars.next();
+            let h2 = chars.next();
+            if let (Some(h1), Some(h2)) = (h1, h2) {
+                let hex_str = [h1, h2];
+                if let Ok(hex_val) = std::str::from_utf8(&hex_str) {
+                    if let Ok(byte_val) = u8::from_str_radix(hex_val, 16) {
+                        bytes.push(byte_val);
+                        continue;
+                    }
+                }
+                bytes.push(b'%');
+                bytes.push(h1);
+                bytes.push(h2);
+            } else {
+                bytes.push(b'%');
+                if let Some(h) = h1 { bytes.push(h); }
+            }
+        } else if b == b'+' {
+            bytes.push(b' ');
+        } else {
+            bytes.push(b);
+        }
+    }
+    String::from_utf8_lossy(&bytes).to_string()
+}
+
+fn unwrap_safety_url(url: &str) -> String {
+    if url.contains("linkedin.com/safety/go") && url.contains("url=") {
+        if let Some(pos) = url.find("url=") {
+            let rest = &url[pos + 4..];
+            let end = rest.find('&').unwrap_or(rest.len());
+            let encoded = &rest[..end];
+            let decoded = decode_percent(encoded);
+            if decoded.starts_with("http://") || decoded.starts_with("https://") {
+                return decoded;
+            }
+        }
+    }
+    url.to_string()
+}
 
 #[derive(Debug)]
 enum AppEvent {
@@ -706,7 +964,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. Tab WebView Factory Closure
     let make_tab_webview = {
         let shared_env = shared_env.clone();
-        let initial_context_script = initial_context_script.clone();
+        let tab_init_script = format!("{}\n{}", initial_context_script, WINDOW_HOOKS_SCRIPT);
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
         let toolbar_holder = toolbar_wv_holder.clone();
@@ -727,14 +985,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .with_bounds(bounds)
                 .with_visible(visible)
                 .with_devtools(true)
-                .with_initialization_script(&initial_context_script)
+                .with_initialization_script(&tab_init_script)
                 .with_new_window_req_handler({
                     let proxy_new_win = proxy_new_win.clone();
                     move |target_url, _features| {
                         println!("[Tailorbird Tab #{}] New window requested for URL: {}", tab_id, target_url);
-                        if !target_url.is_empty() && target_url != "about:blank" {
+
+                        // If it's LinkedIn's placeholder safety/go without destination url, suppress it
+                        if target_url.contains("linkedin.com/safety/go") && !target_url.contains("url=") {
+                            println!("[Tailorbird Tab #{}] Suppressed empty LinkedIn safety/go placeholder: {}", tab_id, target_url);
+                            return NewWindowResponse::Deny;
+                        }
+
+                        let actual_url = unwrap_safety_url(&target_url);
+
+                        if !actual_url.is_empty() && actual_url != "about:blank" {
                             let _ = proxy_new_win.send_event(AppEvent::CreateTab {
-                                url: target_url,
+                                url: actual_url,
                                 activate: true,
                             });
                         }
@@ -1083,6 +1350,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let mut tabs = tabs_holder.lock().unwrap();
                     let cur_active = *active_tab_id_holder.lock().unwrap();
                     if let Some(tab) = tabs.iter_mut().find(|t| t.id == id) {
+                        // Auto-unwrap safety/go URL if present
+                        let clean_url = unwrap_safety_url(&url);
+                        if clean_url != url {
+                            println!("[Tailorbird Tab #{}] Auto-redirecting safety/go to: {}", id, clean_url);
+                            let js_redir = format!("window.location.replace({});", serde_json::to_string(&clean_url).unwrap_or_default());
+                            let _ = tab.webview.evaluate_script(&js_redir);
+                            return;
+                        }
+
                         let is_blank_or_data = url.is_empty() || url == "about:blank" || url.starts_with("data:");
                         let is_currently_local = tab.url.starts_with("local://");
 

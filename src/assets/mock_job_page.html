@@ -263,6 +263,37 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
+    input[type="file"] {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 7px;
+      border: 1.5px dashed #cbd5e1;
+      font-size: 12.5px;
+      color: #475569;
+      background-color: #f8fafc;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    input[type="file"]:hover {
+      border-color: var(--primary);
+      background-color: #f0f7ff;
+    }
+
+    .file-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      margin-top: 4px;
+    }
+
     .radio-checkbox-group {
       display: flex;
       flex-wrap: wrap;
@@ -296,6 +327,8 @@
       font-family: var(--mono);
       font-size: 11.5px;
       margin-top: 24px;
+      max-height: 480px;
+      overflow-y: auto;
     }
 
     .state-inspector-title {
@@ -458,6 +491,16 @@
           </div>
 
           <div class="field-group">
+            <label for="preferredName">Preferred Name / Nickname</label>
+            <input type="text" id="preferredName" name="preferredName" placeholder="e.g. Alex">
+          </div>
+
+          <div class="field-group">
+            <label for="namePronunciation">Name Pronunciation / Phonetic</label>
+            <input type="text" id="namePronunciation" name="namePronunciation" placeholder="e.g. Al-ex">
+          </div>
+
+          <div class="field-group">
             <label for="email">Email Address <span class="required-star">*</span></label>
             <input type="email" id="email" name="email" autocomplete="email" placeholder="name@example.com" required>
           </div>
@@ -473,6 +516,16 @@
           </div>
 
           <div class="field-group">
+            <label for="country">Country / Region</label>
+            <input type="text" id="country" name="country" placeholder="e.g. United States">
+          </div>
+
+          <div class="field-group">
+            <label for="state">State / Province</label>
+            <input type="text" id="state" name="state" placeholder="e.g. California">
+          </div>
+
+          <div class="field-group">
             <label for="company">Current Company / Employer</label>
             <input type="text" id="company" name="company" placeholder="Current employer">
           </div>
@@ -482,13 +535,27 @@
             <input type="number" id="experienceYears" name="experience" placeholder="e.g. 8" min="0" max="50">
           </div>
 
+          <div class="col-span-2 field-group">
+            <label for="desiredSalary">Desired Annual Compensation / Salary</label>
+            <input type="text" id="desiredSalary" name="salary" placeholder="e.g. $90,000 - $125,000">
+          </div>
+
+          <!-- SECTION 2: PROFESSIONAL PROFILES & SOCIAL LINKS -->
+          <div class="section-divider">
+            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span>Professional Profiles &amp; Online Presence</span>
+            </div>
+            <div class="section-desc">Populated from Profile &rarr; General tab links</div>
+          </div>
+
           <div class="field-group">
             <label for="linkedin">LinkedIn Profile URL</label>
             <input type="text" id="linkedin" name="urls[LinkedIn]" placeholder="https://linkedin.com/in/username">
           </div>
 
           <div class="field-group">
-            <label for="github">GitHub Profile URL (Optional)</label>
+            <label for="github">GitHub Profile URL</label>
             <input type="text" id="github" name="urls[GitHub]" placeholder="https://github.com/username">
           </div>
 
@@ -498,15 +565,15 @@
           </div>
 
           <div class="field-group">
-            <label for="desiredSalary">Desired Annual Compensation / Salary</label>
-            <input type="text" id="desiredSalary" name="salary" placeholder="e.g. $90k - $125k">
+            <label for="twitter">Twitter / X Profile URL</label>
+            <input type="text" id="twitter" name="urls[Twitter]" placeholder="https://x.com/username">
           </div>
 
-          <!-- SECTION 2: DEMOGRAPHICS & EEO (PROPERTIES TAB 2) -->
+          <!-- SECTION 3: DEMOGRAPHICS & EEO -->
           <div class="section-divider">
             <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span>Demographics & Equal Opportunity (EEO)</span>
+              <span>Demographics &amp; Equal Opportunity (EEO)</span>
             </div>
             <div class="section-desc">Populated from Profile &rarr; Demographics (EEO) tab or right-click context menu</div>
           </div>
@@ -553,6 +620,16 @@
           </div>
 
           <div class="field-group">
+            <label for="hispanic">Are you Hispanic or Latino?</label>
+            <select id="hispanic" name="hispanic">
+              <option value="">-- Please select --</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+              <option value="Decline">Decline to self-identify</option>
+            </select>
+          </div>
+
+          <div class="field-group">
             <label for="veteranStatus">Veteran Status</label>
             <select id="veteranStatus" name="veteranStatus">
               <option value="">-- Please select --</option>
@@ -562,7 +639,7 @@
             </select>
           </div>
 
-          <div class="field-group col-span-2">
+          <div class="field-group">
             <label for="disabilityStatus">Disability Status</label>
             <select id="disabilityStatus" name="disabilityStatus">
               <option value="">-- Please select --</option>
@@ -572,42 +649,84 @@
             </select>
           </div>
 
-          <!-- SECTION 3: WORK HISTORY / EXPERIENCE -->
+          <div class="col-span-2 field-group">
+            <label for="sponsorship">Do you now or in the future require visa sponsorship for employment?</label>
+            <select id="sponsorship" name="sponsorship">
+              <option value="">-- Please select --</option>
+              <option value="No">No, I am authorized without sponsorship</option>
+              <option value="Yes">Yes, I require sponsorship</option>
+            </select>
+          </div>
+
+          <!-- SECTION 4: WORK HISTORY - DOCUMENT ATTACHMENTS -->
           <div class="section-divider">
             <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <span>Work History & Experience</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Work History &mdash; Document Attachments</span>
             </div>
-            <div class="section-desc">Simulated ATS work history fields</div>
+            <div class="section-desc">Uploaded via Tailorbird Autofill using your configured local Resume &amp; Cover Letter files</div>
           </div>
 
           <div class="field-group">
-            <label for="recentTitle">Most Recent Role / Title</label>
+            <label for="resume">Resume / CV Document <span class="required-star">*</span></label>
+            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+            <div id="resumeStatusPill" class="file-status-pill" style="display:none;"></div>
+            <span class="hint-text">Supported formats: PDF, DOC, DOCX. Populated from Work History &rarr; Resume Attachment.</span>
+          </div>
+
+          <div class="field-group">
+            <label for="coverLetter">Cover Letter Document</label>
+            <input type="file" id="coverLetter" name="cover_letter" accept=".pdf,.doc,.docx">
+            <div id="coverLetterStatusPill" class="file-status-pill" style="display:none;"></div>
+            <span class="hint-text">Supported formats: PDF, DOC, DOCX. Populated from Work History &rarr; Cover Letter Attachment.</span>
+          </div>
+
+          <!-- SECTION 5: WORK HISTORY - RECENT EXPERIENCE -->
+          <div class="section-divider">
+            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>Work History &mdash; Recent Position</span>
+            </div>
+            <div class="section-desc">Populated from the most recent role in your Work History list</div>
+          </div>
+
+          <div class="field-group">
+            <label for="recentTitle">Most Recent Role / Job Title</label>
             <input type="text" id="recentTitle" name="recent_role" placeholder="e.g. Operations Specialist">
           </div>
 
           <div class="field-group">
-            <label for="recentCompany">Most Recent Organization</label>
+            <label for="recentCompany">Most Recent Organization / Company</label>
             <input type="text" id="recentCompany" name="recent_company" placeholder="e.g. Global Logistics Corp">
           </div>
 
-          <div class="col-span-2 field-group">
-            <label for="recentSummary">Key Achievements & Responsibilities</label>
-            <textarea id="recentSummary" name="recent_summary" rows="2" placeholder="Brief summary of your responsibilities, team leadership, metrics, and contributions..."></textarea>
+          <div class="field-group">
+            <label for="startDate">Start Date</label>
+            <input type="text" id="startDate" name="start_date" placeholder="e.g. 2021-01">
           </div>
 
-          <!-- SECTION 4: SPECIAL FIELDS & ESSAYS (CONTEXT MENU TEST) -->
+          <div class="field-group">
+            <label for="endDate">End Date</label>
+            <input type="text" id="endDate" name="end_date" placeholder="e.g. Present or 2024-05">
+          </div>
+
+          <div class="col-span-2 field-group">
+            <label for="recentSummary">Key Achievements &amp; Responsibilities</label>
+            <textarea id="recentSummary" name="recent_summary" rows="3" placeholder="Brief summary of your responsibilities, team leadership, metrics, and contributions..."></textarea>
+          </div>
+
+          <!-- SECTION 6: SPECIAL FIELDS & ESSAYS -->
           <div class="section-divider">
             <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>Special Fields / Essay Questions (Right-Click Menu Test)</span>
+              <span>Special Fields &amp; Essay Questions</span>
             </div>
-            <div class="section-desc">Right-click these textareas to quickly insert your saved Special Fields paragraphs!</div>
+            <div class="section-desc">Matched against saved Special Fields during Autofill, or right-click to insert snippet</div>
           </div>
 
           <div class="col-span-2 field-group">
             <label for="whyCompany">Why do you want to work at Acme Global?</label>
-            <textarea id="whyCompany" name="why_company" rows="3" placeholder="Right-click here to insert your saved Special Field answer..."></textarea>
+            <textarea id="whyCompany" name="why_company" rows="3" placeholder="Right-click here or run Autofill to insert your saved Special Field answer..."></textarea>
             <span class="hint-text" style="display:flex; align-items:center; gap:5px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>
               <span>Tip: Right-click inside this box to open the Tailorbird contextual menu and choose a saved snippet.</span>
@@ -616,10 +735,15 @@
 
           <div class="col-span-2 field-group">
             <label for="projectChallenge">Describe a complex project or operational challenge you successfully managed</label>
-            <textarea id="projectChallenge" name="project_challenge" rows="3" placeholder="Right-click here to insert your saved response paragraph..."></textarea>
+            <textarea id="projectChallenge" name="project_challenge" rows="3" placeholder="Right-click here or run Autofill to insert your saved Special Field answer..."></textarea>
           </div>
 
-          <!-- SECTION 5: UNFILLED HIGHLIGHT TEST -->
+          <div class="col-span-2 field-group">
+            <label for="coverLetterText">Cover Letter Statement / Why you are the best candidate</label>
+            <textarea id="coverLetterText" name="cover_letter_text" rows="3" placeholder="Right-click here or run Autofill to insert your saved cover letter special field..."></textarea>
+          </div>
+
+          <!-- SECTION 7: VISUAL ATTENTION (UNFILLED HIGHLIGHT DEMO) -->
           <div class="section-divider">
             <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -629,7 +753,7 @@
           </div>
 
           <div class="field-group">
-            <label for="noticePeriod">Notice Period / Start Date</label>
+            <label for="noticePeriod">Notice Period / Earliest Start Date</label>
             <select id="noticePeriod" name="notice_period">
               <option value="">-- Please select --</option>
               <option value="immediate">Immediately</option>
@@ -639,12 +763,12 @@
           </div>
 
           <div class="field-group">
-            <label for="workAuth">Are you authorized to work in the United States?</label>
-            <select id="workAuth" name="work_auth">
+            <label for="relocationPreference">Willingness to Relocate</label>
+            <select id="relocationPreference" name="relocation_preference">
               <option value="">-- Please select --</option>
-              <option value="yes">Yes, unrestricted</option>
-              <option value="visa">Yes, requires sponsorship</option>
-              <option value="no">No</option>
+              <option value="yes">Yes, open to relocation</option>
+              <option value="negotiable">Negotiable with assistance</option>
+              <option value="no">No, remote only</option>
             </select>
           </div>
 
@@ -659,18 +783,39 @@
           <table class="state-table">
             <tbody>
               <tr><td class="key">state.fullName</td><td class="val" id="stateFullName">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.preferredName</td><td class="val" id="statePreferredName">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.namePronunciation</td><td class="val" id="stateNamePronunciation">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.email</td><td class="val" id="stateEmail">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.phone</td><td class="val" id="statePhone">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.location</td><td class="val" id="stateLocation">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.country</td><td class="val" id="stateCountry">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.state</td><td class="val" id="stateState">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.company</td><td class="val" id="stateCompany">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.yearsExperience</td><td class="val" id="stateExperience">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.salary</td><td class="val" id="stateSalary">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.linkedin</td><td class="val" id="stateLinkedin">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.github</td><td class="val" id="stateGithub">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.portfolio</td><td class="val" id="statePortfolio">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.twitter</td><td class="val" id="stateTwitter">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.gender</td><td class="val" id="stateGender">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.race</td><td class="val" id="stateRace">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.hispanic</td><td class="val" id="stateHispanic">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.veteranStatus</td><td class="val" id="stateVeteran">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.disabilityStatus</td><td class="val" id="stateDisability">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.sponsorship</td><td class="val" id="stateSponsorship">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.resumeFile</td><td class="val" id="stateResumeFile">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.coverLetterFile</td><td class="val" id="stateCoverLetterFile">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.recentRole</td><td class="val" id="stateRecentRole">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.recentCompany</td><td class="val" id="stateRecentCompany">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.startDate</td><td class="val" id="stateStartDate">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.endDate</td><td class="val" id="stateEndDate">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.recentSummary</td><td class="val" id="stateRecentSummary">&lt;empty&gt;</td></tr>
               <tr><td class="key">state.whyCompany</td><td class="val" id="stateWhyCompany">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.projectChallenge</td><td class="val" id="stateProjectChallenge">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.coverLetterText</td><td class="val" id="stateCoverLetterText">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.noticePeriod (unfilled)</td><td class="val" id="stateNoticePeriod">&lt;empty&gt;</td></tr>
+              <tr><td class="key">state.relocation (unfilled)</td><td class="val" id="stateRelocation">&lt;empty&gt;</td></tr>
             </tbody>
           </table>
         </div>
@@ -690,6 +835,35 @@
     const form = document.getElementById('jobForm');
     const eventCountSpan = document.getElementById('eventCount');
 
+    function formatFileSize(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function updateFileDisplay(inputId, pillId, stateKey) {
+      const el = document.getElementById(inputId);
+      const pill = document.getElementById(pillId);
+      const stateEl = document.getElementById(stateKey);
+      if (el && el.files && el.files.length > 0) {
+        const file = el.files[0];
+        const info = `${file.name} (${formatFileSize(file.size)})`;
+        if (pill) {
+          pill.style.display = 'inline-flex';
+          pill.textContent = `Attached: ${info}`;
+        }
+        if (stateEl) stateEl.textContent = info;
+      } else {
+        if (pill) {
+          pill.style.display = 'none';
+          pill.textContent = '';
+        }
+        if (stateEl) stateEl.textContent = '<empty>';
+      }
+    }
+
     function syncState() {
       eventCount++;
       eventCountSpan.textContent = `${eventCount} events captured`;
@@ -702,18 +876,41 @@
       const checkedPronouns = Array.from(document.querySelectorAll('input[name="pronouns"]:checked')).map(cb => cb.value).join(', ');
 
       document.getElementById('stateFullName').textContent = getVal('fullName') || '<empty>';
+      document.getElementById('statePreferredName').textContent = getVal('preferredName') || '<empty>';
+      document.getElementById('stateNamePronunciation').textContent = getVal('namePronunciation') || '<empty>';
       document.getElementById('stateEmail').textContent = getVal('email') || '<empty>';
       document.getElementById('statePhone').textContent = getVal('phone') || '<empty>';
       document.getElementById('stateLocation').textContent = getVal('location') || '<empty>';
+      document.getElementById('stateCountry').textContent = getVal('country') || '<empty>';
+      document.getElementById('stateState').textContent = getVal('state') || '<empty>';
       document.getElementById('stateCompany').textContent = getVal('company') || '<empty>';
       document.getElementById('stateExperience').textContent = getVal('experienceYears') || '<empty>';
       document.getElementById('stateSalary').textContent = getVal('desiredSalary') || '<empty>';
+      document.getElementById('stateLinkedin').textContent = getVal('linkedin') || '<empty>';
+      document.getElementById('stateGithub').textContent = getVal('github') || '<empty>';
+      document.getElementById('statePortfolio').textContent = getVal('portfolio') || '<empty>';
+      document.getElementById('stateTwitter').textContent = getVal('twitter') || '<empty>';
       document.getElementById('stateGender').textContent = getVal('gender') || '<empty>';
       document.getElementById('statePronouns').textContent = checkedPronouns || '<empty>';
       document.getElementById('stateRace').textContent = getVal('race') || '<empty>';
+      document.getElementById('stateHispanic').textContent = getVal('hispanic') || '<empty>';
       document.getElementById('stateVeteran').textContent = getVal('veteranStatus') || '<empty>';
       document.getElementById('stateDisability').textContent = getVal('disabilityStatus') || '<empty>';
+      document.getElementById('stateSponsorship').textContent = getVal('sponsorship') || '<empty>';
+
+      updateFileDisplay('resume', 'resumeStatusPill', 'stateResumeFile');
+      updateFileDisplay('coverLetter', 'coverLetterStatusPill', 'stateCoverLetterFile');
+
+      document.getElementById('stateRecentRole').textContent = getVal('recentTitle') || '<empty>';
+      document.getElementById('stateRecentCompany').textContent = getVal('recentCompany') || '<empty>';
+      document.getElementById('stateStartDate').textContent = getVal('startDate') || '<empty>';
+      document.getElementById('stateEndDate').textContent = getVal('endDate') || '<empty>';
+      document.getElementById('stateRecentSummary').textContent = getVal('recentSummary') || '<empty>';
       document.getElementById('stateWhyCompany').textContent = getVal('whyCompany') || '<empty>';
+      document.getElementById('stateProjectChallenge').textContent = getVal('projectChallenge') || '<empty>';
+      document.getElementById('stateCoverLetterText').textContent = getVal('coverLetterText') || '<empty>';
+      document.getElementById('stateNoticePeriod').textContent = getVal('noticePeriod') || '<empty>';
+      document.getElementById('stateRelocation').textContent = getVal('relocationPreference') || '<empty>';
     }
 
     // Attach listeners to test bubbling input/change events
@@ -727,6 +924,8 @@
       allFormInputs.forEach(input => {
         if (input.type === 'checkbox' || input.type === 'radio') {
           input.checked = false;
+        } else if (input.type === 'file') {
+          input.value = '';
         } else {
           input.value = '';
         }

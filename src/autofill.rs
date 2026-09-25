@@ -52,6 +52,10 @@ pub struct CandidateProfile {
     pub resume_file: Option<FilePayload>,
     #[serde(default)]
     pub cover_letter_file: Option<FilePayload>,
+    #[serde(default)]
+    pub work_history: Vec<crate::resume::WorkHistoryEntry>,
+    #[serde(default)]
+    pub special_fields: Vec<crate::prospect::SpecialField>,
 }
 
 /// Generates the self-contained JavaScript snippet to be evaluated in the target webview.
@@ -432,6 +436,39 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             if (/race|ethnic/i.test(lbl)) return {{ field: 'race', value: this.profile.race }};
             if (/veteran|military/i.test(lbl)) return {{ field: 'veteranStatus', value: this.profile.veteranStatus }};
             if (/disabilit/i.test(lbl)) return {{ field: 'disabilityStatus', value: this.profile.disabilityStatus }};
+
+            // Work History (Most recent position)
+            const latestJob = (this.profile.workHistory && Array.isArray(this.profile.workHistory) && this.profile.workHistory.length > 0)
+                ? this.profile.workHistory[0]
+                : null;
+            if (latestJob) {{
+                if (/recent.*role|recent.*title|latest.*title|current.*title|job.*title/i.test(lbl)) {{
+                    if (latestJob.role) return {{ field: 'recentRole', value: latestJob.role }};
+                }}
+                if (/recent.*company|latest.*company|recent.*org|former.*company/i.test(lbl)) {{
+                    if (latestJob.company) return {{ field: 'recentCompany', value: latestJob.company }};
+                }}
+                if (/start.*date|from.*date/i.test(lbl) && latestJob.startDate) {{
+                    return {{ field: 'startDate', value: latestJob.startDate }};
+                }}
+                if (/end.*date|to.*date/i.test(lbl) && latestJob.endDate) {{
+                    return {{ field: 'endDate', value: latestJob.endDate }};
+                }}
+                if (/recent.*summary|work.*summary|job.*responsibilities|key.*achievements|role.*description/i.test(lbl)) {{
+                    if (latestJob.summary) return {{ field: 'recentSummary', value: latestJob.summary }};
+                }}
+            }}
+
+            // Special Fields
+            if (this.profile.specialFields && Array.isArray(this.profile.specialFields)) {{
+                for (const sf of this.profile.specialFields) {{
+                    if (!sf.content) continue;
+                    const sfLbl = (sf.label || '').toLowerCase();
+                    if (sfLbl && (lbl.includes(sfLbl) || sfLbl.includes(lbl))) {{
+                        return {{ field: sf.id || 'specialField', value: sf.content }};
+                    }}
+                }}
+            }}
 
             return null;
         }}

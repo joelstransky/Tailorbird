@@ -2097,7 +2097,9 @@
         veteranStatus: getVeteranStatus(),
         disabilityStatus: getDisabilityStatus(),
         resumePath: resumeSourceInput ? resumeSourceInput.value.trim() : '',
-        coverLetterPath: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : ''
+        coverLetterPath: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : '',
+        workHistory: workHistory || [],
+        specialFields: specialFields || []
       };
       sendIpc('AUTOFILL', { data });
     }

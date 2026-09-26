@@ -111,7 +111,7 @@ pub struct AppData {
     pub split_width: Option<f64>,
     #[serde(default)]
     pub drawer_states: Option<std::collections::HashMap<String, bool>>,
-    #[serde(default)]
+    #[serde(default, alias = "outreach_roster", alias = "outreachRoster", alias = "roster")]
     pub hit_list: Vec<HitListTarget>,
     #[serde(default)]
     pub primary_color: Option<String>,

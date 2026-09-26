@@ -483,11 +483,11 @@ enum IpcMessage {
     },
     #[serde(rename = "LOAD_DATA")]
     LoadData,
-    #[serde(rename = "LOAD_HIT_LIST")]
+    #[serde(rename = "LOAD_HIT_LIST", alias = "LOAD_OUTREACH_ROSTER")]
     LoadHitList,
-    #[serde(rename = "SAVE_HIT_LIST")]
+    #[serde(rename = "SAVE_HIT_LIST", alias = "SAVE_OUTREACH_ROSTER")]
     SaveHitList {
-        #[serde(rename = "hitList")]
+        #[serde(rename = "hitList", alias = "outreachRoster")]
         hit_list: Vec<crate::prospect::HitListTarget>,
     },
     #[serde(rename = "OPEN_NEW_TAB")]
@@ -1045,7 +1045,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
-            let is_hitlist = url == "local://hitlist";
+            let is_hitlist = url == "local://hitlist" || url == "local://roster";
             let is_settings = url == "local://settings";
             let proxy_title = proxy.clone();
             let proxy_load = proxy.clone();
@@ -1128,9 +1128,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 let mut data = load_stored_data();
                                 data.hit_list = hit_list;
                                 if let Err(e) = save_stored_data(&data) {
-                                    eprintln!("[Tailorbird Host] Error saving hit list: {}", e);
+                                    eprintln!("[Tailorbird Host] Error saving outreach roster: {}", e);
                                 } else {
-                                    println!("[Tailorbird Host] Successfully saved {} hit list targets.", data.hit_list.len());
+                                    println!("[Tailorbird Host] Successfully saved {} outreach roster targets.", data.hit_list.len());
                                 }
                             }
                             Ok(IpcMessage::OpenNewTab { url }) => {
@@ -1243,7 +1243,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let tabs = tabs_holder.lock().unwrap();
                         tabs.iter().find(|t| {
                             t.url == formatted_url
-                                || (formatted_url == "local://hitlist" && (t.url == "local://hitlist" || t.title.contains("Hit List")))
+                                || ((formatted_url == "local://hitlist" || formatted_url == "local://roster") && (t.url == "local://hitlist" || t.url == "local://roster" || t.title.contains("Roster")))
                                 || (formatted_url == "local://settings" && (t.url == "local://settings" || t.title.contains("Settings")))
                                 || (formatted_url == "local://mock" && (t.url == "local://mock" || t.title.contains("Mock")))
                         }).map(|t| t.id)
@@ -1260,7 +1260,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             serde_json::to_string(&current_color).unwrap_or_default(),
                             serde_json::to_string(&current_color).unwrap_or_default()
                         );
-                        let hitlist_js = if formatted_url == "local://hitlist" {
+                        let hitlist_js = if formatted_url == "local://hitlist" || formatted_url == "local://roster" {
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json)
                         } else {
@@ -1298,8 +1298,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             Ok(wv) => {
                                 let initial_title = if formatted_url == "local://mock" {
                                     "Tailorbird Test Bench".to_string()
-                                } else if formatted_url == "local://hitlist" {
-                                    "Hit List".to_string()
+                                } else if formatted_url == "local://hitlist" || formatted_url == "local://roster" {
+                                    "Outreach Roster".to_string()
                                 } else if formatted_url == "local://settings" {
                                     "Settings".to_string()
                                 } else {
@@ -1480,10 +1480,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             });
                             let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
                             let _ = tab.webview.evaluate_script(&js);
-                        } else if formatted == "local://hitlist" {
+                        } else if formatted == "local://hitlist" || formatted == "local://roster" {
                             let _ = tab.webview.load_html(HITLIST_HTML);
-                            tab.url = "local://hitlist".to_string();
-                            tab.title = "Hit List".to_string();
+                            tab.url = "local://roster".to_string();
+                            tab.title = "Outreach Roster".to_string();
                             let stored = load_stored_data();
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
@@ -1716,8 +1716,8 @@ fn format_input_to_url(input: &str) -> String {
     if trimmed.is_empty() || trimmed == "local://mock" {
         return "local://mock".to_string();
     }
-    if trimmed == "local://hitlist" || trimmed.eq_ignore_ascii_case("hitlist") {
-        return "local://hitlist".to_string();
+    if trimmed == "local://roster" || trimmed == "local://hitlist" || trimmed.eq_ignore_ascii_case("roster") || trimmed.eq_ignore_ascii_case("hitlist") {
+        return "local://roster".to_string();
     }
     if trimmed == "local://settings" || trimmed.eq_ignore_ascii_case("settings") {
         return "local://settings".to_string();

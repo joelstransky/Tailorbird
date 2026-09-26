@@ -33,13 +33,13 @@ Track positions as you find them without keeping dozens of tabs open or switchin
 
 ![Prospects Pipeline](docs/images/tailorbird_prospects_pipeline.png)
 
-### Target Hit List & Outreach
-For proactive networking and direct outreach, the Hit List tracks companies and key contacts.
+### Outreach Roster
+For proactive networking and direct outreach, the Outreach Roster tracks companies and key contacts.
 - Track target companies, contacts, and communication status.
 - Draft custom outreach messages and value alignment notes.
 - Copy draft messages to your clipboard with one click.
 
-![Target Hit List](docs/images/tailorbird_dual_pane_hitlist.png)
+![Outreach Roster](docs/images/tailorbird_dual_pane_hitlist.png)
 
 ### Job Finder
 Build targeted search queries for platforms like Greenhouse, Lever, LinkedIn, and Indeed based on job title, location, and remote preferences.

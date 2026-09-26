@@ -2086,30 +2086,35 @@
     function setDisabilityStatus(val) { disabilityHandler.setVal(val); }
 
     function handleAutofill() {
-      const data = {
-        fullName: document.getElementById('fullName').value.trim(),
-        role: document.getElementById('profileRole') ? document.getElementById('profileRole').value.trim() : '',
-        pronouns: getPronouns(),
-        email: document.getElementById('email').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        location: document.getElementById('location').value.trim(),
-        currentCompany: (workHistory && workHistory.length > 0 && workHistory[0].company) ? workHistory[0].company.trim() : '',
-        linkedin: document.getElementById('linkedin').value.trim(),
-        github: document.getElementById('github').value.trim(),
-        portfolioUrl: document.getElementById('portfolioUrl').value.trim(),
-        experienceYears: document.getElementById('experienceYears').value.trim(),
-        salaryMin: '',
-        salaryMax: '',
-        gender: getGender(),
-        race: getRace(),
-        veteranStatus: getVeteranStatus(),
-        disabilityStatus: getDisabilityStatus(),
-        resumePath: resumeSourceInput ? resumeSourceInput.value.trim() : '',
-        coverLetterPath: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : '',
-        workHistory: workHistory || [],
-        specialFields: specialFields || []
-      };
-      sendIpc('AUTOFILL', { data });
+      try {
+        const data = {
+          fullName: (document.getElementById('fullName') ? document.getElementById('fullName').value : '').trim(),
+          role: (document.getElementById('profileRole') ? document.getElementById('profileRole').value : '').trim(),
+          pronouns: getPronouns(),
+          email: (document.getElementById('email') ? document.getElementById('email').value : '').trim(),
+          phone: (document.getElementById('phone') ? document.getElementById('phone').value : '').trim(),
+          location: (document.getElementById('location') ? document.getElementById('location').value : '').trim(),
+          currentCompany: (workHistory && workHistory.length > 0 && workHistory[0].company) ? workHistory[0].company.trim() : '',
+          linkedin: (document.getElementById('linkedin') ? document.getElementById('linkedin').value : '').trim(),
+          github: (document.getElementById('github') ? document.getElementById('github').value : '').trim(),
+          portfolioUrl: (document.getElementById('portfolioUrl') ? document.getElementById('portfolioUrl').value : '').trim(),
+          experienceYears: (document.getElementById('experienceYears') ? document.getElementById('experienceYears').value : '').trim(),
+          salaryMin: '',
+          salaryMax: '',
+          gender: getGender(),
+          race: getRace(),
+          veteranStatus: getVeteranStatus(),
+          disabilityStatus: getDisabilityStatus(),
+          resumePath: resumeSourceInput ? resumeSourceInput.value.trim() : '',
+          coverLetterPath: coverLetterSourceInput ? coverLetterSourceInput.value.trim() : '',
+          workHistory: workHistory || [],
+          specialFields: specialFields || []
+        };
+        console.log('[Tailorbird UI] Sending AUTOFILL IPC:', data);
+        sendIpc('AUTOFILL', { data });
+      } catch (err) {
+        console.error('[Tailorbird UI] Error in handleAutofill:', err);
+      }
     }
     ['btnAutofill', 'btnAutofillFooter'].forEach(id => {
       const el = document.getElementById(id);

@@ -450,6 +450,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 if (latestJob && latestJob.role) return {{ field: 'recentRole', value: latestJob.role }};
                 if (this.profile.role) return {{ field: 'role', value: this.profile.role }};
             }}
+            if (latestJob) {{
                 if (/recent.*company|latest.*company|recent.*org|former.*company/i.test(lbl)) {{
                     if (latestJob.company) return {{ field: 'recentCompany', value: latestJob.company }};
                 }}
@@ -1681,6 +1682,16 @@ mod tests {
         assert!(script.contains("Staff Software Engineer"));
         assert!(script.contains("Apex Cloud Technologies"));
         assert!(script.contains("San Francisco, CA"));
+
+        // Validate syntax with node if available
+        let tmp_path = std::env::temp_dir().join("test_autofill_syntax.js");
+        if std::fs::write(&tmp_path, &script).is_ok() {
+            if let Ok(output) = std::process::Command::new("node").args(["--check", tmp_path.to_str().unwrap()]).output() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                assert!(output.status.success(), "Autofill JS syntax error: {}", stderr);
+            }
+            let _ = std::fs::remove_file(&tmp_path);
+        }
     }
 }
 

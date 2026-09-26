@@ -1456,6 +1456,13 @@
           </div>
 
           <div class="prop-row">
+            <span class="prop-label">Role / Title</span>
+            <div class="prop-input-wrap">
+              <input type="text" id="profileRole" value="" placeholder="e.g. Senior Frontend Engineer">
+            </div>
+          </div>
+
+          <div class="prop-row">
             <span class="prop-label">Email</span>
             <div class="prop-input-wrap">
               <input type="email" id="email" value="" placeholder="e.g. jane@example.com">
@@ -2081,6 +2088,7 @@
     function handleAutofill() {
       const data = {
         fullName: document.getElementById('fullName').value.trim(),
+        role: document.getElementById('profileRole') ? document.getElementById('profileRole').value.trim() : '',
         pronouns: getPronouns(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
@@ -2904,6 +2912,7 @@
       // 1. Candidate Profile
       if (data.candidateProfile) {
         if (data.candidateProfile.fullName !== undefined) document.getElementById('fullName').value = data.candidateProfile.fullName || '';
+        if (data.candidateProfile.role !== undefined && document.getElementById('profileRole')) document.getElementById('profileRole').value = data.candidateProfile.role || '';
         if (data.candidateProfile.pronouns !== undefined) setPronouns(data.candidateProfile.pronouns || '');
         if (data.candidateProfile.email !== undefined) document.getElementById('email').value = data.candidateProfile.email || '';
         if (data.candidateProfile.phone !== undefined) document.getElementById('phone').value = formatPhoneNumber(data.candidateProfile.phone || '');
@@ -2918,6 +2927,7 @@
         if (data.candidateProfile.disabilityStatus !== undefined) setDisabilityStatus(data.candidateProfile.disabilityStatus || '');
       } else {
         document.getElementById('fullName').value = '';
+        if (document.getElementById('profileRole')) document.getElementById('profileRole').value = '';
         setPronouns('');
         document.getElementById('email').value = '';
         document.getElementById('phone').value = '';
@@ -2995,7 +3005,7 @@
       const ph = (phone !== undefined ? phone : (document.getElementById('phone') ? document.getElementById('phone').value : '')).trim();
       const loc = (location !== undefined ? location : (document.getElementById('location') ? document.getElementById('location').value : '')).trim();
       const port = (portfolio !== undefined ? portfolio : (document.getElementById('portfolioUrl') ? document.getElementById('portfolioUrl').value : '')).trim();
-      const r = (role !== undefined ? role : (document.getElementById('searchTitle') ? document.getElementById('searchTitle').value : '')).trim();
+      const r = (role !== undefined ? role : (document.getElementById('profileRole') ? document.getElementById('profileRole').value : '')).trim();
 
       // Initials calculation
       let initials = '--';
@@ -3074,6 +3084,7 @@
 
       const candidateProfile = {
         fullName: document.getElementById('fullName').value.trim(),
+        role: document.getElementById('profileRole') ? document.getElementById('profileRole').value.trim() : '',
         pronouns: getPronouns(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
@@ -3267,7 +3278,7 @@
     }
 
     // Auto-save & candidate summary sync on input changes for profile and search builder
-    ['fullName', 'pronouns', 'email', 'phone', 'location', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
+    ['fullName', 'profileRole', 'pronouns', 'email', 'phone', 'location', 'linkedin', 'github', 'portfolioUrl', 'experienceYears', 'gender', 'race', 'veteranStatus', 'disabilityStatus'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('input', () => updateCandidateSummaryUI());
@@ -3280,9 +3291,7 @@
     ['searchTitle', 'searchLocation', 'chkGreenhouse', 'chkLever', 'chkLinkedin', 'chkIndeed'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener('input', () => updateCandidateSummaryUI());
         el.addEventListener('change', () => {
-          updateCandidateSummaryUI();
           saveAllData();
         });
       }

@@ -15,6 +15,8 @@ pub struct CandidateProfile {
     #[serde(default)]
     pub full_name: String,
     #[serde(default)]
+    pub role: String,
+    #[serde(default)]
     pub pronouns: String,
     #[serde(default)]
     pub email: String,
@@ -441,10 +443,13 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             const latestJob = (this.profile.workHistory && Array.isArray(this.profile.workHistory) && this.profile.workHistory.length > 0)
                 ? this.profile.workHistory[0]
                 : null;
-            if (latestJob) {{
-                if (/recent.*role|recent.*title|latest.*title|current.*title|job.*title/i.test(lbl)) {{
-                    if (latestJob.role) return {{ field: 'recentRole', value: latestJob.role }};
-                }}
+            if (/target.*role|desired.*role|target.*title|desired.*title/i.test(lbl) && this.profile.role) {{
+                return {{ field: 'role', value: this.profile.role }};
+            }}
+            if (/recent.*role|recent.*title|latest.*title|current.*title|job.*title/i.test(lbl)) {{
+                if (latestJob && latestJob.role) return {{ field: 'recentRole', value: latestJob.role }};
+                if (this.profile.role) return {{ field: 'role', value: this.profile.role }};
+            }}
                 if (/recent.*company|latest.*company|recent.*org|former.*company/i.test(lbl)) {{
                     if (latestJob.company) return {{ field: 'recentCompany', value: latestJob.company }};
                 }}
@@ -1648,6 +1653,7 @@ mod tests {
     fn test_generate_autofill_script_contains_solvers() {
         let profile = CandidateProfile {
             full_name: "Alex Mercer".to_string(),
+            role: "Staff Software Engineer".to_string(),
             pronouns: "They/them".to_string(),
             email: "alex.mercer.dev@example.com".to_string(),
             phone: "(555) 019-2834".to_string(),
@@ -1672,6 +1678,7 @@ mod tests {
         assert!(script.contains("NativeSelectSolver"));
         assert!(script.contains("FileAttachmentSolver"));
         assert!(script.contains("Alex Mercer"));
+        assert!(script.contains("Staff Software Engineer"));
         assert!(script.contains("Apex Cloud Technologies"));
         assert!(script.contains("San Francisco, CA"));
     }

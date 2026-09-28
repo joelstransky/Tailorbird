@@ -21,18 +21,22 @@ jobs:
         include:
           - os: windows-latest
             os-name: Windows
+            target: x86_64-pc-windows-msvc
             binary-name: tailorbird.exe
             asset-name: tailorbird-windows-x86_64.exe
           - os: ubuntu-22.04
             os-name: Linux (Ubuntu x86_64)
+            target: x86_64-unknown-linux-gnu
             binary-name: tailorbird
             asset-name: tailorbird-linux-x86_64
           - os: macos-latest
             os-name: macOS (Apple Silicon)
+            target: aarch64-apple-darwin
             binary-name: tailorbird
             asset-name: tailorbird-macos-arm64
-          - os: macos-13
+          - os: macos-latest
             os-name: macOS (Intel)
+            target: x86_64-apple-darwin
             binary-name: tailorbird
             asset-name: tailorbird-macos-x86_64
 
@@ -57,23 +61,27 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       - name: Cargo build (Release)
-        run: cargo build --release
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Stage Windows binary
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Copy-Item target/release/${{ matrix.binary-name }} -Destination ${{ matrix.asset-name }}
+          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary-name }} -Destination ${{ matrix.asset-name }}
 
       - name: Stage Unix binary
         if: runner.os != 'Windows'
         run: |
-          cp target/release/${{ matrix.binary-name }} ${{ matrix.asset-name }}
+          cp target/${{ matrix.target }}/release/${{ matrix.binary-name }} ${{ matrix.asset-name }}
           chmod +x ${{ matrix.asset-name }}
 
       - name: Upload build artifact

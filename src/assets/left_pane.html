@@ -1690,24 +1690,21 @@
         <div id="tabViewProfileDemographics" class="wh-tab-view" style="display: none;">
           <div class="prop-row">
             <span class="prop-label">Gender</span>
-            <div class="prop-input-wrap" style="display:flex; gap:4px;">
-              <select id="genderSelect" style="flex:1;">
+            <div class="prop-input-wrap">
+              <select id="gender" style="width:100%;">
                 <option value="">-- Select --</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Non-Binary">Non-Binary</option>
                 <option value="Prefer not to say">Prefer not to say</option>
-                <option value="custom">Custom...</option>
               </select>
-              <input type="text" id="genderCustom" placeholder="Write-in..." style="display:none; flex:1;">
-              <input type="hidden" id="gender" value="">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Pronouns</span>
-            <div class="prop-input-wrap" style="display:flex; gap:4px;">
-              <select id="pronounSelect" style="flex:1;">
+            <div class="prop-input-wrap">
+              <select id="pronouns" style="width:100%;">
                 <option value="">-- Select --</option>
                 <option value="He/him">He/him</option>
                 <option value="She/her">She/her</option>
@@ -1715,17 +1712,14 @@
                 <option value="He/they">He/they</option>
                 <option value="She/they">She/they</option>
                 <option value="Prefer not to say">Prefer not to say</option>
-                <option value="custom">Custom...</option>
               </select>
-              <input type="text" id="pronounsCustom" placeholder="Write-in..." style="display:none; flex:1;">
-              <input type="hidden" id="pronouns" value="">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Race / Ethnicity</span>
-            <div class="prop-input-wrap" style="display:flex; gap:4px;">
-              <select id="raceSelect" style="flex:1;">
+            <div class="prop-input-wrap">
+              <select id="race" style="width:100%;">
                 <option value="">-- Select --</option>
                 <option value="Hispanic or Latino">Hispanic or Latino</option>
                 <option value="White">White (Not Hispanic or Latino)</option>
@@ -1735,40 +1729,31 @@
                 <option value="American Indian or Alaska Native">American Indian or Alaska Native</option>
                 <option value="Two or More Races">Two or More Races (Not Hispanic or Latino)</option>
                 <option value="Decline to self-identify">Decline to self-identify / Prefer not to say</option>
-                <option value="custom">Custom...</option>
               </select>
-              <input type="text" id="raceCustom" placeholder="Write-in..." style="display:none; flex:1;">
-              <input type="hidden" id="race" value="">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Veteran</span>
-            <div class="prop-input-wrap" style="display:flex; gap:4px;">
-              <select id="veteranSelect" style="flex:1;">
+            <div class="prop-input-wrap">
+              <select id="veteranStatus" style="width:100%;">
                 <option value="">-- Select --</option>
                 <option value="I am not a protected veteran">I am not a protected veteran</option>
                 <option value="I identify as one or more of the classifications of a protected veteran">I identify as a protected veteran</option>
                 <option value="I don't wish to answer">I don't wish to answer / Decline</option>
-                <option value="custom">Custom...</option>
               </select>
-              <input type="text" id="veteranCustom" placeholder="Write-in..." style="display:none; flex:1;">
-              <input type="hidden" id="veteranStatus" value="">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Disability</span>
-            <div class="prop-input-wrap" style="display:flex; gap:4px;">
-              <select id="disabilitySelect" style="flex:1;">
+            <div class="prop-input-wrap">
+              <select id="disabilityStatus" style="width:100%;">
                 <option value="">-- Select --</option>
                 <option value="Yes, I have a disability (or previously had one)">Yes, I have a disability</option>
                 <option value="No, I don't have a disability">No, I don't have a disability</option>
                 <option value="I don't wish to answer">I don't wish to answer / Decline</option>
-                <option value="custom">Custom...</option>
               </select>
-              <input type="text" id="disabilityCustom" placeholder="Write-in..." style="display:none; flex:1;">
-              <input type="hidden" id="disabilityStatus" value="">
             </div>
           </div>
         </div>
@@ -2174,89 +2159,85 @@
       }
     }
 
-    // --- Generic Dropdown with Custom Write-In Helper ---
-    function bindCustomDropdown(selectId, customId, hiddenId) {
-      const sel = document.getElementById(selectId);
-      const custom = document.getElementById(customId);
-      const hidden = document.getElementById(hiddenId);
-      if (!sel || !custom || !hidden) return { getVal: () => '', setVal: () => {} };
-
-      function getVal() {
-        if (sel.value === 'custom') {
-          return (custom.value || '').trim();
-        }
-        return sel.value;
-      }
-
-      function setVal(v) {
-        const val = (v || '').trim();
-        hidden.value = val;
-        if (!val) {
-          sel.value = '';
-          custom.style.display = 'none';
-          custom.value = '';
+    function getPronouns() {
+      const el = document.getElementById('pronouns');
+      return el ? el.value : '';
+    }
+    function setPronouns(val) {
+      const el = document.getElementById('pronouns');
+      if (!el) return;
+      for (const opt of el.options) {
+        if (opt.value && opt.value.toLowerCase() === (val || '').toLowerCase()) {
+          el.value = opt.value;
           return;
         }
-        let matched = null;
-        for (const opt of sel.options) {
-          if (opt.value && opt.value.toLowerCase() === val.toLowerCase()) {
-            matched = opt.value;
-            break;
-          }
-        }
-        if (matched) {
-          sel.value = matched;
-          custom.style.display = 'none';
-          custom.value = '';
-        } else {
-          sel.value = 'custom';
-          custom.style.display = 'block';
-          custom.value = val;
-        }
       }
-
-      sel.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
-          custom.style.display = 'block';
-          custom.focus();
-        } else {
-          custom.style.display = 'none';
-        }
-        hidden.value = getVal();
-        saveAllData();
-      });
-
-      custom.addEventListener('input', () => {
-        hidden.value = getVal();
-      });
-      custom.addEventListener('change', () => {
-        hidden.value = getVal();
-        saveAllData();
-      });
-
-      return { getVal, setVal };
+      el.value = val || '';
     }
 
-    const pronounHandler = bindCustomDropdown('pronounSelect', 'pronounsCustom', 'pronouns');
-    const genderHandler = bindCustomDropdown('genderSelect', 'genderCustom', 'gender');
-    const raceHandler = bindCustomDropdown('raceSelect', 'raceCustom', 'race');
-    const veteranHandler = bindCustomDropdown('veteranSelect', 'veteranCustom', 'veteranStatus');
-    const disabilityHandler = bindCustomDropdown('disabilitySelect', 'disabilityCustom', 'disabilityStatus');
+    function getGender() {
+      const el = document.getElementById('gender');
+      return el ? el.value : '';
+    }
+    function setGender(val) {
+      const el = document.getElementById('gender');
+      if (!el) return;
+      for (const opt of el.options) {
+        if (opt.value && opt.value.toLowerCase() === (val || '').toLowerCase()) {
+          el.value = opt.value;
+          return;
+        }
+      }
+      el.value = val || '';
+    }
 
-    function getPronouns() { return pronounHandler.getVal(); }
-    function setPronouns(val) { pronounHandler.setVal(val); }
+    function getRace() {
+      const el = document.getElementById('race');
+      return el ? el.value : '';
+    }
+    function setRace(val) {
+      const el = document.getElementById('race');
+      if (!el) return;
+      for (const opt of el.options) {
+        if (opt.value && opt.value.toLowerCase() === (val || '').toLowerCase()) {
+          el.value = opt.value;
+          return;
+        }
+      }
+      el.value = val || '';
+    }
 
-    function getGender() { return genderHandler.getVal(); }
-    function setGender(val) { genderHandler.setVal(val); }
+    function getVeteranStatus() {
+      const el = document.getElementById('veteranStatus');
+      return el ? el.value : '';
+    }
+    function setVeteranStatus(val) {
+      const el = document.getElementById('veteranStatus');
+      if (!el) return;
+      for (const opt of el.options) {
+        if (opt.value && opt.value.toLowerCase() === (val || '').toLowerCase()) {
+          el.value = opt.value;
+          return;
+        }
+      }
+      el.value = val || '';
+    }
 
-    function getRace() { return raceHandler.getVal(); }
-    function setRace(val) { raceHandler.setVal(val); }
-
-    function getVeteranStatus() { return veteranHandler.getVal(); }
-    function setVeteranStatus(val) { veteranHandler.setVal(val); }
-
-    function getDisabilityStatus() { return disabilityHandler.getVal(); }
-    function setDisabilityStatus(val) { disabilityHandler.setVal(val); }
+    function getDisabilityStatus() {
+      const el = document.getElementById('disabilityStatus');
+      return el ? el.value : '';
+    }
+    function setDisabilityStatus(val) {
+      const el = document.getElementById('disabilityStatus');
+      if (!el) return;
+      for (const opt of el.options) {
+        if (opt.value && opt.value.toLowerCase() === (val || '').toLowerCase()) {
+          el.value = opt.value;
+          return;
+        }
+      }
+      el.value = val || '';
+    }
 
     function handleAutofill() {
       try {

@@ -6,14 +6,13 @@
   <title>Acme Global - Senior Operations Manager</title>
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #dbe0e8;
       --card-bg: #ffffff;
-      --border: #e2e8f0;
-      --text: #1e293b;
+      --border: #d1d5db;
+      --text: #0f172a;
       --text-muted: #64748b;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --accent-green: #10b981;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
@@ -22,6 +21,21 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      outline: none;
+    }
+
+    .container,
+    .job-header,
+    .form-section,
+    .form-actions-card,
+    .state-inspector,
+    .ribbon-feature-item,
+    .file-status-pill,
+    input,
+    select,
+    textarea,
+    button {
+      border-radius: 0 !important;
     }
 
     body {
@@ -29,169 +43,183 @@
       color: var(--text);
       font-family: var(--font);
       line-height: 1.5;
-      padding: 32px 24px;
+      padding: 0;
+      margin: 0;
       overflow-y: auto;
     }
 
-    .container {
-      max-width: 860px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* Application Ribbon Header */
+    .app-ribbon {
+      background: #141722;
+      border-bottom: 1px solid #232838;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      user-select: none;
     }
 
-    /* Feature Tour Callout Bar */
-    .tour-banner {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      color: #f8fafc;
-      border-radius: 12px;
-      padding: 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-      border: 1px solid #334155;
-    }
-
-    .tour-header {
+    .ribbon-top-row {
+      height: 42px;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .ribbon-group {
+      display: flex;
+      align-items: center;
       gap: 10px;
     }
 
-    .tour-title {
+    .ribbon-app-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ribbon-brand-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      display: block;
+      overflow: visible;
+    }
+
+    .ribbon-title-text {
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: #f1f5f9;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
     }
 
-    .tour-chips {
+    .ribbon-divider {
+      width: 1px;
+      height: 18px;
+      background: #252a3a;
+      margin: 0 4px;
+    }
+
+    .ribbon-bottom-row {
+      padding: 8px 20px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px 12px;
+      background: #0e1018;
+    }
+
+    .ribbon-feature-item {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
-    }
-
-    .tour-chip {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 6px;
-      padding: 4px 10px;
+      background: #171b26;
+      border: 1px solid #252c3d;
+      padding: 6px 10px;
       font-size: 11.5px;
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      color: #94a3b8;
+      min-width: 0;
     }
 
-    .tour-chip strong {
-      color: #ffffff;
+    .ribbon-feature-item svg {
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .ribbon-feature-item span {
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.35;
+    }
+
+    .ribbon-feature-item strong {
+      color: #f1f5f9;
+    }
+
+    /* Page Content Container */
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 20px 48px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
     /* Job Header Card */
     .job-header {
       background: var(--card-bg);
       padding: 24px 28px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
+      border: none;
     }
 
-    .company-logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .company-badge {
-      background: #eff6ff;
-      color: var(--primary);
+    .company-name {
+      font-size: 14px;
       font-weight: 700;
-      font-size: 13px;
-      padding: 4px 10px;
-      border-radius: 6px;
+      color: var(--primary);
     }
-
 
     .job-title {
       font-size: 24px;
       font-weight: 800;
       color: #0f172a;
       letter-spacing: -0.4px;
+      line-height: 1.25;
     }
 
     .job-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 18px;
       color: var(--text-muted);
       font-size: 13.5px;
+      margin-top: 4px;
     }
 
-    /* Main Form Card */
-    .card {
-      background: var(--card-bg);
-      padding: 28px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
+    .job-meta-item {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 5px;
     }
 
-    .badge-sim {
-      font-size: 11px;
-      background: #ecfdf5;
-      color: #059669;
-      border: 1px solid #a7f3d0;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-weight: 600;
+    /* Grouped Input Sections */
+    .form-section {
+      background: var(--card-bg);
+      padding: 24px 28px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+      border: none;
     }
 
-    .section-divider {
-      grid-column: span 2;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 18px;
-      margin-top: 6px;
+    .section-header {
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
     }
 
     .section-heading {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       color: #0f172a;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 4px;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .section-heading svg {
+      color: #475569;
     }
 
     .section-desc {
       font-size: 12px;
       color: var(--text-muted);
-      margin-bottom: 14px;
     }
 
     .form-grid {
@@ -207,7 +235,7 @@
     .field-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     label {
@@ -229,35 +257,43 @@
     textarea {
       width: 100%;
       padding: 9px 12px;
-      border-radius: 7px;
-      border: 1.5px solid #cbd5e1;
+      border: 1px solid var(--border);
       font-size: 13.5px;
       color: #0f172a;
       background-color: #ffffff;
-      transition: all 0.2s ease;
       outline: none;
+      box-shadow: none;
+      transition: border-color 0.15s ease;
+      font-family: inherit;
     }
 
-    input:focus, select:focus, textarea:focus {
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      outline: none;
+      box-shadow: none;
     }
 
     input[type="file"] {
       width: 100%;
-      padding: 7px 10px;
-      border-radius: 7px;
-      border: 1.5px dashed #cbd5e1;
+      padding: 8px 10px;
+      border: 1px dashed #cbd5e1;
       font-size: 12.5px;
       color: #475569;
       background-color: #f8fafc;
-      transition: all 0.2s ease;
+      outline: none;
       cursor: pointer;
+      box-shadow: none;
     }
 
-    input[type="file"]:hover {
+    input[type="file"]:focus {
+      outline: none;
       border-color: var(--primary);
-      background-color: #f0f7ff;
+      box-shadow: none;
     }
 
     .file-status-pill {
@@ -267,7 +303,6 @@
       font-size: 11px;
       font-weight: 600;
       padding: 3px 8px;
-      border-radius: 9999px;
       background: #eff6ff;
       color: #1d4ed8;
       border: 1px solid #bfdbfe;
@@ -277,7 +312,7 @@
     .radio-checkbox-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 16px;
       align-items: center;
       min-height: 38px;
     }
@@ -301,14 +336,14 @@
     /* State Inspector */
     .state-inspector {
       background: #0f172a;
-      border-radius: 10px;
       padding: 18px 20px;
       color: #e2e8f0;
       font-family: var(--mono);
       font-size: 11.5px;
-      margin-top: 24px;
       max-height: 480px;
       overflow-y: auto;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+      border: none;
     }
 
     .state-inspector-title {
@@ -342,21 +377,23 @@
       word-break: break-all;
     }
 
-    .form-actions {
+    /* Form Actions Card */
+    .form-actions-card {
+      background: var(--card-bg);
+      padding: 18px 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
+      border: none;
     }
 
     .btn-submit {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 9px 22px;
-      border-radius: 7px;
+      outline: none;
+      padding: 9px 24px;
       font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
@@ -368,69 +405,94 @@
     }
 
     .btn-clear {
-      background: transparent;
+      background: #ffffff;
       color: var(--text-muted);
       border: 1px solid var(--border);
-      padding: 9px 16px;
-      border-radius: 7px;
+      outline: none;
+      padding: 9px 18px;
       font-size: 13.5px;
       cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
     }
 
     .btn-clear:hover {
-      background: #f1f5f9;
+      background: #f8fafc;
       color: var(--text);
+    }
+
+    @media (max-width: 720px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-span-2 {
+        grid-column: span 1;
+      }
+      .ribbon-top-row {
+        height: auto;
+        padding: 8px 16px;
+        flex-wrap: wrap;
+      }
+      .ribbon-bottom-row {
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- Feature Tour Callout -->
-    <div class="tour-banner">
-      <div class="tour-header">
-        <span class="tour-title">
-          <img src="data:image/png;base64,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" width="18" height="18" style="border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 6px;" alt="Tailorbird">
-          Tailorbird Feature Test Bench
-        </span>
-        <span style="font-size: 11px; color: #94a3b8;">Interactive Sandbox</span>
-      </div>
-      <div class="tour-chips">
-        <span class="tour-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <strong>Autofill:</strong> Use Autofill in sidebar or dock to populate fields
-        </span>
-        <span class="tour-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
-          <strong>Context Menu:</strong> Right-click any input to pick profile / special snippets
-        </span>
-        <span class="tour-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
-          <strong>Record Prospect:</strong> Click "Record Prospect" in toolbar to track this listing
-        </span>
-      </div>
-    </div>
-
-    <!-- Job Header -->
-    <div class="job-header">
-      <div class="company-logo-row">
-        <div>
-          <span class="company-badge">Acme Global, Inc.</span>
-          <span style="color: var(--text-muted); font-size: 12.5px; margin-left: 8px;">Operations & Business Strategy</span>
+  <!-- Application Ribbon Header -->
+  <header class="app-ribbon">
+    <div class="ribbon-top-row">
+      <div class="ribbon-group">
+        <div class="ribbon-app-title">
+          <svg class="ribbon-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="22" height="22" fill="none">
+            <rect x="3" y="3" width="58" height="58" rx="14" fill="#0F172A" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.8"/>
+            <path d="M29 41v5.5M35 40.5V46" stroke="#818CF8" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M17.5 41h14.5a12 12 0 0 0 12-12v-4.5a6 6 0 0 0-10.9-3.5L15.5 41" stroke="#818CF8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="#818CF8" fill-opacity="0.15"/>
+            <path d="M44 24.5l4 .8-4 .8" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M24.5 41a9 9 0 0 0 5.8-15.9" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="38" cy="24.5" r="2.2" fill="#FFFFFF"/>
+          </svg>
+          <span class="ribbon-title-text">Feature Test Bench</span>
         </div>
       </div>
+    </div>
+    <div class="ribbon-bottom-row">
+      <div class="ribbon-feature-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span><strong>Autofill:</strong> Populate candidate, demographic, and work history fields in one click</span>
+      </div>
+      <div class="ribbon-feature-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+        <span><strong>Context Menu:</strong> Right-click any input to select and insert targeted profile snippets</span>
+      </div>
+      <div class="ribbon-feature-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span><strong>Record Prospect:</strong> Track and save this job opportunity directly to your roster</span>
+      </div>
+      <div class="ribbon-feature-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span><strong>Review Navigator:</strong> Step through remaining unfilled fields using the reminder navigation bar</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- Job Header Card -->
+    <div class="job-header">
+      <div class="company-name">Acme Global, Inc.</div>
       <h1 class="job-title">Senior Operations Manager</h1>
       <div class="job-meta">
-        <span style="display:inline-flex; align-items:center; gap:5px;">
+        <span class="job-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           San Francisco, CA (or Remote USA)
         </span>
-        <span style="display:inline-flex; align-items:center; gap:5px;">
+        <span class="job-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
           Full-Time
         </span>
-        <span style="display:inline-flex; align-items:center; gap:5px;">
+        <span class="job-meta-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           $115,000 - $145,000
         </span>
@@ -438,24 +500,19 @@
     </div>
 
     <!-- Application Form -->
-    <div class="card">
-      <div class="card-title">
-        <span>Job Application Form</span>
-        <span class="badge-sim">ATS Simulator Ready</span>
-      </div>
+    <form id="jobForm" onsubmit="event.preventDefault(); alert('Application submitted successfully (mock test)!');">
+      
+      <!-- SECTION 1: CANDIDATE PROFILE (GENERAL) -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Candidate Profile
+          </h2>
+          <div class="section-desc">Populated from Profile General tab or right-click context menu</div>
+        </div>
 
-      <form id="jobForm" onsubmit="event.preventDefault(); alert('Application submitted successfully (mock test)!');">
         <div class="form-grid">
-          
-          <!-- SECTION 1: CANDIDATE PROFILE (GENERAL) -->
-          <div class="section-divider" style="border-top: none; padding-top: 0; margin-top: 0;">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span>Candidate Profile (General Info)</span>
-            </div>
-            <div class="section-desc">Populated from Profile &rarr; General tab or right-click context menu</div>
-          </div>
-
           <div class="field-group">
             <label for="fullName">Full Name <span class="required-star">*</span></label>
             <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="Full name" required>
@@ -510,16 +567,20 @@
             <label for="desiredSalary">Desired Annual Compensation / Salary</label>
             <input type="text" id="desiredSalary" name="salary" placeholder="e.g. $90,000 - $125,000">
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 2: PROFESSIONAL PROFILES & SOCIAL LINKS -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              <span>Professional Profiles &amp; Online Presence</span>
-            </div>
-            <div class="section-desc">Populated from Profile &rarr; General tab links</div>
-          </div>
+      <!-- SECTION 2: PROFESSIONAL PROFILES & SOCIAL LINKS -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Professional Profiles &amp; Online Presence
+          </h2>
+          <div class="section-desc">Populated from Profile General tab links</div>
+        </div>
 
+        <div class="form-grid">
           <div class="field-group">
             <label for="linkedin">LinkedIn Profile URL</label>
             <input type="text" id="linkedin" name="urls[LinkedIn]" placeholder="https://linkedin.com/in/username">
@@ -539,16 +600,20 @@
             <label for="twitter">Twitter / X Profile URL</label>
             <input type="text" id="twitter" name="urls[Twitter]" placeholder="https://x.com/username">
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 3: DEMOGRAPHICS & EEO -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              <span>Demographics &amp; Equal Opportunity (EEO)</span>
-            </div>
-            <div class="section-desc">Populated from Profile &rarr; Demographics (EEO) tab or right-click context menu</div>
-          </div>
+      <!-- SECTION 3: DEMOGRAPHICS & EEO -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Demographics &amp; Equal Opportunity (EEO)
+          </h2>
+          <div class="section-desc">Populated from Profile Demographics (EEO) tab or right-click context menu</div>
+        </div>
 
+        <div class="form-grid">
           <div class="field-group">
             <label for="gender">Gender</label>
             <select id="gender" name="gender">
@@ -628,16 +693,20 @@
               <option value="Yes">Yes, I require sponsorship</option>
             </select>
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 4: WORK HISTORY - DOCUMENT ATTACHMENTS -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              <span>Work History &mdash; Document Attachments</span>
-            </div>
-            <div class="section-desc">Uploaded via Tailorbird Autofill using your configured local Resume &amp; Cover Letter files</div>
-          </div>
+      <!-- SECTION 4: WORK HISTORY - DOCUMENT ATTACHMENTS -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Document Attachments
+          </h2>
+          <div class="section-desc">Uploaded via Tailorbird Autofill using your configured local Resume &amp; Cover Letter files</div>
+        </div>
 
+        <div class="form-grid">
           <div class="field-group">
             <label for="resume">Resume / CV Document <span class="required-star">*</span></label>
             <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
@@ -651,16 +720,20 @@
             <div id="coverLetterStatusPill" class="file-status-pill" style="display:none;"></div>
             <span class="hint-text">Supported formats: PDF, DOC, DOCX. Populated from Work History &rarr; Cover Letter Attachment.</span>
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 5: WORK HISTORY - RECENT EXPERIENCE -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <span>Work History &mdash; Recent Position</span>
-            </div>
-            <div class="section-desc">Populated from the most recent role in your Work History list</div>
-          </div>
+      <!-- SECTION 5: WORK HISTORY - RECENT POSITION -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Work History &mdash; Recent Position
+          </h2>
+          <div class="section-desc">Populated from the most recent role in your Work History list</div>
+        </div>
 
+        <div class="form-grid">
           <div class="field-group">
             <label for="recentTitle">Most Recent Role / Job Title</label>
             <input type="text" id="recentTitle" name="recent_role" placeholder="e.g. Operations Specialist">
@@ -685,16 +758,20 @@
             <label for="recentSummary">Key Achievements &amp; Responsibilities</label>
             <textarea id="recentSummary" name="recent_summary" rows="3" placeholder="Brief summary of your responsibilities, team leadership, metrics, and contributions..."></textarea>
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 6: SPECIAL FIELDS & ESSAYS -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>Special Fields &amp; Essay Questions</span>
-            </div>
-            <div class="section-desc">Matched against saved Special Fields during Autofill, or right-click to insert snippet</div>
-          </div>
+      <!-- SECTION 6: SPECIAL FIELDS & ESSAYS -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Special Fields &amp; Essay Questions
+          </h2>
+          <div class="section-desc">Matched against saved Special Fields during Autofill, or right-click to insert snippet</div>
+        </div>
 
+        <div class="form-grid">
           <div class="col-span-2 field-group">
             <label for="whyCompany">Why do you want to work at Acme Global?</label>
             <textarea id="whyCompany" name="why_company" rows="3" placeholder="Right-click here or run Autofill to insert your saved Special Field answer..."></textarea>
@@ -713,16 +790,20 @@
             <label for="coverLetterText">Cover Letter Statement / Why you are the best candidate</label>
             <textarea id="coverLetterText" name="cover_letter_text" rows="3" placeholder="Right-click here or run Autofill to insert your saved cover letter special field..."></textarea>
           </div>
+        </div>
+      </section>
 
-          <!-- SECTION 7: VISUAL ATTENTION (UNFILLED HIGHLIGHT DEMO) -->
-          <div class="section-divider">
-            <div class="section-heading" style="display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Visual Attention Fields (Unfilled Highlight Demo)</span>
-            </div>
-            <div class="section-desc">Fields that remain unfilled after running Autofill will be highlighted with amber dashed borders</div>
-          </div>
+      <!-- SECTION 7: VISUAL ATTENTION (UNFILLED HIGHLIGHT DEMO) -->
+      <section class="form-section">
+        <div class="section-header">
+          <h2 class="section-heading">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Visual Attention Fields (Unfilled Highlight Demo)
+          </h2>
+          <div class="section-desc">Fields that remain unfilled after running Autofill will be highlighted with amber dashed borders</div>
+        </div>
 
+        <div class="form-grid">
           <div class="field-group">
             <label for="noticePeriod">Notice Period / Earliest Start Date</label>
             <select id="noticePeriod" name="notice_period">
@@ -742,63 +823,63 @@
               <option value="no">No, remote only</option>
             </select>
           </div>
-
         </div>
+      </section>
 
-        <!-- Simulated React State Inspector -->
-        <div class="state-inspector">
-          <div class="state-inspector-title">
-            <span>Simulated Reactive Component State</span>
-            <span id="eventCount" style="color: #94a3b8; font-weight: normal;">0 events captured</span>
-          </div>
-          <table class="state-table">
-            <tbody>
-              <tr><td class="key">state.fullName</td><td class="val" id="stateFullName">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.preferredName</td><td class="val" id="statePreferredName">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.namePronunciation</td><td class="val" id="stateNamePronunciation">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.email</td><td class="val" id="stateEmail">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.phone</td><td class="val" id="statePhone">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.location</td><td class="val" id="stateLocation">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.country</td><td class="val" id="stateCountry">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.state</td><td class="val" id="stateState">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.company</td><td class="val" id="stateCompany">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.yearsExperience</td><td class="val" id="stateExperience">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.salary</td><td class="val" id="stateSalary">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.linkedin</td><td class="val" id="stateLinkedin">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.github</td><td class="val" id="stateGithub">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.portfolio</td><td class="val" id="statePortfolio">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.twitter</td><td class="val" id="stateTwitter">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.gender</td><td class="val" id="stateGender">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.race</td><td class="val" id="stateRace">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.hispanic</td><td class="val" id="stateHispanic">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.veteranStatus</td><td class="val" id="stateVeteran">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.disabilityStatus</td><td class="val" id="stateDisability">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.sponsorship</td><td class="val" id="stateSponsorship">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.resumeFile</td><td class="val" id="stateResumeFile">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.coverLetterFile</td><td class="val" id="stateCoverLetterFile">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.recentRole</td><td class="val" id="stateRecentRole">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.recentCompany</td><td class="val" id="stateRecentCompany">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.startDate</td><td class="val" id="stateStartDate">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.endDate</td><td class="val" id="stateEndDate">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.recentSummary</td><td class="val" id="stateRecentSummary">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.whyCompany</td><td class="val" id="stateWhyCompany">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.projectChallenge</td><td class="val" id="stateProjectChallenge">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.coverLetterText</td><td class="val" id="stateCoverLetterText">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.noticePeriod (unfilled)</td><td class="val" id="stateNoticePeriod">&lt;empty&gt;</td></tr>
-              <tr><td class="key">state.relocation (unfilled)</td><td class="val" id="stateRelocation">&lt;empty&gt;</td></tr>
-            </tbody>
-          </table>
+      <!-- Simulated React State Inspector -->
+      <div class="state-inspector">
+        <div class="state-inspector-title">
+          <span>Simulated Reactive Component State</span>
+          <span id="eventCount" style="color: #94a3b8; font-weight: normal;">0 events captured</span>
         </div>
+        <table class="state-table">
+          <tbody>
+            <tr><td class="key">state.fullName</td><td class="val" id="stateFullName">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.preferredName</td><td class="val" id="statePreferredName">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.namePronunciation</td><td class="val" id="stateNamePronunciation">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.email</td><td class="val" id="stateEmail">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.phone</td><td class="val" id="statePhone">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.location</td><td class="val" id="stateLocation">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.country</td><td class="val" id="stateCountry">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.state</td><td class="val" id="stateState">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.company</td><td class="val" id="stateCompany">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.yearsExperience</td><td class="val" id="stateExperience">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.salary</td><td class="val" id="stateSalary">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.linkedin</td><td class="val" id="stateLinkedin">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.github</td><td class="val" id="stateGithub">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.portfolio</td><td class="val" id="statePortfolio">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.twitter</td><td class="val" id="stateTwitter">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.gender</td><td class="val" id="stateGender">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.pronouns</td><td class="val" id="statePronouns">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.race</td><td class="val" id="stateRace">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.hispanic</td><td class="val" id="stateHispanic">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.veteranStatus</td><td class="val" id="stateVeteran">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.disabilityStatus</td><td class="val" id="stateDisability">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.sponsorship</td><td class="val" id="stateSponsorship">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.resumeFile</td><td class="val" id="stateResumeFile">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.coverLetterFile</td><td class="val" id="stateCoverLetterFile">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.recentRole</td><td class="val" id="stateRecentRole">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.recentCompany</td><td class="val" id="stateRecentCompany">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.startDate</td><td class="val" id="stateStartDate">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.endDate</td><td class="val" id="stateEndDate">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.recentSummary</td><td class="val" id="stateRecentSummary">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.whyCompany</td><td class="val" id="stateWhyCompany">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.projectChallenge</td><td class="val" id="stateProjectChallenge">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.coverLetterText</td><td class="val" id="stateCoverLetterText">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.noticePeriod (unfilled)</td><td class="val" id="stateNoticePeriod">&lt;empty&gt;</td></tr>
+            <tr><td class="key">state.relocation (unfilled)</td><td class="val" id="stateRelocation">&lt;empty&gt;</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-clear" id="btnClearForm">Clear Form</button>
-          <button type="submit" class="btn-submit">Submit Application</button>
-        </div>
-      </form>
-    </div>
+      <!-- Form Actions Card -->
+      <div class="form-actions-card">
+        <button type="button" class="btn-clear" id="btnClearForm">Clear Form</button>
+        <button type="submit" class="btn-submit">Submit Application</button>
+      </div>
 
-  </div>
+    </form>
+  </main>
 
   <script>
     // Simulated Virtual DOM state sync

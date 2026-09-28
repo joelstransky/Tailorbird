@@ -34,66 +34,270 @@
       background-color: var(--bg);
       color: var(--text);
       font-family: var(--font);
-      line-height: 1.5;
-      padding: 24px;
+      line-height: 1.4;
+      padding: 0;
+      margin: 0;
       overflow-y: auto;
     }
 
-    .container {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* Application Ribbon Bar */
+    .app-ribbon {
+      background: #141722;
+      border-bottom: 1px solid #232838;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      user-select: none;
     }
 
-    /* Header Bar */
-    .header-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 22px;
+    .ribbon-top-row {
+      height: 42px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
       gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .header-icon {
-      font-size: 26px;
-      background: rgba(56, 139, 253, 0.15);
-      border: 1px solid rgba(56, 139, 253, 0.3);
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .header-title-wrap h1 {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-bright);
-      letter-spacing: -0.3px;
-    }
-
-    .header-title-wrap p {
-      font-size: 12.5px;
-      color: var(--text-muted);
-    }
-
-    .header-actions {
+    .ribbon-group {
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .ribbon-app-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ribbon-app-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--accent-blue, #388bfd);
+      flex-shrink: 0;
+    }
+
+    .ribbon-title-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #F1F5F9;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+    }
+
+    .ribbon-divider {
+      width: 1px;
+      height: 18px;
+      background: #252A3A;
+      margin: 0 4px;
+    }
+
+    .ribbon-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ribbon-btn {
+      height: 28px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s ease;
+      border: 1px solid transparent;
+      outline: none;
+      white-space: nowrap;
+    }
+
+    .ribbon-btn-primary {
+      background: #3B82F6;
+      color: #ffffff;
+      border-color: #2563EB;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .ribbon-btn-primary:hover {
+      background: #2563EB;
+      border-color: #1D4ED8;
+    }
+
+    .ribbon-btn-primary:active {
+      transform: translateY(1px);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .ribbon-btn-secondary {
+      background: #1C202C;
+      color: #CBD5E1;
+      border-color: #2B3245;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .ribbon-btn-secondary:hover {
+      background: #252B3C;
+      border-color: #3D4660;
+      color: #FFFFFF;
+    }
+
+    .ribbon-btn-secondary:active {
+      transform: translateY(1px);
+    }
+
+    .ribbon-search-wrap {
+      position: relative;
+      width: 260px;
+    }
+
+    .ribbon-search-input {
+      width: 100%;
+      height: 28px;
+      background: #0B0E15;
+      border: 1px solid #232838;
+      border-radius: 5px;
+      padding: 0 10px 0 28px;
+      font-size: 11.5px;
+      color: #F1F5F9;
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ribbon-search-input:focus {
+      background: #0F121C;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 1px #3B82F6;
+    }
+
+    .ribbon-search-icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .ribbon-bottom-row {
+      min-height: 36px;
+      padding: 4px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: #0E1018;
+    }
+
+    .filter-tabs {
+      display: inline-flex;
+      background: #141722;
+      border: 1px solid #232838;
+      border-radius: 5px;
+      padding: 2px;
+      gap: 2px;
+      overflow-x: auto;
+    }
+
+    .filter-tab {
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8B949E;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s ease;
+    }
+
+    .filter-tab:hover {
+      color: #E2E8F0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .filter-tab.active {
+      background: #242938;
+      color: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .ribbon-metrics-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ribbon-metric-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #8B949E;
+      background: #141722;
+      border: 1px solid #202534;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .ribbon-metric-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dot-total { background: #94A3B8; }
+    .dot-targeted { background: #388BFD; }
+    .dot-contacted { background: #10B981; }
+
+    .ribbon-metric-val {
+      color: #FFFFFF;
+      font-weight: 700;
+      font-family: var(--mono);
+      font-size: 11.5px;
+    }
+
+    .content-area {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 20px 40px 20px;
+    }
+
+    @media (max-width: 860px) {
+      .ribbon-top-row {
+        height: auto;
+        padding: 8px 12px;
+        flex-wrap: wrap;
+      }
+      .ribbon-bottom-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .filter-tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .ribbon-metrics-strip {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .ribbon-search-wrap {
+        width: 100%;
+        max-width: none;
+      }
     }
 
     .btn {
@@ -148,393 +352,415 @@
       background: rgba(248, 81, 73, 0.25);
     }
 
-    /* Metrics & Filter Row */
-    .controls-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .metrics-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .metric-pill {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .metric-pill strong {
-      color: var(--text-bright);
-      font-weight: 700;
-    }
-
-    .filter-search-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .filter-tabs {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px;
-      gap: 2px;
-      overflow-x: auto;
-    }
-
-    .filter-tab {
-      padding: 4px 10px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.12s ease;
-    }
-
-    .filter-tab:hover {
-      color: var(--text-bright);
-    }
-
-    .filter-tab.active {
-      background: #21262d;
-      color: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-
-    .search-input-wrap {
-      flex: 1;
-      max-width: 320px;
-      min-width: 200px;
-      position: relative;
-    }
-
-    .search-input {
-      width: 100%;
-      background: #13161c;
-      border: none !important;
-      border-radius: 6px;
-      padding: 7px 12px 7px 30px;
-      font-size: 12px;
-      color: var(--text-bright);
-      outline: none !important;
-      transition: background 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .search-input:focus {
-      background: #181d26;
-      box-shadow: 0 0 0 1.5px rgba(129, 140, 248, 0.4);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-
     /* Cards Grid */
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 28px;
+      align-items: start;
     }
 
-    /* Individual Contact Card */
-    .contact-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px;
+    /* 3D Business Card Scene */
+    .card-scene {
+      perspective: 1200px;
+      position: relative;
+      border-radius: 0;
+      cursor: pointer;
+    }
+
+    /* Curled Corner Drop Shadows */
+    .card-scene::before,
+    .card-scene::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      bottom: 8px;
+      width: 44%;
+      height: 22%;
+      max-width: 220px;
+      box-shadow: 0 12px 14px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.4s ease;
+    }
+
+    .card-scene::before {
+      left: 10px;
+      transform: rotate(-3.5deg);
+    }
+
+    .card-scene::after {
+      right: 10px;
+      transform: rotate(3.5deg);
+    }
+
+    .card-scene:hover::before {
+      transform: rotate(-4.5deg);
+      box-shadow: 0 15px 16px rgba(0, 0, 0, 0.85);
+    }
+
+    .card-scene:hover::after {
+      transform: rotate(4.5deg);
+      box-shadow: 0 15px 16px rgba(0, 0, 0, 0.85);
+    }
+
+    /* 3D Flipper Container */
+    .card-flipper {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.4, 1.15), height 0.35s ease;
+      border-radius: 0;
+      z-index: 1;
+    }
+
+    .card-scene.is-flipped .card-flipper {
+      transform: rotateX(180deg);
+      height: 310px;
+      transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.4, 1.15), height 0.35s ease 0.15s;
+    }
+
+    /* Card Faces */
+    .card-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 0;
+      background: #181c26;
+      border: none;
+      padding: 16px 18px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-      position: relative;
+      justify-content: space-between;
+      box-sizing: border-box;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      user-select: none;
+      overflow: hidden;
     }
 
-    .contact-card:hover {
-      border-color: #444c5e;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    .card-front {
+      transform: rotateX(0deg);
+      z-index: 2;
     }
 
-    /* Card Top: Company & Status */
-    .card-top {
+    .card-back {
+      transform: rotateX(180deg);
+      z-index: 1;
+      background: #151822;
+      border: none;
+      cursor: default;
+      user-select: text;
+    }
+
+    /* Business Card Header */
+    .biz-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
+      padding-bottom: 8px;
     }
 
-    .company-ident {
+    .biz-company-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
 
-    .company-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+    .biz-company-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 0;
+      background: #2563eb;
       color: #ffffff;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       text-transform: uppercase;
       flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(31, 111, 235, 0.35);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     }
 
-    .company-names {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .biz-company-info {
+      min-width: 0;
     }
 
-    .company-title {
-      font-size: 15px;
+    .biz-company-name {
+      font-size: 14px;
       font-weight: 700;
-      color: var(--text-bright);
-      line-height: 1.2;
-    }
-
-    .company-sub {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-select {
-      background: #14171d;
-      color: var(--text-bright);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 6px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color 0.15s ease;
-    }
-
-    .status-select:focus {
-      border-color: var(--accent-blue);
-    }
-
-    /* Persona Block (Contact Details) */
-    .persona-box {
-      background: #15181f;
-      border: 1px solid #272c37;
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .persona-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #2b313e;
-      border: 1.5px solid #3c4456;
       color: #ffffff;
-      font-size: 13px;
-      font-weight: 700;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .biz-company-sub {
+      font-size: 11px;
+      color: #8b949e;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Staging Pill Toggle */
+    .stage-toggle-group {
+      display: inline-flex;
+      background: #0f121a;
+      border: 1px solid #232838;
+      border-radius: 0;
+      padding: 2px;
+      gap: 2px;
       flex-shrink: 0;
     }
 
-    .persona-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .persona-name {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--text-bright);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .persona-title {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .persona-links {
-      display: flex;
-      gap: 5px;
-      margin-top: 4px;
-    }
-
-    .persona-link-btn {
-      background: #212630;
-      border: 1px solid #303746;
-      color: #94a0b2;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 10.5px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      transition: all 0.15s ease;
-    }
-
-    .persona-link-btn:hover {
-      background: var(--accent-blue);
-      color: #ffffff;
-      border-color: var(--accent-blue);
-    }
-
-    /* Angle Callout Box */
-    .angle-box {
-      background: rgba(56, 139, 253, 0.08);
-      border-left: 3px solid var(--accent-blue);
-      border-radius: 0 6px 6px 0;
-      padding: 8px 10px;
-      font-size: 12px;
-      line-height: 1.4;
-      color: #dbeafe;
-    }
-
-    .angle-label {
-      font-size: 10.5px;
-      font-weight: 700;
-      color: #60a5fa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    /* Draft Message Box */
-    .message-box {
-      background: #14171e;
-      border: 1px solid #282e3c;
-      border-radius: 6px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .message-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .message-text {
-      font-size: 12px;
-      color: #e6edf3;
-      line-height: 1.45;
-      max-height: 80px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: var(--font);
-    }
-
-    .message-text.expanded {
-      max-height: none;
-    }
-
-    .message-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid #202531;
-      padding-top: 6px;
-    }
-
-    .btn-copy-msg {
-      background: #212630;
-      border: 1px solid #363d4e;
-      color: #cbd5e1;
-      font-size: 11px;
-      font-weight: 600;
+    .stage-pill {
       padding: 3px 8px;
-      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #8b949e;
+      background: transparent;
+      border: none;
+      border-radius: 0;
       cursor: pointer;
+      outline: none;
+      transition: all 0.12s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .stage-pill:hover {
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .stage-pill.active {
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+
+    .stage-pill.active.contacted {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    /* Business Card Body (Centered) */
+    .biz-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      gap: 5px;
+      margin: auto 0;
+      flex: 1;
+    }
+
+    .biz-contact-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+      line-height: 1.2;
+    }
+
+    .biz-contact-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #38bdf8;
+      line-height: 1.25;
+    }
+
+    .biz-links-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .biz-link-item {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: all 0.15s ease;
+      background: #12151d;
+      border: 1px solid #282f3e;
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 0;
+      text-decoration: none;
+      transition: all 0.12s ease;
     }
 
-    .btn-copy-msg:hover {
-      background: #2ea043;
+    .biz-link-item:hover {
+      background: #2563eb;
       color: #ffffff;
-      border-color: #2ea043;
+      border-color: #2563eb;
     }
 
-    .btn-copy-msg.copied {
-      background: #2ea043 !important;
-      color: #ffffff !important;
-      border-color: #2ea043 !important;
-    }
-
-    /* Card Footer */
-    .card-footer {
+    /* Business Card Footer */
+    .biz-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding-top: 8px;
-      border-top: 1px solid #252a36;
       font-size: 11px;
-      color: var(--text-muted);
+      color: #64748b;
     }
 
-    .card-actions {
+    .biz-flip-btn {
+      background: #1c212d;
+      border: 1px solid #2d3648;
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+    }
+
+    .biz-flip-btn:hover {
+      background: #283042;
+      color: #ffffff;
+      border-color: #3f4c66;
+    }
+
+    .biz-actions {
       display: flex;
+      gap: 5px;
+    }
+
+    /* Card Back Layout */
+    .back-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+    }
+
+    .back-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .back-header-actions {
+      display: flex;
+      align-items: center;
       gap: 6px;
+    }
+
+    .back-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .back-field-label-row {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field-save-status {
+      font-size: 9.5px;
+      color: #10b981;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .textarea-corner-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .back-msg-input, .back-notes-input {
+      width: 100%;
+      background: #0e1017;
+      border: 1px solid #222836;
+      border-radius: 0;
+      padding: 6px 28px 6px 8px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #e2e8f0;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.12s ease;
+    }
+
+    .back-msg-input:focus, .back-notes-input:focus {
+      border-color: #2563eb;
+      background: #11141c;
+    }
+
+    .back-msg-input {
+      height: 112px;
+    }
+
+    .back-notes-input {
+      height: 58px;
+    }
+
+    .corner-copy-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 2;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #181d28;
+      border: 1px solid #2c3547;
+      border-radius: 0;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.12s ease;
+      outline: none;
+    }
+
+    .corner-copy-btn:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #ffffff;
+    }
+
+    .corner-copy-btn.copied {
+      background: #10b981;
+      border-color: #10b981;
+      color: #ffffff;
     }
 
     /* Empty State */
@@ -689,84 +915,76 @@
 </head>
 <body>
 
-  <div class="container">
-
-    <!-- Header Bar -->
-    <div class="header-bar">
-      <div class="header-left">
-        <div class="header-icon" title="Tailorbird Outreach Roster">
-          <img src="data:image/png;base64,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" width="34" height="34" style="border-radius: 8px; display: block;" alt="Tailorbird">
-        </div>
-        <div class="header-title-wrap">
-          <h1>Outreach Roster</h1>
-          <p>High-conviction networking: Align your background to specific engineering leaders</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-secondary" id="btnLoadExamples" type="button" title="Load sample cards">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18h6"/><path d="M10 22h4"/>
-            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/>
+  <div class="app-ribbon">
+    <div class="ribbon-top-row">
+      <div class="ribbon-group">
+        <div class="ribbon-app-title">
+          <svg class="ribbon-app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
           </svg>
-          <span>Sample Cards</span>
-        </button>
-        <button class="btn btn-primary" id="btnOpenAddModal" type="button">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          <span>Add Target Company</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Metrics & Search/Filter Bar -->
-    <div class="controls-bar">
-      <div class="metrics-pills">
-        <span class="metric-pill">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="9" y2="18.01"/><line x1="15" y1="18" x2="15" y2="18.01"/></svg>
-          <span>Total Targets:</span> <strong id="metricTotal">0</strong>
-        </span>
-        <span class="metric-pill">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          <span>Messages Drafted:</span> <strong id="metricDrafted">0</strong>
-        </span>
-        <span class="metric-pill">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span>Contacted:</span> <strong id="metricContacted">0</strong>
-        </span>
-        <span class="metric-pill">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>In Conversation:</span> <strong id="metricConversations">0</strong>
-        </span>
-      </div>
-
-      <div class="filter-search-row">
-        <div class="filter-tabs" id="filterTabs">
-          <button class="filter-tab active" data-filter="all" type="button">All Targets</button>
-          <button class="filter-tab" data-filter="Targeted" type="button">Targeted</button>
-          <button class="filter-tab" data-filter="Contact Identified" type="button">Contact Identified</button>
-          <button class="filter-tab" data-filter="Drafted" type="button">Drafted</button>
-          <button class="filter-tab" data-filter="Contacted" type="button">Contacted</button>
-          <button class="filter-tab" data-filter="In Conversation" type="button">In Conversation</button>
+          <span class="ribbon-title-text">Outreach Roster</span>
         </div>
+        <div class="ribbon-divider"></div>
+        <div class="ribbon-btn-group">
+          <button class="ribbon-btn ribbon-btn-primary" id="btnOpenAddModal" type="button" title="Add new target company to outreach roster">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>New Target</span>
+          </button>
+          <button class="ribbon-btn ribbon-btn-secondary" id="btnLoadExamples" type="button" title="Load sample roster cards">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"/><path d="M10 22h4"/>
+              <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/>
+            </svg>
+            <span>Sample Cards</span>
+          </button>
+        </div>
+      </div>
 
-        <div class="search-input-wrap">
-          <span class="search-icon">
+      <div class="ribbon-group ribbon-group-right">
+        <div class="ribbon-search-wrap">
+          <span class="ribbon-search-icon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </span>
-          <input type="text" class="search-input" id="searchInput" placeholder="Search company, contact, or title...">
+          <input type="text" class="ribbon-search-input" id="searchInput" placeholder="Filter company, contact, or role...">
         </div>
       </div>
     </div>
 
-    <!-- Contact Cards Grid -->
-    <div class="cards-grid" id="cardsGrid">
-      <!-- Injected dynamically -->
-    </div>
+    <div class="ribbon-bottom-row">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all" type="button">All</button>
+        <button class="filter-tab" data-filter="Targeted" type="button">Targeted</button>
+        <button class="filter-tab" data-filter="Contacted" type="button">Contacted</button>
+      </div>
 
+      <div class="ribbon-metrics-strip">
+        <div class="ribbon-metric-item" title="Total targets in roster">
+          <span class="ribbon-metric-dot dot-total"></span>
+          <span class="ribbon-metric-label">Total:</span>
+          <strong class="ribbon-metric-val" id="metricTotal">0</strong>
+        </div>
+        <div class="ribbon-metric-item" title="Targeted opportunities">
+          <span class="ribbon-metric-dot dot-targeted"></span>
+          <span class="ribbon-metric-label">Targeted:</span>
+          <strong class="ribbon-metric-val" id="metricTargeted">0</strong>
+        </div>
+        <div class="ribbon-metric-item" title="Contacted targets">
+          <span class="ribbon-metric-dot dot-contacted"></span>
+          <span class="ribbon-metric-label">Contacted:</span>
+          <strong class="ribbon-metric-val" id="metricContacted">0</strong>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <main class="content-area">
+    <div class="cards-grid" id="cardsGrid">
+    </div>
+  </main>
 
   <!-- Add / Edit Target Modal -->
   <div class="modal-overlay" id="targetModal">
@@ -801,15 +1019,12 @@
               <input type="text" class="form-input" id="modalWebsite" placeholder="https://example.com">
             </div>
             <div class="form-col">
-              <label for="modalStatus">Outreach Status</label>
-              <select class="form-select" id="modalStatus">
-                <option value="Targeted">Targeted</option>
-                <option value="Contact Identified">Contact Identified</option>
-                <option value="Drafted">Drafted</option>
-                <option value="Contacted">Contacted</option>
-                <option value="In Conversation">In Conversation</option>
-                <option value="Archived">Archived</option>
-              </select>
+              <label>Outreach Stage</label>
+              <input type="hidden" id="modalStatus" value="Targeted">
+              <div class="stage-toggle-group" style="height: 36px; align-items: center; padding: 2px 4px; background: #131720;">
+                <button type="button" class="stage-pill active" id="modalPillTargeted" onclick="setModalStage('Targeted')" style="flex: 1; padding: 5px 12px; font-size: 11.5px;">Targeted</button>
+                <button type="button" class="stage-pill" id="modalPillContacted" onclick="setModalStage('Contacted')" style="flex: 1; padding: 5px 12px; font-size: 11.5px;">Contacted</button>
+              </div>
             </div>
           </div>
 
@@ -917,6 +1132,23 @@
       charCounter.textContent = `${words} words · ${chars} chars`;
     }
 
+    function setModalStage(stage) {
+      const norm = (stage === 'Contacted') ? 'Contacted' : 'Targeted';
+      const statusInput = document.getElementById('modalStatus');
+      if (statusInput) statusInput.value = norm;
+      const pillTargeted = document.getElementById('modalPillTargeted');
+      const pillContacted = document.getElementById('modalPillContacted');
+      if (pillTargeted && pillContacted) {
+        if (norm === 'Contacted') {
+          pillTargeted.classList.remove('active');
+          pillContacted.classList.add('active', 'contacted');
+        } else {
+          pillTargeted.classList.add('active');
+          pillContacted.classList.remove('active', 'contacted');
+        }
+      }
+    }
+
     function openAddModal() {
       editTargetId.value = '';
       modalTitle.innerHTML = `
@@ -926,7 +1158,7 @@
       modalCompany.value = '';
       modalIndustry.value = '';
       modalWebsite.value = '';
-      modalStatus.value = 'Targeted';
+      setModalStage('Targeted');
       modalContactName.value = '';
       modalContactTitle.value = '';
       modalContactLinkedin.value = '';
@@ -952,7 +1184,7 @@
       modalCompany.value = target.companyName || '';
       modalIndustry.value = target.industry || '';
       modalWebsite.value = target.websiteUrl || '';
-      modalStatus.value = (target.status === 'Angle Drafted') ? 'Drafted' : (target.status || 'Targeted');
+      setModalStage(target.status === 'Contacted' ? 'Contacted' : 'Targeted');
 
       const c = target.contact || {};
       modalContactName.value = c.name || '';
@@ -962,7 +1194,6 @@
       modalContactGithub.value = c.githubUrl || '';
       modalContactTwitter.value = c.twitterUrl || '';
 
-      // Populate unified message field from draftMessage or valueAngle
       modalMessage.value = target.draftMessage || target.valueAngle || '';
       modalNotes.value = target.notes || '';
       updateCharCount();
@@ -985,12 +1216,13 @@
       const existingIdx = hitList.findIndex(t => t.id === id);
 
       const msg = modalMessage.value.trim();
+      const status = modalStatus.value === 'Contacted' ? 'Contacted' : 'Targeted';
       const targetData = {
         id,
         companyName: company,
         industry: modalIndustry.value.trim(),
         websiteUrl: modalWebsite.value.trim(),
-        status: modalStatus.value,
+        status: status,
         contact: {
           name: modalContactName.value.trim(),
           title: modalContactTitle.value.trim(),
@@ -1003,7 +1235,7 @@
         draftMessage: msg,
         notes: modalNotes.value.trim(),
         dateAdded: existingIdx >= 0 ? hitList[existingIdx].dateAdded : new Date().toLocaleDateString(),
-        lastContacted: existingIdx >= 0 ? (hitList[existingIdx].lastContacted || '') : ''
+        lastContacted: existingIdx >= 0 ? (hitList[existingIdx].lastContacted || '') : (status === 'Contacted' ? new Date().toLocaleDateString() : '')
       };
 
       if (existingIdx >= 0) {
@@ -1027,38 +1259,112 @@
       }
     }
 
-    function updateTargetStatus(id, newStatus) {
+    function setCardStage(id, stage, event) {
+      if (event) event.stopPropagation();
       const target = hitList.find(t => t.id === id);
-      if (target) {
-        target.status = newStatus;
-        if (newStatus === 'Contacted' && !target.lastContacted) {
-          target.lastContacted = new Date().toLocaleDateString();
-        }
-        persistData();
-        updateMetrics();
+      if (!target) return;
+      target.status = stage;
+      if (stage === 'Contacted' && !target.lastContacted) {
+        target.lastContacted = new Date().toLocaleDateString();
+      }
+      persistData();
+      renderCards();
+    }
+
+    function flipCard(id, event) {
+      if (event) event.stopPropagation();
+      const card = (typeof id === 'string') ? document.getElementById(`card-${id}`) : id;
+      if (card) {
+        card.classList.toggle('is-flipped');
       }
     }
 
-    function copyMessage(id, btn) {
-      const target = hitList.find(t => t.id === id);
-      if (!target || !target.draftMessage) return;
+    function toggleCardFlip(sceneEl, event) {
+      flipCard(sceneEl, event);
+    }
 
-      navigator.clipboard.writeText(target.draftMessage).then(() => {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '✓ Copied!';
+    function handleCardClick(id, event) {
+      if (event && event.target) {
+        if (event.target.closest('a, button, input, textarea, select, .stage-toggle-group, .corner-copy-btn, .no-flip')) {
+          return;
+        }
+      }
+      flipCard(id, event);
+    }
+
+    const noteSaveTimeouts = {};
+    function handleNoteInput(id, text, statusId) {
+      const target = hitList.find(t => t.id === id);
+      if (!target) return;
+      target.notes = text;
+
+      const statusEl = document.getElementById(statusId);
+      if (statusEl) {
+        statusEl.textContent = 'Saving...';
+        statusEl.style.opacity = '1';
+      }
+
+      if (noteSaveTimeouts[id]) {
+        clearTimeout(noteSaveTimeouts[id]);
+      }
+      noteSaveTimeouts[id] = setTimeout(() => {
+        persistData();
+        if (statusEl) {
+          statusEl.textContent = 'Saved';
+          setTimeout(() => {
+            if (statusEl) statusEl.style.opacity = '0';
+          }, 1200);
+        }
+      }, 400);
+    }
+
+    const msgSaveTimeouts = {};
+    function handleMsgInput(id, text, statusId) {
+      const target = hitList.find(t => t.id === id);
+      if (!target) return;
+      target.draftMessage = text;
+
+      const statusEl = document.getElementById(statusId);
+      if (statusEl) {
+        statusEl.textContent = 'Saving...';
+        statusEl.style.opacity = '1';
+      }
+
+      if (msgSaveTimeouts[id]) {
+        clearTimeout(msgSaveTimeouts[id]);
+      }
+      msgSaveTimeouts[id] = setTimeout(() => {
+        persistData();
+        if (statusEl) {
+          statusEl.textContent = 'Saved';
+          setTimeout(() => {
+            if (statusEl) statusEl.style.opacity = '0';
+          }, 1200);
+        }
+      }, 400);
+    }
+
+    function copyField(id, field, btn) {
+      const target = hitList.find(t => t.id === id);
+      if (!target) return;
+      const text = (field === 'message')
+        ? (target.draftMessage || target.valueAngle || '')
+        : (target.notes || '');
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
         btn.classList.add('copied');
         setTimeout(() => {
-          btn.innerHTML = originalText;
+          btn.innerHTML = originalHtml;
           btn.classList.remove('copied');
-        }, 1800);
+        }, 1500);
       });
     }
 
-    function toggleMessageExpand(id) {
-      const el = document.getElementById(`msgText-${id}`);
-      if (el) {
-        el.classList.toggle('expanded');
-      }
+    function copyMessage(id, btn) {
+      copyField(id, 'message', btn);
     }
 
     // Filter and search
@@ -1077,10 +1383,15 @@
     });
 
     function updateMetrics() {
-      document.getElementById('metricTotal').textContent = hitList.length;
-      document.getElementById('metricDrafted').textContent = hitList.filter(t => (t.draftMessage || '').trim().length > 0).length;
-      document.getElementById('metricContacted').textContent = hitList.filter(t => t.status === 'Contacted').length;
-      document.getElementById('metricConversations').textContent = hitList.filter(t => t.status === 'In Conversation').length;
+      const total = hitList.length;
+      const contacted = hitList.filter(t => t.status === 'Contacted').length;
+      const targeted = total - contacted;
+      const elTotal = document.getElementById('metricTotal');
+      const elTargeted = document.getElementById('metricTargeted');
+      const elContacted = document.getElementById('metricContacted');
+      if (elTotal) elTotal.textContent = total;
+      if (elTargeted) elTargeted.textContent = targeted;
+      if (elContacted) elContacted.textContent = contacted;
     }
 
     function getInitials(name) {
@@ -1096,13 +1407,10 @@
       updateMetrics();
 
       const filtered = hitList.filter(t => {
-        if (currentFilter !== 'all') {
-          if (currentFilter === 'Drafted') {
-            if (t.status !== 'Drafted' && t.status !== 'Angle Drafted') return false;
-          } else if (t.status !== currentFilter) {
-            return false;
-          }
-        }
+        const isContacted = (t.status === 'Contacted');
+        if (currentFilter === 'Contacted' && !isContacted) return false;
+        if (currentFilter === 'Targeted' && isContacted) return false;
+
         if (searchQuery) {
           const comp = (t.companyName || '').toLowerCase();
           const ind = (t.industry || '').toLowerCase();
@@ -1110,7 +1418,8 @@
           const ctitle = (t.contact?.title || '').toLowerCase();
           const angle = (t.valueAngle || '').toLowerCase();
           const msg = (t.draftMessage || '').toLowerCase();
-          return comp.includes(searchQuery) || ind.includes(searchQuery) || cname.includes(searchQuery) || ctitle.includes(searchQuery) || angle.includes(searchQuery) || msg.includes(searchQuery);
+          const notes = (t.notes || '').toLowerCase();
+          return comp.includes(searchQuery) || ind.includes(searchQuery) || cname.includes(searchQuery) || ctitle.includes(searchQuery) || angle.includes(searchQuery) || msg.includes(searchQuery) || notes.includes(searchQuery);
         }
         return true;
       });
@@ -1139,88 +1448,110 @@
         const c = target.contact || {};
         const companyInitial = (target.companyName || 'C')[0].toUpperCase();
         const contactInitials = getInitials(c.name || target.companyName);
+        const isContacted = target.status === 'Contacted';
 
         const card = document.createElement('div');
-        card.className = 'contact-card';
+        card.className = 'card-scene';
         card.id = `card-${target.id}`;
+        card.onclick = function(e) { handleCardClick(target.id, e); };
 
         card.innerHTML = `
-          <!-- Card Top -->
-          <div class="card-top">
-            <div class="company-ident">
-              <div class="company-avatar">${companyInitial}</div>
-              <div class="company-names">
-                <div class="company-title">${escapeHtml(target.companyName)}</div>
-                <div class="company-sub">
-                  ${target.industry ? `<span>${escapeHtml(target.industry)}</span>` : ''}
-                  ${target.websiteUrl ? `<span>&bull;</span> <a href="#" onclick="openTab('${escapeAttr(target.websiteUrl)}'); return false;" style="color:var(--accent-blue); text-decoration:none; display:inline-flex; align-items:center; gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Site</span></a>` : ''}
+          <div class="card-flipper">
+            <!-- FRONT FACE (Business Card Layout) -->
+            <div class="card-face card-front">
+              <!-- Header -->
+              <div class="biz-header">
+                <div class="biz-company-wrap">
+                  <div class="biz-company-avatar">${companyInitial}</div>
+                  <div class="biz-company-info">
+                    <div class="biz-company-name" title="${escapeAttr(target.companyName)}">${escapeHtml(target.companyName)}</div>
+                    <div class="biz-company-sub">
+                      ${target.industry ? `<span>${escapeHtml(target.industry)}</span>` : ''}
+                      ${target.websiteUrl ? `<span>•</span> <a href="#" onclick="openTab('${escapeAttr(target.websiteUrl)}'); return false;" style="color:var(--accent-blue); text-decoration:none;">Website</a>` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Staging Pill Toggle -->
+                <div class="stage-toggle-group" onclick="event.stopPropagation()">
+                  <button type="button" class="stage-pill ${!isContacted ? 'active' : ''}" onclick="setCardStage('${target.id}', 'Targeted', event)" title="Mark as Targeted">Targeted</button>
+                  <button type="button" class="stage-pill ${isContacted ? 'active contacted' : ''}" onclick="setCardStage('${target.id}', 'Contacted', event)" title="Mark as Contacted">Contacted</button>
+                </div>
+              </div>
+
+              <!-- Body / Contact Info (Centered) -->
+              <div class="biz-body">
+                <div class="biz-contact-name">${c.name ? escapeHtml(c.name) : '<span style="color:#64748b; font-weight:normal; font-style:italic;">No contact identified</span>'}</div>
+                <div class="biz-contact-title">${c.title ? escapeHtml(c.title) : 'Target Role'}</div>
+                <div class="biz-links-row">
+                  ${c.linkedinUrl ? `<a class="biz-link-item" href="#" onclick="openTab('${escapeAttr(c.linkedinUrl)}'); return false;">in LinkedIn</a>` : ''}
+                  ${c.githubUrl ? `<a class="biz-link-item" href="#" onclick="openTab('${escapeAttr(c.githubUrl)}'); return false;">gh GitHub</a>` : ''}
+                  ${c.twitterUrl ? `<a class="biz-link-item" href="#" onclick="openTab('${escapeAttr(c.twitterUrl)}'); return false;">𝕏 Twitter</a>` : ''}
+                  ${c.email ? `<a class="biz-link-item" href="mailto:${escapeAttr(c.email)}">@ Email</a>` : ''}
+                  ${!c.linkedinUrl && !c.githubUrl && !c.twitterUrl && !c.email ? '<span style="font-size:10.5px; color:#64748b;">No contact links saved</span>' : ''}
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div class="biz-footer">
+                <span>${target.lastContacted ? `Contacted ${target.lastContacted}` : `Added ${target.dateAdded || 'recently'}`}</span>
+                <div class="biz-actions">
+                  <button class="biz-flip-btn" type="button" onclick="flipCard('${target.id}', event)" title="Flip card">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    <span>Flip</span>
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="openEditModal('${target.id}'); event.stopPropagation();" type="button" title="Edit target">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteTarget('${target.id}'); event.stopPropagation();" type="button" title="Delete target">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
                 </div>
               </div>
             </div>
-            <div>
-              <select class="status-select" onchange="updateTargetStatus('${target.id}', this.value)">
-                <option value="Targeted" ${target.status === 'Targeted' ? 'selected' : ''}>Targeted</option>
-                <option value="Contact Identified" ${target.status === 'Contact Identified' ? 'selected' : ''}>Contact Identified</option>
-                <option value="Drafted" ${target.status === 'Drafted' || target.status === 'Angle Drafted' ? 'selected' : ''}>Drafted</option>
-                <option value="Contacted" ${target.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
-                <option value="In Conversation" ${target.status === 'In Conversation' ? 'selected' : ''}>In Conversation</option>
-                <option value="Archived" ${target.status === 'Archived' ? 'selected' : ''}>Archived</option>
-              </select>
-            </div>
-          </div>
 
-          <!-- Persona Box -->
-          <div class="persona-box">
-            <div class="persona-avatar">${contactInitials}</div>
-            <div class="persona-info">
-              <div class="persona-name">${c.name ? escapeHtml(c.name) : '<span style="color:#6e7681; font-weight:normal; font-style:italic;">No contact identified yet</span>'}</div>
-              <div class="persona-title">${c.title ? escapeHtml(c.title) : 'Target Role'}</div>
-              <div class="persona-links">
-                ${c.linkedinUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.linkedinUrl)}'); return false;">in LinkedIn</a>` : ''}
-                ${c.githubUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.githubUrl)}'); return false;">gh GitHub</a>` : ''}
-                ${c.twitterUrl ? `<a class="persona-link-btn" href="#" onclick="openTab('${escapeAttr(c.twitterUrl)}'); return false;">X</a>` : ''}
-                ${c.email ? `<a class="persona-link-btn" href="mailto:${escapeAttr(c.email)}">@ Email</a>` : ''}
-                ${!c.linkedinUrl && !c.githubUrl && !c.twitterUrl && !c.email ? '<span style="font-size:10.5px; color:#6e7681;">No links saved</span>' : ''}
+            <!-- BACK FACE (Outreach Message & Notes) -->
+            <div class="card-face card-back">
+              <div class="back-header">
+                <div class="back-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <span>Outreach & Notes</span>
+                </div>
+                <div class="back-header-actions">
+                  <button class="biz-flip-btn" type="button" onclick="flipCard('${target.id}', event)" title="Flip card to front">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    <span>Flip</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Combined Outreach Message & Value Alignment Box -->
-          ${(target.draftMessage || target.valueAngle) ? `
-            <div class="message-box">
-              <div class="message-header">
-                <span style="font-weight:600; color:#60a5fa; display:flex; align-items:center; gap:5px;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                  <span>Outreach Message & Value Alignment</span>
-                </span>
-                <button class="btn-copy-msg" onclick="copyMessage('${target.id}', this)" type="button" style="display:inline-flex; align-items:center; gap:4px;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  <span>Copy</span>
-                </button>
+              <!-- Outreach Message Area with Corner Copy Icon -->
+              <div class="back-field-wrap">
+                <div class="back-field-label-row">
+                  <span>Outreach Message</span>
+                  <span id="msg-status-${target.id}" class="field-save-status">Saved</span>
+                </div>
+                <div class="textarea-corner-wrap">
+                  <textarea class="back-msg-input" placeholder="Draft your customized value alignment and outreach note..." oninput="handleMsgInput('${target.id}', this.value, 'msg-status-${target.id}')" onclick="event.stopPropagation()">${escapeHtml(target.draftMessage || target.valueAngle || '')}</textarea>
+                  <button class="corner-copy-btn" onclick="copyField('${target.id}', 'message', this); event.stopPropagation();" type="button" title="Copy outreach message">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
               </div>
-              <div class="message-text" id="msgText-${target.id}" onclick="toggleMessageExpand('${target.id}')" title="Click to expand/collapse">${escapeHtml(target.draftMessage || target.valueAngle)}</div>
-            </div>
-          ` : `
-            <div class="angle-box" style="border-left-color:#484f58; background:rgba(255,255,255,0.03); color:#8b949e;">
-              <div class="angle-label" style="color:#8b949e; display:flex; align-items:center; gap:4px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                <span>Outreach Message</span>
-              </div>
-              <span style="font-style:italic;">No outreach message or alignment angle drafted yet. Click Edit to craft how your background provides value.</span>
-            </div>
-          `}
 
-          <!-- Footer -->
-          <div class="card-footer">
-            <span>${target.lastContacted ? `Contacted ${target.lastContacted}` : `Added ${target.dateAdded || 'recently'}`}</span>
-            <div class="card-actions">
-              <button class="btn btn-secondary btn-sm" onclick="openEditModal('${target.id}')" type="button" style="display:inline-flex; align-items:center; gap:4px;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                <span>Edit</span>
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteTarget('${target.id}')" type="button" title="Delete target" style="display:inline-flex; align-items:center; justify-content:center;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-              </button>
+              <!-- Notes Area with Corner Copy Icon -->
+              <div class="back-field-wrap">
+                <div class="back-field-label-row">
+                  <span>Roster Notes</span>
+                  <span id="note-status-${target.id}" class="field-save-status">Saved</span>
+                </div>
+                <div class="textarea-corner-wrap">
+                  <textarea class="back-notes-input" placeholder="Quick notes, mutual contacts, follow-up timeline..." oninput="handleNoteInput('${target.id}', this.value, 'note-status-${target.id}')" onclick="event.stopPropagation()">${escapeHtml(target.notes || '')}</textarea>
+                  <button class="corner-copy-btn" onclick="copyField('${target.id}', 'notes', this); event.stopPropagation();" type="button" title="Copy notes">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -1251,7 +1582,7 @@
           companyName: 'Vercel',
           industry: 'Cloud Infrastructure / Developer Experience',
           websiteUrl: 'https://vercel.com',
-          status: 'Contact Identified',
+          status: 'Contacted',
           contact: {
             name: 'Jordan Rivera',
             title: 'VP of Developer Experience',
@@ -1260,18 +1591,18 @@
             githubUrl: 'https://github.com',
             twitterUrl: 'https://x.com'
           },
-          valueAngle: 'Core Web Vitals optimization and large-scale frontend monorepo architecture. Directly addresses developer experience and enterprise speed needs.',
+          valueAngle: '',
           draftMessage: 'Hi Jordan — loved your recent talk on edge-rendered frontend architectures. Having led platform initiatives that improved Core Web Vitals across high-scale applications and unified multiple apps into streamlined monorepos, I\'m deeply tuned into the performance challenges fast-moving engineering teams face.',
-          notes: 'Connected on LinkedIn; drafting outreach note.',
+          notes: 'Connected on LinkedIn; sent note regarding edge runtime and asset bundle sizes.',
           dateAdded: new Date().toLocaleDateString(),
-          lastContacted: ''
+          lastContacted: new Date().toLocaleDateString()
         },
         {
           id: `sample-2`,
           companyName: 'Linear',
           industry: 'Developer Tools / Issue Tracking',
           websiteUrl: 'https://linear.app',
-          status: 'Drafted',
+          status: 'Targeted',
           contact: {
             name: 'Taylor Morgan',
             title: 'Head of Product Engineering',
@@ -1280,9 +1611,9 @@
             githubUrl: 'https://github.com',
             twitterUrl: 'https://x.com'
           },
-          valueAngle: 'Real-time client synchronization, desktop performance engineering, and keyboard-first workflow design.',
+          valueAngle: '',
           draftMessage: 'Hi Taylor — huge admirer of Linear\'s local-first sync architecture and client performance focus. Having led initiatives modernizing desktop web clients and optimizing frontend asset delivery, I\'d love to share some insights on desktop runtime performance if you\'re ever open to a brief chat.',
-          notes: 'Researched via their blog post on synced SQLite state. Reached out on LinkedIn.',
+          notes: 'Researched via their blog post on synced SQLite state.',
           dateAdded: new Date().toLocaleDateString(),
           lastContacted: ''
         }

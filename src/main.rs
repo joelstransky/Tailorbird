@@ -14,10 +14,9 @@ use tao::{
 
 #[cfg(target_os = "windows")]
 use tao::platform::windows::WindowExtWindows;
-use wry::{
-    NewWindowResponse, PageLoadEvent, Rect, WebView, WebViewBuilder, WebViewBuilderExtWindows,
-    WebViewExtWindows,
-};
+use wry::{NewWindowResponse, PageLoadEvent, Rect, WebView, WebViewBuilder};
+#[cfg(target_os = "windows")]
+use wry::{WebViewBuilderExtWindows, WebViewExtWindows};
 
 use crate::autofill::{generate_autofill_script, generate_context_menu_script, CandidateProfile};
 use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
@@ -568,8 +567,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(target_os = "windows")]
     let hwnd_raw = window.hwnd() as isize;
-    #[cfg(not(target_os = "windows"))]
-    let hwnd_raw = 0isize;
 
     // Load persisted app data to restore split width if available
     let initial_app_data = load_stored_data();
@@ -685,8 +682,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_ipc = proxy_for_left.clone();
             let left_w_holder = left_width_for_ipc.clone();
             let toolbar_for_left = toolbar_for_left_ipc.clone();
+            #[cfg(target_os = "windows")]
             let win_sz_for_ipc = window_size_holder.clone();
+            #[cfg(target_os = "windows")]
             let sf_for_ipc = scale_factor_for_ipc.clone();
+            #[cfg(target_os = "windows")]
             let hwnd_for_ipc = hwnd_raw;
 
             move |req| {
@@ -851,15 +851,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         });
                     }
                     Ok(IpcMessage::StartResize) => {
-                        let proxy_resize = proxy_ipc.clone();
-                        let win_sz_h = win_sz_for_ipc.clone();
-                        let left_w_h = left_w_holder.clone();
-                        let sf_h = sf_for_ipc.clone();
-                        let hwnd_isize = hwnd_for_ipc;
+                        #[cfg(target_os = "windows")]
+                        {
+                            let proxy_resize = proxy_ipc.clone();
+                            let win_sz_h = win_sz_for_ipc.clone();
+                            let left_w_h = left_w_holder.clone();
+                            let sf_h = sf_for_ipc.clone();
+                            let hwnd_isize = hwnd_for_ipc;
 
-                        std::thread::spawn(move || {
-                            #[cfg(target_os = "windows")]
-                            {
+                            std::thread::spawn(move || {
                                 use windows_sys::Win32::Foundation::POINT;
                                 use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
                                 use windows_sys::Win32::UI::WindowsAndMessaging::GetCursorPos;
@@ -897,8 +897,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 let mut data = load_stored_data();
                                 data.split_width = Some(cur_w);
                                 let _ = save_stored_data(&data);
-                            }
-                        });
+                            });
+                        }
                     }
                     Ok(IpcMessage::SetLeftWidth { width }) => {
                         let _ = proxy_ipc.send_event(AppEvent::SetLeftWidth { width });
@@ -976,13 +976,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build_as_child(&window)?;
 
     // Share WebView2 environment on Windows across all webviews
+    #[cfg(target_os = "windows")]
     let shared_env = left_webview.environment();
 
     let initial_right_width = (DEFAULT_WINDOW_WIDTH - initial_left_width).max(0.0);
 
     // 2. Initialize Browser Toolbar (Tabs Strip, Back, Forward, Reload, Home, Omnibar)
-    let toolbar_webview = WebViewBuilder::new()
-        .with_environment(shared_env.clone())
+    let mut toolbar_builder = WebViewBuilder::new();
+    #[cfg(target_os = "windows")]
+    {
+        toolbar_builder = toolbar_builder.with_environment(shared_env.clone());
+    }
+    let toolbar_webview = toolbar_builder
         .with_bounds(Rect {
             position: Position::Logical(LogicalPosition::new(initial_left_width, 0.0)),
             size: Size::Logical(LogicalSize::new(initial_right_width, TOOLBAR_HEIGHT)),
@@ -1037,6 +1042,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Tab WebView Factory Closure
     let make_tab_webview = {
+        #[cfg(target_os = "windows")]
         let shared_env = shared_env.clone();
         let tab_init_script = format!("{}\n{}", initial_context_script, WINDOW_HOOKS_SCRIPT);
         let proxy = proxy.clone();
@@ -1054,8 +1060,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let left_h = left_holder.clone();
             let toolbar_h = toolbar_holder.clone();
 
-            let builder = WebViewBuilder::new()
-                .with_environment(shared_env.clone())
+            let mut builder = WebViewBuilder::new();
+            #[cfg(target_os = "windows")]
+            {
+                builder = builder.with_environment(shared_env.clone());
+            }
+            let builder = builder
                 .with_bounds(bounds)
                 .with_visible(visible)
                 .with_devtools(true)

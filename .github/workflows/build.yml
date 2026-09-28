@@ -1,0 +1,91 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os-name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            os-name: Windows
+            binary-name: tailorbird.exe
+            asset-name: tailorbird-windows-x86_64.exe
+          - os: ubuntu-22.04
+            os-name: Linux (Ubuntu x86_64)
+            binary-name: tailorbird
+            asset-name: tailorbird-linux-x86_64
+          - os: macos-latest
+            os-name: macOS (Apple Silicon)
+            binary-name: tailorbird
+            asset-name: tailorbird-macos-arm64
+          - os: macos-13
+            os-name: macOS (Intel)
+            binary-name: tailorbird
+            asset-name: tailorbird-macos-x86_64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cargo build (Release)
+        run: cargo build --release
+
+      - name: Stage Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item target/release/${{ matrix.binary-name }} -Destination ${{ matrix.asset-name }}
+
+      - name: Stage Unix binary
+        if: runner.os != 'Windows'
+        run: |
+          cp target/release/${{ matrix.binary-name }} ${{ matrix.asset-name }}
+          chmod +x ${{ matrix.asset-name }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset-name }}
+          path: ${{ matrix.asset-name }}
+
+      - name: Create or update draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset-name }}
+          draft: true
+          generate_release_notes: true

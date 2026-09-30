@@ -1247,15 +1247,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         size: Size::Logical(LogicalSize::new(right_width, target_height)),
                     };
 
-                    // If requesting a local page and it is already open, focus the existing tab instead of creating duplicates
-                    let is_local_page = formatted_url.starts_with("local://");
-                    let already_open_id = if is_local_page {
+                    // Only deduplicate singleton local utility pages (Outreach Roster and Settings).
+                    // The test form and standard web pages are never deduplicated so that
+                    // the new tab (+) button always creates a new tab unconditionally.
+                    let is_singleton_page = formatted_url == "local://hitlist"
+                        || formatted_url == "local://roster"
+                        || formatted_url == "local://settings";
+                    let already_open_id = if is_singleton_page {
                         let tabs = tabs_holder.lock().unwrap();
                         tabs.iter().find(|t| {
-                            t.url == formatted_url
-                                || ((formatted_url == "local://hitlist" || formatted_url == "local://roster") && (t.url == "local://hitlist" || t.url == "local://roster" || t.title.contains("Roster")))
+                            ((formatted_url == "local://hitlist" || formatted_url == "local://roster") && (t.url == "local://hitlist" || t.url == "local://roster" || t.title.contains("Roster")))
                                 || (formatted_url == "local://settings" && (t.url == "local://settings" || t.title.contains("Settings")))
-                                || (formatted_url == "local://mock" && (t.url == "local://mock" || t.title.contains("Mock")))
                         }).map(|t| t.id)
                     } else {
                         None

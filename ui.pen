@@ -2564,6 +2564,298 @@
           "strokeLinecap": "round"
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "ws_page_artboard",
+      "name": "Welcome Screen (New Tab Page)",
+      "x": -100,
+      "y": -4092,
+      "width": 1024,
+      "height": 768,
+      "clip": true,
+      "fill": "#0B0D13",
+      "stroke": "#1E222D",
+      "strokeWidth": 1,
+      "cornerRadius": 12,
+      "layout": "vertical",
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "padding": [
+        32,
+        40
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "ws_top_spacer",
+          "name": "Top Spacer",
+          "height": 32,
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "ws_center_content",
+          "name": "Centered Content Group",
+          "layout": "vertical",
+          "alignItems": "center",
+          "gap": 28,
+          "children": [
+            {
+              "type": "frame",
+              "id": "ws_logo_block",
+              "name": "Logo and Brand",
+              "layout": "vertical",
+              "alignItems": "center",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ws_logo_emblem",
+                  "name": "Tailorbird Logo Emblem",
+                  "width": 76,
+                  "height": 76,
+                  "fill": "#0F172A",
+                  "cornerRadius": 20,
+                  "stroke": "#38BDF8",
+                  "strokeWidth": 2,
+                  "effect": [
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#38BDF820",
+                      "offset": {
+                        "x": 0,
+                        "y": 8
+                      },
+                      "blur": 32
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#818CF815",
+                      "offset": {
+                        "x": 0,
+                        "y": 2
+                      },
+                      "blur": 8
+                    }
+                  ],
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "ws_logo_legs",
+                      "name": "Bird Legs",
+                      "x": 6,
+                      "y": 6,
+                      "geometry": "M29 41v5.5M35 40.5V46",
+                      "stroke": "#818CF8",
+                      "strokeWidth": 3.5,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "path",
+                      "id": "ws_logo_body",
+                      "name": "Bird Body",
+                      "x": 6,
+                      "y": 6,
+                      "geometry": "M17.5 41h14.5a12 12 0 0 0 12-12v-4.5a6 6 0 0 0-10.9-3.5L15.5 41",
+                      "stroke": "#818CF8",
+                      "strokeWidth": 3.5,
+                      "strokeLinecap": "round",
+                      "strokeLinejoin": "round",
+                      "fill": "#818CF826"
+                    },
+                    {
+                      "type": "path",
+                      "id": "ws_logo_beak",
+                      "name": "Bird Beak",
+                      "x": 6,
+                      "y": 6,
+                      "geometry": "M44 24.5l4 .8-4 .8",
+                      "stroke": "#38BDF8",
+                      "strokeWidth": 3.5,
+                      "strokeLinecap": "round",
+                      "strokeLinejoin": "round"
+                    },
+                    {
+                      "type": "path",
+                      "id": "ws_logo_wing",
+                      "name": "Bird Wing",
+                      "x": 6,
+                      "y": 6,
+                      "geometry": "M24.5 41a9 9 0 0 0 5.8-15.9",
+                      "stroke": "#38BDF8",
+                      "strokeWidth": 3.5,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "ws_logo_eye",
+                      "name": "Bird Eye",
+                      "x": 42,
+                      "y": 28.5,
+                      "width": 5,
+                      "height": 5,
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ws_brand_name",
+                  "name": "Tailorbird Wordmark",
+                  "content": "Tailorbird",
+                  "fontFamily": "Inter",
+                  "fontSize": 22,
+                  "fontWeight": "bold",
+                  "fill": "#F8FAFC"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ws_message_group",
+              "name": "Encouragement Message",
+              "layout": "vertical",
+              "alignItems": "center",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ws_enc_title",
+                  "name": "Headline",
+                  "content": "Ready when you are.",
+                  "fontFamily": "Inter",
+                  "fontSize": 28,
+                  "fontWeight": "600",
+                  "fill": "#FFFFFF",
+                  "textAlign": "center"
+                },
+                {
+                  "type": "text",
+                  "id": "ws_enc_body",
+                  "name": "Encouragement Body",
+                  "content": "Every application is an opportunity. Take a breath, prepare your profile, and apply with confidence.",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "fill": "#94A3B8",
+                  "textAlign": "center"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ws_test_form_pill",
+              "name": "Test Form Note and Link",
+              "layout": "horizontal",
+              "alignItems": "center",
+              "gap": 12,
+              "padding": [
+                12,
+                20
+              ],
+              "cornerRadius": 12,
+              "fill": "#131726",
+              "stroke": "#22283C",
+              "strokeWidth": 1,
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ws_tf_ico",
+                  "name": "Sparkles Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "sparkles",
+                  "library": "lucide",
+                  "fill": "#38BDF8"
+                },
+                {
+                  "type": "text",
+                  "id": "ws_tf_note_txt",
+                  "name": "Test Form Note",
+                  "content": "Want to test autofill or preview candidate data?",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal",
+                  "fill": "#CBD5E1"
+                },
+                {
+                  "type": "frame",
+                  "id": "ws_tf_btn_link",
+                  "name": "Test Form Link",
+                  "layout": "horizontal",
+                  "alignItems": "center",
+                  "gap": 5,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ws_tf_link_label",
+                      "name": "Link Text",
+                      "content": "Open Test Form",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600",
+                      "fill": "#818CF8"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "ws_tf_arrow_ico",
+                      "name": "Arrow Icon",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "#818CF8"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ws_sticky_footer",
+          "name": "Sticky Footer",
+          "width": "fill_container",
+          "height": 40,
+          "layout": "horizontal",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ws_ver_badge",
+              "name": "Version Badge (Lower Left)",
+              "layout": "horizontal",
+              "alignItems": "center",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "ws_ver_dot",
+                  "name": "Online Indicator Dot",
+                  "width": 6,
+                  "height": 6,
+                  "fill": "#10B981"
+                },
+                {
+                  "type": "text",
+                  "id": "ws_ver_label",
+                  "name": "Version Text",
+                  "content": "v0.1.0",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500",
+                  "fill": "#64748B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "fileToken": "cb043919-a82c-47c2-99f8-da8fe69c6200"

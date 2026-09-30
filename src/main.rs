@@ -37,6 +37,7 @@ const TOOLBAR_HTML: &str = include_str!("assets/toolbar.html");
 const MOCK_JOB_HTML: &str = include_str!("assets/mock_job_page.html");
 const HITLIST_HTML: &str = include_str!("assets/hitlist.html");
 const SETTINGS_HTML: &str = include_str!("assets/settings.html");
+const WELCOME_HTML: &str = include_str!("assets/welcome.html");
 
 fn prepare_settings_html(primary_color: &str) -> String {
     let color_json = serde_json::to_string(primary_color).unwrap_or_else(|_| "\"#818CF8\"".to_string());
@@ -1028,7 +1029,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let _ = proxy_tb.send_event(AppEvent::CloseTab { id });
                     }
                     Ok(IpcMessage::NewTab { url }) => {
-                        let target_url = url.unwrap_or_else(|| "local://mock".to_string());
+                        let target_url = url
+                            .filter(|u| !u.trim().is_empty() && u.trim() != "about:blank")
+                            .unwrap_or_else(|| "local://welcome".to_string());
                         let _ = proxy_tb.send_event(AppEvent::CreateTab {
                             url: target_url,
                             activate: true,
@@ -1051,6 +1054,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
+            let is_welcome = url == "local://welcome";
             let is_hitlist = url == "local://hitlist" || url == "local://roster";
             let is_settings = url == "local://settings";
             let proxy_title = proxy.clone();
@@ -1159,6 +1163,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let webview = if is_mock {
                 builder.with_html(MOCK_JOB_HTML).build_as_child(win)?
+            } else if is_welcome {
+                builder.with_html(WELCOME_HTML).build_as_child(win)?
             } else if is_hitlist {
                 builder.with_html(HITLIST_HTML).build_as_child(win)?
             } else if is_settings {
@@ -1194,18 +1200,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // 4. Create Initial Tab (Mock Job Page)
+    // 4. Create Initial Tab (Welcome Page)
     let initial_target_height = (DEFAULT_WINDOW_HEIGHT - TOOLBAR_HEIGHT).max(0.0);
     let initial_bounds = Rect {
         position: Position::Logical(LogicalPosition::new(initial_left_width, TOOLBAR_HEIGHT)),
         size: Size::Logical(LogicalSize::new(initial_right_width, initial_target_height)),
     };
 
-    let initial_tab_wv = make_tab_webview(&window, 1, "local://mock", initial_bounds, true)?;
+    let initial_tab_wv = make_tab_webview(&window, 1, "local://welcome", initial_bounds, true)?;
     let initial_tab = BrowserTab {
         id: 1,
-        title: "Tailorbird Mock Job Listing".to_string(),
-        url: "local://mock".to_string(),
+        title: "Welcome".to_string(),
+        url: "local://welcome".to_string(),
         webview: initial_tab_wv,
         is_search: false,
     };
@@ -1223,7 +1229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Sync initial tabs & omnibar to toolbar
     sync_tabs(&toolbar_wv_holder, &tabs_holder.lock().unwrap(), 1);
-    sync_url(&toolbar_wv_holder, "local://mock");
+    sync_url(&toolbar_wv_holder, "local://welcome");
 
     println!("[Tailorbird] All panes, multi-tab manager, and browser toolbar ready! Event loop running.");
 
@@ -1308,7 +1314,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         match make_tab_webview(&window, new_id, &formatted_url, bounds, activate) {
                             Ok(wv) => {
-                                let initial_title = if formatted_url == "local://mock" {
+                                let initial_title = if formatted_url == "local://welcome" {
+                                    "Welcome".to_string()
+                                } else if formatted_url == "local://mock" {
                                     "Tailorbird Test Bench".to_string()
                                 } else if formatted_url == "local://hitlist" || formatted_url == "local://roster" {
                                     "Outreach Roster".to_string()
@@ -1378,15 +1386,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let mut tabs = tabs_holder.lock().unwrap();
                     if tabs.len() <= 1 {
                         let single_id = if let Some(t) = tabs.first_mut() {
-                            let _ = t.webview.load_html(MOCK_JOB_HTML);
-                            t.url = "local://mock".to_string();
-                            t.title = "Tailorbird Mock Job Listing".to_string();
+                            let _ = t.webview.load_html(WELCOME_HTML);
+                            t.url = "local://welcome".to_string();
+                            t.title = "Welcome".to_string();
                             t.is_search = false;
                             t.id
                         } else {
                             1
                         };
-                        sync_url(&toolbar_wv_holder, "local://mock");
+                        sync_url(&toolbar_wv_holder, "local://welcome");
                         sync_tabs(&toolbar_wv_holder, &tabs, single_id);
                         return;
                     }
@@ -1481,7 +1489,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if formatted.starts_with("local://") || (!formatted.contains("google.com/search") && !formatted.contains("bing.com/search") && !formatted.contains("duckduckgo.com")) {
                             tab.is_search = false;
                         }
-                        if formatted == "local://mock" {
+                        if formatted == "local://welcome" {
+                            let _ = tab.webview.load_html(WELCOME_HTML);
+                            tab.url = "local://welcome".to_string();
+                            tab.title = "Welcome".to_string();
+                        } else if formatted == "local://mock" {
                             let _ = tab.webview.load_html(MOCK_JOB_HTML);
                             tab.url = "local://mock".to_string();
                             tab.title = "Tailorbird Mock Job Listing".to_string();
@@ -1725,7 +1737,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn format_input_to_url(input: &str) -> String {
     let trimmed = input.trim();
-    if trimmed.is_empty() || trimmed == "local://mock" {
+    if trimmed.is_empty() || trimmed == "about:blank" || trimmed == "local://welcome" || trimmed.eq_ignore_ascii_case("welcome") {
+        return "local://welcome".to_string();
+    }
+    if trimmed == "local://mock" || trimmed.eq_ignore_ascii_case("mock") || trimmed.eq_ignore_ascii_case("test") {
         return "local://mock".to_string();
     }
     if trimmed == "local://roster" || trimmed == "local://hitlist" || trimmed.eq_ignore_ascii_case("roster") || trimmed.eq_ignore_ascii_case("hitlist") {

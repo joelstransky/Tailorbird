@@ -20,7 +20,6 @@
       --text-sub: #CBD5E1;
       --accent-purple: #818CF8;
       --accent-blue: #38BDF8;
-      --accent-green: #10B981;
       --footer-text: #64748B;
     }
 
@@ -40,7 +39,7 @@
     /* Subtle atmospheric radial glow in background */
     .bg-glow {
       position: fixed;
-      top: 30%;
+      top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 680px;
@@ -59,7 +58,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 24px 80px 24px;
+      padding: 40px 24px 60px 24px;
       max-width: 820px;
       margin: 0 auto;
       text-align: center;
@@ -108,35 +107,35 @@
       color: #F8FAFC;
     }
 
+    /* Centered Content Frame */
+    .content-frame {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      max-width: 640px;
+    }
+
     /* Inspirational Message Group */
     .message-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 32px;
-      max-width: 640px;
+      gap: 12px;
+      max-width: 580px;
     }
 
-    .message-headline {
-      font-size: 26px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.35;
-      color: #FFFFFF;
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.3s ease;
-    }
-
-    .message-subtext {
+    .message-body {
       font-size: 14px;
       font-weight: 400;
       line-height: 1.6;
       color: var(--text-muted);
-      max-width: 520px;
+      text-align: center;
+      transition: opacity 0.25s ease;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Test Form Callout Pill */
@@ -163,13 +162,6 @@
 
     .test-form-pill:active {
       transform: translateY(0);
-    }
-
-    .pill-icon {
-      color: var(--accent-blue);
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .pill-text {
@@ -199,30 +191,14 @@
       transform: translateX(3px);
     }
 
-    /* Refresh button subtle trigger */
-    .refresh-hint {
-      margin-top: 18px;
-      font-size: 11px;
-      color: #475569;
-      cursor: pointer;
-      transition: color 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .refresh-hint:hover {
-      color: #94A3B8;
-    }
-
     /* Sticky Footer */
     .sticky-footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 44px;
-      padding: 0 28px;
+      height: 40px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -238,14 +214,6 @@
       gap: 8px;
     }
 
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: var(--accent-green);
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-    }
-
     .version-text {
       font-size: 12px;
       font-weight: 500;
@@ -256,17 +224,29 @@
 </head>
 <body>
 
+  <!-- Ambient Glow -->
   <div class="bg-glow"></div>
 
+  <!-- Main Container -->
   <main class="welcome-container">
-    
-    <!-- Centered Logo & Brand -->
+
+    <!-- Tailorbird Logo & Brand Wordmark -->
     <div class="brand-block">
-      <div class="logo-emblem" title="Tailorbird">
+      <div class="logo-emblem">
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M29 41v5.5M35 40.5V46" stroke="#818CF8" stroke-width="3.5" stroke-linecap="round"/>
-          <path d="M17.5 41h14.5a12 12 0 0 0 12-12v-4.5a6 6 0 0 0-10.9-3.5L15.5 41" stroke="#818CF8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="#818CF8" fill-opacity="0.2"/>
-          <path d="M44 24.5l4 .8-4 .8" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Stylized Tailorbird Origami Crest -->
+          <path d="M14 44L28 20L42 34L28 48Z" fill="#38BDF8" fill-opacity="0.18"/>
+          <path d="M28 20L48 24L38 40L28 20Z" fill="#818CF8" fill-opacity="0.25"/>
+          <path d="M16 42C24 42 32 36 38 28C42 22.7 49 18 53 17C50.5 22.5 47 29 42 35C36 42.5 27 48 16 48L16 42Z" fill="url(#tailorbirdGrad)"/>
+          <defs>
+            <linearGradient id="tailorbirdGrad" x1="16" y1="17" x2="53" y2="48" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#38BDF8"/>
+              <stop offset="1" stop-color="#818CF8"/>
+            </linearGradient>
+          </defs>
+          <!-- Needle / Eye element -->
+          <circle cx="43" cy="22" r="2.8" fill="#FFFFFF"/>
+          <path d="M43 22L54 16" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
           <path d="M24.5 41a9 9 0 0 0 5.8-15.9" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round"/>
           <circle cx="38" cy="24.5" r="2.2" fill="#FFFFFF"/>
         </svg>
@@ -274,43 +254,26 @@
       <h1 class="brand-title">Tailorbird</h1>
     </div>
 
-    <!-- Message of Encouragement -->
-    <div class="message-group">
-      <div class="message-headline" id="inspirationalHeadline">
-        "Your worth is not defined by an automated rejection. Keep going."
+    <!-- Center Content Frame -->
+    <div class="content-frame">
+      <!-- Message of Encouragement -->
+      <div class="message-group">
+        <p class="message-body" id="inspirationalBody">
+          Every application is an opportunity. Take a breath, prepare your profile, and apply with confidence.
+        </p>
       </div>
-      <p class="message-subtext">
-        Searching for the right opportunity is demanding work. Take a deep breath, be proud of your persistence, and take it one day at a time.
-      </p>
-    </div>
 
-    <!-- Note about Test Form with Action Link -->
-    <a href="local://mock" class="test-form-pill" id="btnTestForm" title="Open the Tailorbird Test Bench">
-      <div class="pill-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-          <path d="M5 3v4"/>
-          <path d="M19 17v4"/>
-          <path d="M3 5h4"/>
-          <path d="M17 19h4"/>
-        </svg>
-      </div>
-      <span class="pill-text">Want to test autofill or preview candidate data?</span>
-      <span class="pill-action">
-        Open Test Form
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </span>
-    </a>
-
-    <!-- Subtle click to shuffle message -->
-    <div class="refresh-hint" id="btnNewPhrase" title="Get another thought for the day">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-      </svg>
-      <span>New reminder</span>
+      <!-- Note about Test Form with Action Link -->
+      <a href="local://mock" class="test-form-pill" id="btnTestForm" title="Open the Tailorbird Test Bench">
+        <span class="pill-text">Want to test autofill or preview candidate data?</span>
+        <span class="pill-action">
+          Open Test Form
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </span>
+      </a>
     </div>
 
   </main>
@@ -318,35 +281,34 @@
   <!-- Sticky Footer -->
   <footer class="sticky-footer">
     <div class="footer-version-badge">
-      <span class="status-dot"></span>
       <span class="version-text">v0.1.0</span>
     </div>
   </footer>
 
   <script>
-    // 32 Encouraging statements for people feeling down or weary from job hunting
+    // 32 Encouraging statements for people feeling weary or discouraged by job hunting
     const INSPIRATIONAL_PHRASES = [
+      "Every application is an opportunity. Take a breath, prepare your profile, and apply with confidence.",
       "Your worth is not defined by an automated rejection email. Keep going.",
       "You only need one 'yes' to change everything. Every application brings you closer.",
-      "It is completely okay to step away and take a breath today. Your well-being comes first.",
-      "The silence from recruiters is not a reflection of your talent. The right door will open.",
-      "Progress is not always visible day to day, but every step forward counts.",
-      "You have overcome hard things before, and you will get through this season too.",
-      "Remember to be as kind to yourself as you would be to a friend going through this.",
-      "A rejection is merely redirection toward an environment where you will genuinely thrive.",
-      "Your skills, perspective, and unique experience have real value in this world.",
-      "Take it one day, one conversation, and one application at a time.",
-      "This search is a chapter in your story, not the entire book.",
-      "Do not forget how hard you have worked to get here. Be proud of your persistence.",
-      "Even slow progress is still progress. Celebrate just showing up today.",
-      "It is okay to feel tired. Rest when you need to, but do not give up on yourself.",
-      "Somewhere out there is a team that will be genuinely grateful they hired you.",
-      "Your career is a marathon with peaks and valleys. This valley is temporary.",
-      "Give yourself credit: searching for a job while keeping your head up is hard work.",
-      "You bring things to the table that can never be captured on a single sheet of paper.",
-      "Trust the timing of your life. The right opportunity often arrives when least expected.",
-      "Rejections feel deeply personal, but hiring algorithms and budget freezes rarely are.",
-      "One conversation can change the entire trajectory of your year.",
+      "Be gentle with yourself today. Job hunting is a marathon, not a sprint.",
+      "Rejection is often redirection toward a role that truly values your unique strengths.",
+      "You have accomplished difficult things before, and you will get through this season too.",
+      "Small daily steps lead to life-changing results. Celebrate showing up today.",
+      "Remember that interviewers and hiring algorithms never see your full depth and brilliance.",
+      "Your career is a lifelong story, and this is just one challenging chapter.",
+      "Rest when you need to. Rest is productive and preserves your spark.",
+      "The right team will be lucky to have your perspective, skills, and energy.",
+      "Don't let silence from employers shake your belief in what you have built.",
+      "You are learning, sharpening, and preparing for the role that will fit you best.",
+      "It is completely normal to feel tired. Acknowledge your fatigue and be kind to yourself.",
+      "One conversation can change your entire trajectory. Stay curious and open.",
+      "Your skills didn't disappear just because the market is difficult right now.",
+      "Keep your chin up. What is meant for you will not pass you by.",
+      "Every 'no' is just data. Refine, recharge, and step forward again.",
+      "You are more than your resume, your job title, or your employment status.",
+      "Give yourself credit for the courage it takes to put yourself out there again and again.",
+      "A quiet period is not a failure. Seeds grow underground before they sprout.",
       "You are more capable, resilient, and adaptable than you give yourself credit for.",
       "A company that passes on you simply didn't see what the right one will value most.",
       "Make time for fresh air, good food, and a clear mind today. You deserve care.",
@@ -360,7 +322,7 @@
       "You are worthy, you are capable, and your breakthrough is coming."
     ];
 
-    const headlineEl = document.getElementById('inspirationalHeadline');
+    const bodyEl = document.getElementById('inspirationalBody');
 
     function getRandomPhrase() {
       const randomIndex = Math.floor(Math.random() * INSPIRATIONAL_PHRASES.length);
@@ -368,24 +330,12 @@
     }
 
     function displayRandomPhrase() {
-      if (!headlineEl) return;
-      headlineEl.style.opacity = '0';
-      setTimeout(() => {
-        headlineEl.textContent = `"${getRandomPhrase()}"`;
-        headlineEl.style.opacity = '1';
-      }, 150);
+      if (!bodyEl) return;
+      bodyEl.textContent = getRandomPhrase();
     }
 
     // Set initial phrase on load
     displayRandomPhrase();
-
-    // Allow user to click refresh icon to see another phrase
-    const btnNewPhrase = document.getElementById('btnNewPhrase');
-    if (btnNewPhrase) {
-      btnNewPhrase.addEventListener('click', () => {
-        displayRandomPhrase();
-      });
-    }
 
     // IPC Link handling for Test Form
     const btnTestForm = document.getElementById('btnTestForm');
@@ -393,7 +343,6 @@
       btnTestForm.addEventListener('click', (e) => {
         e.preventDefault();
         if (window.ipc && typeof window.ipc.postMessage === 'function') {
-          // Open or navigate to local://mock
           window.ipc.postMessage(JSON.stringify({ action: 'OPEN_NEW_TAB', url: 'local://mock' }));
         } else {
           window.location.href = 'local://mock';

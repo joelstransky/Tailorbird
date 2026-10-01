@@ -1684,10 +1684,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let cur_active = *active_tab_id_holder.lock().unwrap();
                     let mut tabs = tabs_holder.lock().unwrap();
                     if let Some(tab) = tabs.iter_mut().find(|t| t.id == cur_active) {
-                        let _ = tab.webview.load_html(MOCK_JOB_HTML);
-                        tab.url = "local://mock".to_string();
-                        tab.title = "Tailorbird Mock Job Listing".to_string();
-                        sync_url(&toolbar_wv_holder, "local://mock");
+                        let _ = tab.webview.load_html(WELCOME_HTML);
+                        tab.url = "local://welcome".to_string();
+                        tab.title = "Welcome".to_string();
+                        sync_url(&toolbar_wv_holder, "local://welcome");
                     }
                     sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
                 }

@@ -1085,11 +1085,30 @@
         </div>
       </form>
     </div>
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: var(--accent-red);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Delete Outreach Target</span>
+        </div>
+        <button class="modal-close" id="btnCloseDeleteModal" type="button">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <p id="deleteConfirmMessage" style="font-size: 13px; color: var(--text); line-height: 1.5; margin: 0;">Are you sure you want to remove this target from your outreach roster?</p>
+      </div>
+      <div class="modal-footer" style="padding: 12px 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-secondary" id="btnCancelDeleteModal" type="button">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDeleteModal" type="button">Delete Target</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    /*__INITIAL_DATA__*/
     // State
-    let hitList = [];
+    let hitList = Array.isArray(window.__INITIAL_HITLIST_DATA__) ? window.__INITIAL_HITLIST_DATA__ : [];
     let currentFilter = 'all';
     let searchQuery = '';
 
@@ -1207,6 +1226,9 @@
     document.getElementById('btnOpenAddModal').addEventListener('click', openAddModal);
     document.getElementById('btnCloseModal').addEventListener('click', closeModal);
     document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
 
     function saveTargetForm() {
       const company = modalCompany.value.trim();
@@ -1249,15 +1271,56 @@
       renderCards();
     }
 
+    let pendingDeleteTargetId = null;
+    const deleteModal = document.getElementById('deleteConfirmModal');
+    const deleteMessage = document.getElementById('deleteConfirmMessage');
+
     function deleteTarget(id) {
       const target = hitList.find(t => t.id === id);
       if (!target) return;
-      if (confirm(`Remove "${target.companyName}" from your outreach roster?`)) {
-        hitList = hitList.filter(t => t.id !== id);
-        persistData();
-        renderCards();
+      pendingDeleteTargetId = id;
+      if (deleteMessage) {
+        deleteMessage.textContent = `Are you sure you want to remove "${target.companyName}" from your outreach roster? This action cannot be undone.`;
+      }
+      if (deleteModal) {
+        deleteModal.style.display = 'flex';
       }
     }
+
+    function closeDeleteModal() {
+      if (deleteModal) deleteModal.style.display = 'none';
+      pendingDeleteTargetId = null;
+    }
+
+    const btnCloseDel = document.getElementById('btnCloseDeleteModal');
+    if (btnCloseDel) btnCloseDel.addEventListener('click', closeDeleteModal);
+    const btnCancelDel = document.getElementById('btnCancelDeleteModal');
+    if (btnCancelDel) btnCancelDel.addEventListener('click', closeDeleteModal);
+    const btnConfirmDel = document.getElementById('btnConfirmDeleteModal');
+    if (btnConfirmDel) {
+      btnConfirmDel.addEventListener('click', () => {
+        if (pendingDeleteTargetId) {
+          const id = pendingDeleteTargetId;
+          hitList = hitList.filter(t => t.id !== id);
+          persistData();
+          renderCards();
+        }
+        closeDeleteModal();
+      });
+    }
+
+    if (deleteModal) {
+      deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) closeDeleteModal();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+      }
+    });
 
     function setCardStage(id, stage, event) {
       if (event) event.stopPropagation();
@@ -1504,7 +1567,7 @@
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                   </button>
                   <button class="btn btn-danger btn-sm" onclick="deleteTarget('${target.id}'); event.stopPropagation();" type="button" title="Delete target">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <svg style="pointer-events: none;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
                 </div>
               </div>
@@ -1623,6 +1686,9 @@
       persistData();
       renderCards();
     });
+
+    // Render initial cards immediately
+    renderCards();
 
     // Request data on load
     sendIpc('LOAD_HIT_LIST');

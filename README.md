@@ -56,6 +56,35 @@ Choose from multiple accent colors to personalize your workspace.
 
 ---
 
+## Keyboard Shortcuts
+
+Tailorbird supports standard desktop browser navigation and specialized job-hunting shortcuts:
+
+### Tab Management & Navigation
+
+| Action | macOS | Windows / Linux |
+| :--- | :--- | :--- |
+| **New Tab** | <kbd>Cmd</kbd> + <kbd>T</kbd> | <kbd>Ctrl</kbd> + <kbd>T</kbd> |
+| **Close Tab** | <kbd>Cmd</kbd> + <kbd>W</kbd> | <kbd>Ctrl</kbd> + <kbd>W</kbd> |
+| **Focus Address Bar (Omnibar)** | <kbd>Cmd</kbd> + <kbd>L</kbd> | <kbd>Ctrl</kbd> + <kbd>L</kbd> |
+| **Reload Tab** | <kbd>Cmd</kbd> + <kbd>R</kbd> | <kbd>Ctrl</kbd> + <kbd>R</kbd> / <kbd>F5</kbd> |
+| **Back in History** | <kbd>Cmd</kbd> + <kbd>[</kbd> | <kbd>Alt</kbd> + <kbd>←</kbd> |
+| **Forward in History** | <kbd>Cmd</kbd> + <kbd>]</kbd> | <kbd>Alt</kbd> + <kbd>→</kbd> |
+| **Next Tab** | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> |
+| **Previous Tab** | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> |
+| **Switch to Tab (1–9)** | <kbd>Cmd</kbd> + <kbd>1</kbd> – <kbd>9</kbd> | <kbd>Ctrl</kbd> + <kbd>1</kbd> – <kbd>9</kbd> |
+
+### Tailorbird Actions
+
+| Action | macOS | Windows / Linux |
+| :--- | :--- | :--- |
+| **Record Listing to Prospects** | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> |
+| **Dismiss Dialogs / Cancel Edit** | <kbd>Esc</kbd> | <kbd>Esc</kbd> |
+| **Save In-Line Row Edit** | <kbd>Enter</kbd> | <kbd>Enter</kbd> |
+| **Standard Text Operations** (Copy / Paste / Undo / Select All) | <kbd>Cmd</kbd> + <kbd>C</kbd> / <kbd>V</kbd> / <kbd>Z</kbd> / <kbd>A</kbd> | <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>V</kbd> / <kbd>Z</kbd> / <kbd>A</kbd> |
+
+---
+
 ## Building and Running
 
 ### Prerequisites

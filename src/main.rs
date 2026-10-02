@@ -47,6 +47,14 @@ fn prepare_settings_html(primary_color: &str) -> String {
     )
 }
 
+fn prepare_hitlist_html(targets: &[crate::prospect::HitListTarget]) -> String {
+    let data_json = serde_json::to_string(targets).unwrap_or_else(|_| "[]".to_string());
+    HITLIST_HTML.replace(
+        "/*__INITIAL_DATA__*/",
+        &format!("window.__INITIAL_HITLIST_DATA__ = {};", data_json),
+    )
+}
+
 #[cfg(target_os = "macos")]
 fn setup_macos_menu() {
     use muda::{Menu, PredefinedMenuItem, Submenu};
@@ -1235,6 +1243,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
         let toolbar_holder = toolbar_wv_holder.clone();
+        let tabs_factory_holder = tabs_holder.clone();
 
         move |win: &tao::window::Window, tab_id: usize, url: &str, bounds: Rect, visible: bool| -> Result<WebView, Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
@@ -1247,6 +1256,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_ipc = proxy.clone();
             let left_h = left_holder.clone();
             let toolbar_h = toolbar_holder.clone();
+            let tabs_h = tabs_factory_holder.clone();
 
             let mut builder = WebViewBuilder::new();
             #[cfg(target_os = "windows")]
@@ -1334,6 +1344,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     eprintln!("[Tailorbird Host] Error saving outreach roster: {}", e);
                                 } else {
                                     println!("[Tailorbird Host] Successfully saved {} outreach roster targets.", data.hit_list.len());
+                                    let count = data.hit_list.len();
+                                    if let Ok(guard) = left_h.lock() {
+                                        if let Some(ref left_wv) = *guard {
+                                            let js = format!("if (window.updateHitListCount) {{ window.updateHitListCount({}); }}", count);
+                                            let _ = left_wv.evaluate_script(&js);
+                                        }
+                                    }
+                                }
+                            }
+                            Ok(IpcMessage::LoadHitList) => {
+                                let stored = load_stored_data();
+                                let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                                let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
+                                if let Ok(guard) = tabs_h.lock() {
+                                    if let Some(tab) = guard.iter().find(|t| t.id == tab_id) {
+                                        let _ = tab.webview.evaluate_script(&js);
+                                    }
                                 }
                             }
                             Ok(IpcMessage::OpenNewTab { url }) => {
@@ -1355,7 +1382,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if is_welcome {
                 builder.with_html(WELCOME_HTML).build_as_child(win)?
             } else if is_hitlist {
-                builder.with_html(HITLIST_HTML).build_as_child(win)?
+                let stored = load_stored_data();
+                let html = prepare_hitlist_html(&stored.hit_list);
+                builder.with_html(&html).build_as_child(win)?
             } else if is_settings {
                 let stored = load_stored_data();
                 let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
@@ -1694,10 +1723,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
                             let _ = tab.webview.evaluate_script(&js);
                         } else if formatted == "local://hitlist" || formatted == "local://roster" {
-                            let _ = tab.webview.load_html(HITLIST_HTML);
+                            let stored = load_stored_data();
+                            let html = prepare_hitlist_html(&stored.hit_list);
+                            let _ = tab.webview.load_html(&html);
                             tab.url = "local://roster".to_string();
                             tab.title = "Outreach Roster".to_string();
-                            let stored = load_stored_data();
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
                             let _ = tab.webview.evaluate_script(&js);
@@ -1864,9 +1894,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 AppEvent::Reload => {
                     let cur_active = *active_tab_id_holder.lock().unwrap();
-                    let tabs = tabs_holder.lock().unwrap();
-                    if let Some(tab) = tabs.iter().find(|t| t.id == cur_active) {
-                        let _ = tab.webview.reload();
+                    let mut tabs = tabs_holder.lock().unwrap();
+                    if let Some(tab) = tabs.iter_mut().find(|t| t.id == cur_active) {
+                        if tab.url == "local://hitlist" || tab.url == "local://roster" {
+                            let stored = load_stored_data();
+                            let html = prepare_hitlist_html(&stored.hit_list);
+                            let _ = tab.webview.load_html(&html);
+                            let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                            let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
+                            let _ = tab.webview.evaluate_script(&js);
+                        } else if tab.url == "local://settings" {
+                            let stored = load_stored_data();
+                            let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                            let html = prepare_settings_html(&current_color);
+                            let _ = tab.webview.load_html(&html);
+                            let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                            let _ = tab.webview.evaluate_script(&js);
+                        } else if tab.url == "local://mock" {
+                            let _ = tab.webview.load_html(MOCK_JOB_HTML);
+                            let stored = load_stored_data();
+                            let context_data = serde_json::json!({
+                                "candidateProfile": stored.candidate_profile,
+                                "specialFields": stored.special_fields,
+                            });
+                            let js = format!("if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}", context_data);
+                            let _ = tab.webview.evaluate_script(&js);
+                        } else if tab.url == "local://welcome" {
+                            let _ = tab.webview.load_html(WELCOME_HTML);
+                        } else {
+                            let _ = tab.webview.reload();
+                        }
                     }
                 }
                 AppEvent::Home => {

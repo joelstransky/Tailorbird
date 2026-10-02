@@ -1414,6 +1414,13 @@
       border-radius: 50%;
       background: #10B981;
       box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+      flex-shrink: 0;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .status-indicator-dot.dot-warning {
+      background: #F59E0B;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
     }
 
     .status-indicator-text {
@@ -2023,10 +2030,10 @@
   <!-- Pro Status Bar (F1CNCF) -->
   <div class="app-status-bar">
     <div class="status-left">
-      <span class="status-indicator-dot"></span>
-      <span class="status-indicator-text">Autofill Engine: Online</span>
+      <span class="status-indicator-dot" id="statusBarDot"></span>
+      <span class="status-indicator-text" id="statusBarLeftText">Candidate: Initializing...</span>
     </div>
-    <div class="status-right">Ready</div>
+    <div class="status-right" id="statusBarRightText">0 Prospects • 0 Outreach Targets</div>
   </div>
 
   <!-- Photoshop-style Modal Confirmation Dialog (Import Overwrite) -->
@@ -2846,6 +2853,7 @@
       prospectTableBody.innerHTML = '';
       prospectCountSpan.textContent = `(${prospects.length})`;
       prospectStatusSummary.textContent = `${prospects.length} position${prospects.length === 1 ? '' : 's'} tracked`;
+      if (typeof updateStatusBar === 'function') updateStatusBar();
 
       const filterText = prospectFilter.value.trim().toLowerCase();
       const filtered = prospects.filter(p => {
@@ -3151,8 +3159,14 @@
         applyPrimaryColor(data.primaryColor, false);
       }
 
+      // 7.5 Cache hit list count
+      if (Array.isArray(data.hitList)) {
+        cachedHitListCount = data.hitList.length;
+      }
+
       // 8. Update Candidate Summary card, command bar pill & chips
       updateCandidateSummaryUI();
+      updateStatusBar();
 
       isDataLoaded = true;
     }
@@ -3197,8 +3211,57 @@
           wsEl.textContent = roleDisplay || 'Candidate Profile';
         }
       }
+
+      updateStatusBar();
     }
     window.updateCandidateSummaryUI = updateCandidateSummaryUI;
+
+    let cachedHitListCount = 0;
+    let saveNoticeTimeout = null;
+
+    function updateStatusBar(saveNotice = false) {
+      const dotEl = document.getElementById('statusBarDot');
+      const leftEl = document.getElementById('statusBarLeftText');
+      const rightEl = document.getElementById('statusBarRightText');
+      if (!leftEl || !rightEl) return;
+
+      const name = (document.getElementById('fullName') ? document.getElementById('fullName').value : '').trim();
+      const role = (document.getElementById('profileRole') ? document.getElementById('profileRole').value : '').trim();
+
+      if (name) {
+        if (dotEl) dotEl.classList.remove('dot-warning');
+        leftEl.textContent = role ? `Candidate: ${name} (${role})` : `Candidate: ${name}`;
+      } else {
+        if (dotEl) dotEl.classList.add('dot-warning');
+        leftEl.textContent = 'Candidate Profile: Incomplete';
+      }
+
+      const pCount = Array.isArray(prospects) ? prospects.length : 0;
+      const hCount = typeof cachedHitListCount === 'number' ? cachedHitListCount : 0;
+      const pLabel = pCount === 1 ? 'Prospect' : 'Prospects';
+      const hLabel = hCount === 1 ? 'Outreach Target' : 'Outreach Targets';
+      const metricsText = `${pCount} ${pLabel} • ${hCount} ${hLabel}`;
+
+      if (saveNotice) {
+        rightEl.textContent = `Saved Locally • ${metricsText}`;
+        if (saveNoticeTimeout) clearTimeout(saveNoticeTimeout);
+        saveNoticeTimeout = setTimeout(() => {
+          rightEl.textContent = metricsText;
+        }, 1800);
+      } else {
+        if (!saveNoticeTimeout) {
+          rightEl.textContent = metricsText;
+        }
+      }
+    }
+    window.updateStatusBar = updateStatusBar;
+
+    window.updateHitListCount = function(count) {
+      if (typeof count === 'number') {
+        cachedHitListCount = count;
+        updateStatusBar();
+      }
+    };
 
     window.setAllData = function(data) {
       applyLoadedData(data);
@@ -3282,6 +3345,8 @@
         drawerStates: null,
         primaryColor: currentPrimaryColor
       });
+
+      updateStatusBar(true);
     }
 
     // --- Activity Bar & Settings Logic ---

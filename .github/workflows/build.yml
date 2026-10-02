@@ -23,22 +23,14 @@ jobs:
             os-name: Windows
             target: x86_64-pc-windows-msvc
             binary-name: tailorbird.exe
-            asset-name: tailorbird-windows-x86_64.exe
-          - os: ubuntu-22.04
-            os-name: Linux (Ubuntu x86_64)
-            target: x86_64-unknown-linux-gnu
-            binary-name: tailorbird
-            asset-name: tailorbird-linux-x86_64
           - os: macos-latest
             os-name: macOS (Apple Silicon)
             target: aarch64-apple-darwin
             binary-name: tailorbird
-            asset-name: tailorbird-macos-arm64
-          - os: macos-latest
-            os-name: macOS (Intel)
-            target: x86_64-apple-darwin
+          - os: ubuntu-22.04
+            os-name: Linux (Ubuntu x86_64)
+            target: x86_64-unknown-linux-gnu
             binary-name: tailorbird
-            asset-name: tailorbird-macos-x86_64
 
     steps:
       - name: Checkout repository
@@ -72,12 +64,9 @@ jobs:
       - name: Cargo build (Release)
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Stage Windows binary
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary-name }} -Destination ${{ matrix.asset-name }}
-
+      # -------------------------------------------------------------
+      # 1. Windows: Build & Upload Inno Setup Installer only
+      # -------------------------------------------------------------
       - name: Build Windows Inno Setup installer
         if: runner.os == 'Windows'
         shell: pwsh
@@ -88,19 +77,16 @@ jobs:
           $iscc = if (Get-Command iscc -ErrorAction SilentlyContinue) { "iscc" } elseif (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") { "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" } else { "${env:LocalAppData}\Programs\Inno Setup 6\ISCC.exe" }
           & $iscc installer/tailorbird.iss
 
-      - name: Upload Windows installer artifact
+      - name: Upload Windows Installer
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: Tailorbird-Setup-v0.1.0.exe
           path: dist/Tailorbird-Setup-v0.1.0.exe
 
-      - name: Stage Unix binary
-        if: runner.os != 'Windows'
-        run: |
-          cp target/${{ matrix.target }}/release/${{ matrix.binary-name }} ${{ matrix.asset-name }}
-          chmod +x ${{ matrix.asset-name }}
-
+      # -------------------------------------------------------------
+      # 2. Modern Mac (Apple Silicon): Bundle, Sign & Upload DMG only
+      # -------------------------------------------------------------
       - name: Build macOS Application Bundle and DMG
         if: runner.os == 'macOS'
         run: |
@@ -126,43 +112,45 @@ jobs:
           # Ad-hoc code sign the bundle
           codesign --force --deep --sign - Tailorbird.app
 
-          # Create DMG installer with Applications link
+          # Create DMG installer with Applications drag-and-drop link
           mkdir -p dmg_root
           cp -R Tailorbird.app dmg_root/
           ln -s /Applications dmg_root/Applications
-          hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO ${{ matrix.asset-name }}.dmg
+          hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO Tailorbird-macOS.dmg
 
-          # Create zip of .app
-          ditto -c -k --keepParent Tailorbird.app ${{ matrix.asset-name }}.zip
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.asset-name }}
-          path: ${{ matrix.asset-name }}
-
-      - name: Upload macOS DMG artifact
+      - name: Upload macOS DMG
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset-name }}.dmg
-          path: ${{ matrix.asset-name }}.dmg
+          name: Tailorbird-macOS.dmg
+          path: Tailorbird-macOS.dmg
 
-      - name: Upload macOS Zip artifact
-        if: runner.os == 'macOS'
+      # -------------------------------------------------------------
+      # 3. Linux: Upload binary
+      # -------------------------------------------------------------
+      - name: Stage Linux binary
+        if: runner.os == 'Linux'
+        run: |
+          cp target/${{ matrix.target }}/release/${{ matrix.binary-name }} tailorbird-linux-x86_64
+          chmod +x tailorbird-linux-x86_64
+
+      - name: Upload Linux Binary
+        if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset-name }}.zip
-          path: ${{ matrix.asset-name }}.zip
+          name: tailorbird-linux-x86_64
+          path: tailorbird-linux-x86_64
 
+      # -------------------------------------------------------------
+      # Release Draft Publishing
+      # -------------------------------------------------------------
       - name: Create or update draft release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ matrix.asset-name }}
             dist/Tailorbird-Setup-v0.1.0.exe
-            *.dmg
-            *.zip
+            Tailorbird-macOS.dmg
+            tailorbird-linux-x86_64
           draft: true
           generate_release_notes: true

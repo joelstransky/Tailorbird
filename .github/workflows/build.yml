@@ -24,7 +24,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary-name: tailorbird.exe
           - os: macos-latest
-            os-name: macOS (Apple Silicon)
+            os-name: macOS (Universal 2)
             target: aarch64-apple-darwin
             binary-name: tailorbird
           - os: ubuntu-22.04
@@ -56,13 +56,29 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Add Intel target for macOS Universal 2
+        if: runner.os == 'macOS'
+        run: rustup target add x86_64-apple-darwin
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
 
+      # -------------------------------------------------------------
+      # Compile Release Binaries
+      # -------------------------------------------------------------
       - name: Cargo build (Release)
+        if: runner.os != 'macOS'
         run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Cargo build macOS Universal 2 (Apple Silicon + Intel)
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          lipo -create -output tailorbird target/aarch64-apple-darwin/release/tailorbird target/x86_64-apple-darwin/release/tailorbird
+          lipo -info tailorbird
 
       # -------------------------------------------------------------
       # 1. Windows: Build & Upload Inno Setup Installer only
@@ -85,7 +101,7 @@ jobs:
           path: dist/Tailorbird-Setup-v0.1.0.exe
 
       # -------------------------------------------------------------
-      # 2. Modern Mac (Apple Silicon): Bundle, Sign & Upload DMG only
+      # 2. macOS: Universal 2 Bundle, Sign & Upload DMG only
       # -------------------------------------------------------------
       - name: Build macOS Application Bundle and DMG
         if: runner.os == 'macOS'
@@ -104,12 +120,12 @@ jobs:
 
           mkdir -p Tailorbird.app/Contents/MacOS
           mkdir -p Tailorbird.app/Contents/Resources
-          cp target/${{ matrix.target }}/release/tailorbird Tailorbird.app/Contents/MacOS/
+          cp tailorbird Tailorbird.app/Contents/MacOS/
           chmod +x Tailorbird.app/Contents/MacOS/tailorbird
           cp installer/macos/Info.plist Tailorbird.app/Contents/
           cp icon.icns Tailorbird.app/Contents/Resources/
 
-          # Ad-hoc code sign the bundle
+          # Ad-hoc code sign the Universal bundle
           codesign --force --deep --sign - Tailorbird.app
 
           # Create DMG installer with Applications drag-and-drop link

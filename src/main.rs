@@ -47,6 +47,38 @@ fn prepare_settings_html(primary_color: &str) -> String {
     )
 }
 
+#[cfg(target_os = "macos")]
+fn setup_macos_menu() {
+    use muda::{Menu, PredefinedMenuItem, Submenu};
+    let app_menu = Submenu::new("Tailorbird", true);
+    let _ = app_menu.append(&PredefinedMenuItem::about(None, None));
+    let _ = app_menu.append(&PredefinedMenuItem::separator());
+    let _ = app_menu.append(&PredefinedMenuItem::hide(None));
+    let _ = app_menu.append(&PredefinedMenuItem::hide_others(None));
+    let _ = app_menu.append(&PredefinedMenuItem::show_all(None));
+    let _ = app_menu.append(&PredefinedMenuItem::separator());
+    let _ = app_menu.append(&PredefinedMenuItem::quit(None));
+
+    let edit_menu = Submenu::new("Edit", true);
+    let _ = edit_menu.append(&PredefinedMenuItem::undo(None));
+    let _ = edit_menu.append(&PredefinedMenuItem::redo(None));
+    let _ = edit_menu.append(&PredefinedMenuItem::separator());
+    let _ = edit_menu.append(&PredefinedMenuItem::cut(None));
+    let _ = edit_menu.append(&PredefinedMenuItem::copy(None));
+    let _ = edit_menu.append(&PredefinedMenuItem::paste(None));
+    let _ = edit_menu.append(&PredefinedMenuItem::select_all(None));
+
+    let window_menu = Submenu::new("Window", true);
+    let _ = window_menu.append(&PredefinedMenuItem::minimize(None));
+    let _ = window_menu.append(&PredefinedMenuItem::close_window(None));
+
+    let menu = Menu::new();
+    let _ = menu.append(&app_menu);
+    let _ = menu.append(&edit_menu);
+    let _ = menu.append(&window_menu);
+    let _ = menu.init_for_nsapp();
+}
+
 fn prepare_left_pane_html(primary_color: &str) -> String {
     let color_json = serde_json::to_string(primary_color).unwrap_or_else(|_| "\"#818CF8\"".to_string());
     LEFT_PANE_HTML
@@ -334,6 +366,92 @@ const WINDOW_HOOKS_SCRIPT: &str = r#"(function() {
     }, true);
 })();"#;
 
+const GLOBAL_SHORTCUTS_SCRIPT: &str = r#"(function() {
+    if (window.__TAILORBIRD_SHORTCUTS_INSTALLED__) return;
+    window.__TAILORBIRD_SHORTCUTS_INSTALLED__ = true;
+
+    window.addEventListener('keydown', function(e) {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+        const key = e.key ? e.key.toLowerCase() : '';
+
+        // Never intercept standard clipboard and text editing shortcuts
+        if (cmdOrCtrl && !e.shiftKey && (key === 'c' || key === 'v' || key === 'x' || key === 'a' || key === 'z')) {
+            return;
+        }
+
+        // 1. New Tab: Cmd+T / Ctrl+T
+        if (cmdOrCtrl && !e.shiftKey && !e.altKey && key === 't') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'NEW_TAB' });
+            return;
+        }
+
+        // 2. Close Tab: Cmd+W / Ctrl+W
+        if (cmdOrCtrl && !e.shiftKey && !e.altKey && key === 'w') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'CLOSE_ACTIVE_TAB' });
+            return;
+        }
+
+        // 3. Reload: Cmd+R / Ctrl+R / F5
+        if ((cmdOrCtrl && !e.shiftKey && !e.altKey && key === 'r') || e.key === 'F5') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'RELOAD' });
+            return;
+        }
+
+        // 4. Focus Omnibar: Cmd+L / Ctrl+L
+        if (cmdOrCtrl && !e.shiftKey && !e.altKey && key === 'l') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'FOCUS_OMNIBAR' });
+            return;
+        }
+
+        // 5. Back: Cmd+[ / Alt+Left
+        if ((isMac && e.metaKey && e.key === '[') || (!isMac && e.altKey && e.key === 'ArrowLeft')) {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'BACK' });
+            return;
+        }
+
+        // 6. Forward: Cmd+] / Alt+Right
+        if ((isMac && e.metaKey && e.key === ']') || (!isMac && e.altKey && e.key === 'ArrowRight')) {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'FORWARD' });
+            return;
+        }
+
+        // 7. Tab Cycling: Ctrl+Tab (next) / Ctrl+Shift+Tab (prev)
+        if (e.ctrlKey && e.key === 'Tab') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'CYCLE_TAB', direction: e.shiftKey ? -1 : 1 });
+            return;
+        }
+
+        // 8. Jump to Tab 1-9: Cmd+1..9 / Ctrl+1..9
+        if (cmdOrCtrl && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '9') {
+            e.preventDefault();
+            const index = parseInt(e.key, 10);
+            sendShortcutIpc({ action: 'SWITCH_TAB_BY_INDEX', index: index });
+            return;
+        }
+
+        // 9. Scrape / Record Prospect: Cmd+Shift+S / Ctrl+Shift+S
+        if (cmdOrCtrl && e.shiftKey && key === 's') {
+            e.preventDefault();
+            sendShortcutIpc({ action: 'SCRAPE_CURRENT_PAGE' });
+            return;
+        }
+    }, true);
+
+    function sendShortcutIpc(msg) {
+        if (window.ipc && typeof window.ipc.postMessage === 'function') {
+            window.ipc.postMessage(JSON.stringify(msg));
+        }
+    }
+})();"#;
+
 fn decode_percent(s: &str) -> String {
     let mut bytes = Vec::new();
     let mut chars = s.bytes();
@@ -385,6 +503,11 @@ enum AppEvent {
     CreateTab { url: String, activate: bool },
     SwitchTab { id: usize },
     CloseTab { id: usize },
+    CloseActiveTab,
+    FocusOmnibar,
+    FocusActiveTab,
+    CycleTab { direction: i32 },
+    SwitchTabByIndex { index: usize },
     TabTitleChanged { id: usize, title: String },
     TabPageLoaded { id: usize, url: String },
     NavigateActiveTab { url: String },
@@ -498,6 +621,74 @@ enum IpcMessage {
     ExportProspectsCsv {
         csv: String,
     },
+    #[serde(rename = "CLOSE_ACTIVE_TAB")]
+    CloseActiveTab,
+    #[serde(rename = "FOCUS_OMNIBAR")]
+    FocusOmnibar,
+    #[serde(rename = "FOCUS_ACTIVE_TAB")]
+    FocusActiveTab,
+    #[serde(rename = "CYCLE_TAB")]
+    CycleTab { direction: i32 },
+    #[serde(rename = "SWITCH_TAB_BY_INDEX")]
+    SwitchTabByIndex { index: usize },
+}
+
+fn handle_common_shortcut_ipc(msg: &IpcMessage, proxy: &EventLoopProxy<AppEvent>) -> bool {
+    match msg {
+        IpcMessage::Back => {
+            let _ = proxy.send_event(AppEvent::Back);
+            true
+        }
+        IpcMessage::Forward => {
+            let _ = proxy.send_event(AppEvent::Forward);
+            true
+        }
+        IpcMessage::Reload => {
+            let _ = proxy.send_event(AppEvent::Reload);
+            true
+        }
+        IpcMessage::Home => {
+            let _ = proxy.send_event(AppEvent::Home);
+            true
+        }
+        IpcMessage::ScrapeCurrentPage => {
+            let _ = proxy.send_event(AppEvent::ScrapeCurrentPage);
+            true
+        }
+        IpcMessage::NewTab { url } => {
+            let target_url = url
+                .as_ref()
+                .filter(|u| !u.trim().is_empty() && u.trim() != "about:blank")
+                .cloned()
+                .unwrap_or_else(|| "local://welcome".to_string());
+            let _ = proxy.send_event(AppEvent::CreateTab {
+                url: target_url,
+                activate: true,
+            });
+            true
+        }
+        IpcMessage::CloseActiveTab => {
+            let _ = proxy.send_event(AppEvent::CloseActiveTab);
+            true
+        }
+        IpcMessage::FocusOmnibar => {
+            let _ = proxy.send_event(AppEvent::FocusOmnibar);
+            true
+        }
+        IpcMessage::FocusActiveTab => {
+            let _ = proxy.send_event(AppEvent::FocusActiveTab);
+            true
+        }
+        IpcMessage::CycleTab { direction } => {
+            let _ = proxy.send_event(AppEvent::CycleTab { direction: *direction });
+            true
+        }
+        IpcMessage::SwitchTabByIndex { index } => {
+            let _ = proxy.send_event(AppEvent::SwitchTabByIndex { index: *index });
+            true
+        }
+        _ => false,
+    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -547,6 +738,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Tailorbird — Dual-Pane Specialized Job-Search Browser");
     println!("============================================================");
 
+    #[cfg(target_os = "macos")]
+    setup_macos_menu();
+
     let mut event_loop_builder = EventLoopBuilder::<AppEvent>::with_user_event();
     let event_loop = event_loop_builder.build();
     let proxy: EventLoopProxy<AppEvent> = event_loop.create_proxy();
@@ -573,7 +767,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let initial_app_data = load_stored_data();
     let initial_left_width = initial_app_data.split_width.unwrap_or(LEFT_PANE_WIDTH);
     let initial_data_json = serde_json::to_string(&initial_app_data).unwrap_or_else(|_| "{}".to_string());
-    let init_script = format!("window.__INITIAL_DATA__ = {};", initial_data_json);
+    let init_script = format!("window.__INITIAL_DATA__ = {};\n{}", initial_data_json, GLOBAL_SHORTCUTS_SCRIPT);
     let initial_context_script = generate_context_menu_script(
         initial_app_data.candidate_profile.as_ref(),
         &initial_app_data.special_fields,
@@ -599,7 +793,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let scale_factor_for_ipc = scale_factor_holder.clone();
 
     let initial_primary_color = initial_app_data.primary_color.clone().unwrap_or_else(|| "#818CF8".to_string());
-    let tb_init_script = format!("window.__INITIAL_PRIMARY_COLOR__ = {};", serde_json::to_string(&initial_primary_color).unwrap_or_default());
+    let tb_init_script = format!(
+        "window.__INITIAL_PRIMARY_COLOR__ = {};\n{}",
+        serde_json::to_string(&initial_primary_color).unwrap_or_default(),
+        GLOBAL_SHORTCUTS_SCRIPT
+    );
     let prepared_left_html = prepare_left_pane_html(&initial_primary_color);
 
     // Reusable layout coordinator to update all webview bounds seamlessly
@@ -692,6 +890,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             move |req| {
                 let body = req.body();
+                if let Ok(msg) = serde_json::from_str::<IpcMessage>(body) {
+                    if handle_common_shortcut_ipc(&msg, &proxy_ipc) {
+                        return;
+                    }
+                }
                 match serde_json::from_str::<IpcMessage>(body) {
                     Ok(IpcMessage::Autofill { mut data }) => {
                         println!("[Tailorbird Host] Triggering AUTOFILL for: {}", data.full_name);
@@ -1000,22 +1203,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_tb = proxy.clone();
             move |req| {
                 let body = req.body();
+                if let Ok(msg) = serde_json::from_str::<IpcMessage>(body) {
+                    if handle_common_shortcut_ipc(&msg, &proxy_tb) {
+                        return;
+                    }
+                }
                 match serde_json::from_str::<IpcMessage>(body) {
-                    Ok(IpcMessage::Back) => {
-                        let _ = proxy_tb.send_event(AppEvent::Back);
-                    }
-                    Ok(IpcMessage::Forward) => {
-                        let _ = proxy_tb.send_event(AppEvent::Forward);
-                    }
-                    Ok(IpcMessage::Reload) => {
-                        let _ = proxy_tb.send_event(AppEvent::Reload);
-                    }
-                    Ok(IpcMessage::Home) => {
-                        let _ = proxy_tb.send_event(AppEvent::Home);
-                    }
-                    Ok(IpcMessage::ScrapeCurrentPage) => {
-                        let _ = proxy_tb.send_event(AppEvent::ScrapeCurrentPage);
-                    }
                     Ok(IpcMessage::Navigate { url }) => {
                         let _ = proxy_tb.send_event(AppEvent::NavigateActiveTab { url });
                     }
@@ -1028,15 +1221,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::CloseTab { id }) => {
                         let _ = proxy_tb.send_event(AppEvent::CloseTab { id });
                     }
-                    Ok(IpcMessage::NewTab { url }) => {
-                        let target_url = url
-                            .filter(|u| !u.trim().is_empty() && u.trim() != "about:blank")
-                            .unwrap_or_else(|| "local://welcome".to_string());
-                        let _ = proxy_tb.send_event(AppEvent::CreateTab {
-                            url: target_url,
-                            activate: true,
-                        });
-                    }
                     _ => {}
                 }
             }
@@ -1047,7 +1231,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let make_tab_webview = {
         #[cfg(target_os = "windows")]
         let shared_env = shared_env.clone();
-        let tab_init_script = format!("{}\n{}", initial_context_script, WINDOW_HOOKS_SCRIPT);
+        let tab_init_script = format!("{}\n{}\n{}", initial_context_script, WINDOW_HOOKS_SCRIPT, GLOBAL_SHORTCUTS_SCRIPT);
         let proxy = proxy.clone();
         let left_holder = left_for_ipc.clone();
         let toolbar_holder = toolbar_wv_holder.clone();
@@ -1122,6 +1306,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let proxy_ipc = proxy_ipc.clone();
                     move |req| {
                         let body = req.body();
+                        if let Ok(msg) = serde_json::from_str::<IpcMessage>(body) {
+                            if handle_common_shortcut_ipc(&msg, &proxy_ipc) {
+                                return;
+                            }
+                        }
                         match serde_json::from_str::<IpcMessage>(body) {
                             Ok(IpcMessage::RecordPageData { data }) => {
                                 println!("[Tailorbird Host] Scraped listing: {} at {}", data.job_title, data.company);
@@ -1698,6 +1887,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if let Some(tab) = guard.iter().find(|t| t.id == active_id) {
                             let _ = tab.webview.evaluate_script(SCRAPE_PAGE_SCRIPT);
                         }
+                    }
+                }
+                AppEvent::CloseActiveTab => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    let _ = proxy.send_event(AppEvent::CloseTab { id: cur_active });
+                }
+                AppEvent::FocusOmnibar => {
+                    if let Ok(guard) = toolbar_wv_holder.lock() {
+                        if let Some(ref tb) = *guard {
+                            let _ = tb.focus();
+                            let _ = tb.evaluate_script("if (window.focusOmnibar) { window.focusOmnibar(); }");
+                        }
+                    }
+                }
+                AppEvent::FocusActiveTab => {
+                    let cur_active = *active_tab_id_holder.lock().unwrap();
+                    if let Ok(guard) = tabs_holder.lock() {
+                        if let Some(tab) = guard.iter().find(|t| t.id == cur_active) {
+                            let _ = tab.webview.focus();
+                        }
+                    }
+                }
+                AppEvent::CycleTab { direction } => {
+                    let tabs = tabs_holder.lock().unwrap();
+                    if tabs.len() > 1 {
+                        let cur_active = *active_tab_id_holder.lock().unwrap();
+                        if let Some(pos) = tabs.iter().position(|t| t.id == cur_active) {
+                            let count = tabs.len() as i32;
+                            let next_pos = ((pos as i32 + direction).rem_euclid(count)) as usize;
+                            let next_id = tabs[next_pos].id;
+                            drop(tabs);
+                            let _ = proxy.send_event(AppEvent::SwitchTab { id: next_id });
+                        }
+                    }
+                }
+                AppEvent::SwitchTabByIndex { index } => {
+                    let tabs = tabs_holder.lock().unwrap();
+                    if index >= 1 && index <= tabs.len() {
+                        let target_id = tabs[index - 1].id;
+                        drop(tabs);
+                        let _ = proxy.send_event(AppEvent::SwitchTab { id: target_id });
                     }
                 }
             },

@@ -512,8 +512,20 @@
       }, 1600);
     };
 
+    window.focusOmnibar = function() {
+      if (urlInput) {
+        urlInput.focus();
+        urlInput.select();
+      }
+    };
+
     urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') navigate();
+      if (e.key === 'Enter') {
+        navigate();
+      } else if (e.key === 'Escape') {
+        urlInput.blur();
+        sendIpc('FOCUS_ACTIVE_TAB');
+      }
     });
   </script>
 </body>

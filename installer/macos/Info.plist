@@ -10,6 +10,8 @@
     <string>com.joelstransky.tailorbird</string>
     <key>CFBundleName</key>
     <string>Tailorbird</string>
+    <key>CFBundleDisplayName</key>
+    <string>Tailorbird</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

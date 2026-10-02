@@ -1398,41 +1398,37 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       flex-shrink: 0;
       z-index: 15;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     .status-left {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-indicator-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #10B981;
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
-      flex-shrink: 0;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .status-indicator-dot.dot-warning {
-      background: #F59E0B;
-      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
-    }
-
-    .status-indicator-text {
-      font-size: 10px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 11px;
       color: #94A3B8;
+      font-weight: 500;
+      line-height: 24px;
     }
 
     .status-right {
-      font-size: 10px;
-      font-family: var(--font-mono);
+      min-width: 0;
+      flex: 0 1 auto;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      text-align: right;
+      font-size: 11px;
+      font-family: var(--font-mono, monospace);
       color: #38BDF8;
       font-weight: 500;
+      line-height: 24px;
     }
   </style>
 </head>
@@ -2029,11 +2025,8 @@
 
   <!-- Pro Status Bar (F1CNCF) -->
   <div class="app-status-bar">
-    <div class="status-left">
-      <span class="status-indicator-dot" id="statusBarDot"></span>
-      <span class="status-indicator-text" id="statusBarLeftText">Candidate: Initializing...</span>
-    </div>
-    <div class="status-right" id="statusBarRightText">0 Prospects • 0 Outreach Targets</div>
+    <div class="status-left" id="statusBarLeftText"></div>
+    <div class="status-right" id="statusBarRightText"></div>
   </div>
 
   <!-- Photoshop-style Modal Confirmation Dialog (Import Overwrite) -->
@@ -3159,11 +3152,6 @@
         applyPrimaryColor(data.primaryColor, false);
       }
 
-      // 7.5 Cache hit list count
-      if (Array.isArray(data.hitList)) {
-        cachedHitListCount = data.hitList.length;
-      }
-
       // 8. Update Candidate Summary card, command bar pill & chips
       updateCandidateSummaryUI();
       updateStatusBar();
@@ -3216,52 +3204,19 @@
     }
     window.updateCandidateSummaryUI = updateCandidateSummaryUI;
 
-    let cachedHitListCount = 0;
-    let saveNoticeTimeout = null;
-
-    function updateStatusBar(saveNotice = false) {
-      const dotEl = document.getElementById('statusBarDot');
+    function updateStatusBar() {
       const leftEl = document.getElementById('statusBarLeftText');
       const rightEl = document.getElementById('statusBarRightText');
       if (!leftEl || !rightEl) return;
 
       const name = (document.getElementById('fullName') ? document.getElementById('fullName').value : '').trim();
-      const role = (document.getElementById('profileRole') ? document.getElementById('profileRole').value : '').trim();
+      const keywords = (document.getElementById('searchTitle') ? document.getElementById('searchTitle').value : '').trim();
 
-      if (name) {
-        if (dotEl) dotEl.classList.remove('dot-warning');
-        leftEl.textContent = role ? `Candidate: ${name} (${role})` : `Candidate: ${name}`;
-      } else {
-        if (dotEl) dotEl.classList.add('dot-warning');
-        leftEl.textContent = 'Candidate Profile: Incomplete';
-      }
-
-      const pCount = Array.isArray(prospects) ? prospects.length : 0;
-      const hCount = typeof cachedHitListCount === 'number' ? cachedHitListCount : 0;
-      const pLabel = pCount === 1 ? 'Prospect' : 'Prospects';
-      const hLabel = hCount === 1 ? 'Outreach Target' : 'Outreach Targets';
-      const metricsText = `${pCount} ${pLabel} • ${hCount} ${hLabel}`;
-
-      if (saveNotice) {
-        rightEl.textContent = `Saved Locally • ${metricsText}`;
-        if (saveNoticeTimeout) clearTimeout(saveNoticeTimeout);
-        saveNoticeTimeout = setTimeout(() => {
-          rightEl.textContent = metricsText;
-        }, 1800);
-      } else {
-        if (!saveNoticeTimeout) {
-          rightEl.textContent = metricsText;
-        }
-      }
+      leftEl.textContent = name;
+      rightEl.textContent = keywords;
     }
     window.updateStatusBar = updateStatusBar;
-
-    window.updateHitListCount = function(count) {
-      if (typeof count === 'number') {
-        cachedHitListCount = count;
-        updateStatusBar();
-      }
-    };
+    window.updateHitListCount = function() {};
 
     window.setAllData = function(data) {
       applyLoadedData(data);
@@ -3572,7 +3527,11 @@
     ['searchTitle', 'searchLocation', 'chkGreenhouse', 'chkLever', 'chkLinkedin', 'chkIndeed'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
+        el.addEventListener('input', () => {
+          if (id === 'searchTitle') updateStatusBar();
+        });
         el.addEventListener('change', () => {
+          if (id === 'searchTitle') updateStatusBar();
           saveAllData();
         });
       }

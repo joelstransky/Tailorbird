@@ -66,6 +66,15 @@ jobs:
           key: ${{ matrix.target }}
 
       # -------------------------------------------------------------
+      # Automated Verification: Clippy Linter & Test Suite
+      # -------------------------------------------------------------
+      - name: Run Cargo Clippy
+        run: cargo clippy --target ${{ matrix.target }} -- -D warnings
+
+      - name: Run Cargo Tests
+        run: cargo test --target ${{ matrix.target }}
+
+      # -------------------------------------------------------------
       # Compile Release Binaries
       # -------------------------------------------------------------
       - name: Cargo build (Release)

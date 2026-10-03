@@ -546,6 +546,7 @@ struct BrowserTab {
     is_search: bool,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, serde::Deserialize)]
 #[serde(tag = "action")]
 enum IpcMessage {
@@ -741,6 +742,7 @@ fn sync_url(toolbar_holder: &Arc<Mutex<Option<WebView>>>, url: &str) {
     }
 }
 
+#[allow(clippy::arc_with_non_send_sync)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("============================================================");
     println!("  Tailorbird — Dual-Pane Specialized Job-Search Browser");
@@ -769,7 +771,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("[Tailorbird] Native parent window created successfully.");
 
     #[cfg(target_os = "windows")]
-    let hwnd_raw = window.hwnd() as isize;
+    let hwnd_raw = window.hwnd();
 
     // Load persisted app data to restore split width if available
     let initial_app_data = load_stored_data();
@@ -2083,4 +2085,134 @@ fn format_search_url(query: &str) -> String {
         }
     }
     format!("https://www.google.com/search?q={}", encoded)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_input_to_url_with_scheme() {
+        assert_eq!(format_input_to_url("https://github.com"), "https://github.com");
+        assert_eq!(format_input_to_url("http://example.com"), "http://example.com");
+        assert_eq!(format_input_to_url("file:///path/to/file"), "file:///path/to/file");
+        assert_eq!(format_input_to_url("local://roster"), "local://roster");
+        assert_eq!(format_input_to_url("local://settings"), "local://settings");
+    }
+
+    #[test]
+    fn test_format_input_to_url_domain_without_scheme() {
+        assert_eq!(format_input_to_url("google.com"), "https://google.com");
+        assert_eq!(format_input_to_url("boards.greenhouse.io/company"), "https://boards.greenhouse.io/company");
+    }
+
+    #[test]
+    fn test_format_input_to_url_localhost() {
+        assert_eq!(format_input_to_url("localhost:3000"), "http://localhost:3000");
+        assert_eq!(format_input_to_url("127.0.0.1:8080"), "http://127.0.0.1:8080");
+    }
+
+    #[test]
+    fn test_format_input_to_url_search_query() {
+        let result = format_input_to_url("senior rust engineer remote");
+        assert!(result.starts_with("https://www.google.com/search?q="));
+        assert!(result.contains("senior+rust+engineer+remote"));
+    }
+
+    #[test]
+    fn test_decode_percent() {
+        assert_eq!(decode_percent("Hello%20World"), "Hello World");
+        assert_eq!(decode_percent("%2Fpath%2Fto"), "/path/to");
+        assert_eq!(decode_percent("normal_text"), "normal_text");
+        assert_eq!(decode_percent("broken%2"), "broken%2");
+    }
+
+    #[test]
+    fn test_ipc_message_deserialization_navigate() {
+        let json = r#"{"action": "NAVIGATE", "url": "https://google.com"}"#;
+        let msg: IpcMessage = serde_json::from_str(json).expect("NAVIGATE should deserialize");
+        match msg {
+            IpcMessage::Navigate { url } => assert_eq!(url, "https://google.com"),
+            _ => panic!("Expected Navigate variant"),
+        }
+    }
+
+    #[test]
+    fn test_ipc_message_deserialization_save_data() {
+        let json = r##"{
+            "action": "SAVE_DATA",
+            "candidateProfile": {
+                "fullName": "Alice Smith"
+            },
+            "resumeSource": "",
+            "workHistory": [],
+            "specialFields": [],
+            "prospects": [],
+            "searchCriteria": {
+                "title": "Frontend Engineer"
+            },
+            "splitWidth": 450.0,
+            "primaryColor": "#3B82F6"
+        }"##;
+
+        let msg: IpcMessage = serde_json::from_str(json).expect("SAVE_DATA should deserialize");
+        match msg {
+            IpcMessage::SaveData { candidate_profile, search_criteria, primary_color, .. } => {
+                let prof = candidate_profile.expect("Profile should be present");
+                assert_eq!(prof.full_name, "Alice Smith");
+                let crit = search_criteria.expect("Search criteria should be present");
+                assert_eq!(crit.title, "Frontend Engineer");
+                assert_eq!(primary_color, Some("#3B82F6".to_string()));
+            }
+            _ => panic!("Expected SaveData variant"),
+        }
+    }
+
+    #[test]
+    fn test_ipc_message_deserialization_hit_list() {
+        let json_load = r#"{"action": "LOAD_HIT_LIST"}"#;
+        let msg_load: IpcMessage = serde_json::from_str(json_load).expect("LOAD_HIT_LIST should deserialize");
+        match msg_load {
+            IpcMessage::LoadHitList => {}
+            _ => panic!("Expected LoadHitList variant"),
+        }
+
+        let json_save = r#"{
+            "action": "SAVE_HIT_LIST",
+            "hitList": [
+                {
+                    "id": "t-1",
+                    "companyName": "Vercel",
+                    "websiteUrl": "https://vercel.com",
+                    "status": "Targeted"
+                }
+            ]
+        }"#;
+        let msg_save: IpcMessage = serde_json::from_str(json_save).expect("SAVE_HIT_LIST should deserialize");
+        match msg_save {
+            IpcMessage::SaveHitList { hit_list } => {
+                assert_eq!(hit_list.len(), 1);
+                assert_eq!(hit_list[0].company_name, "Vercel");
+            }
+            _ => panic!("Expected SaveHitList variant"),
+        }
+    }
+
+    #[test]
+    fn test_prepare_settings_html() {
+        let html = prepare_settings_html("#10B981");
+        assert!(html.contains("window.__INITIAL_ACCENT_COLOR__ = \"#10B981\""));
+    }
+
+    #[test]
+    fn test_prepare_hitlist_html() {
+        let target = crate::prospect::HitListTarget {
+            id: "test-1".to_string(),
+            company_name: "Stripe".to_string(),
+            ..Default::default()
+        };
+        let html = prepare_hitlist_html(&[target]);
+        assert!(html.contains("window.__INITIAL_HITLIST_DATA__ = ["));
+        assert!(html.contains("\"companyName\":\"Stripe\""));
+    }
 }

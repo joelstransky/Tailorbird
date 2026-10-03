@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::autofill::CandidateProfile;
 use crate::resume::WorkHistoryEntry;
@@ -160,27 +160,26 @@ fn storage_file_path() -> PathBuf {
     // Linux (Arch, Debian, etc.): $XDG_CONFIG_HOME/tailorbird or ~/.config/tailorbird
     #[cfg(target_os = "linux")]
     {
-        let config_dir = std::env::var("XDG_CONFIG_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| {
-                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-                PathBuf::from(home).join(".config")
-            });
-        let app_dir = config_dir.join("tailorbird");
-        let _ = fs::create_dir_all(&app_dir);
-        return app_dir.join("tailorbird_data.json");
+        if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+            let app_dir = PathBuf::from(xdg).join("tailorbird");
+            let _ = fs::create_dir_all(&app_dir);
+            return app_dir.join("tailorbird_data.json");
+        } else if let Ok(home) = std::env::var("HOME") {
+            let app_dir = PathBuf::from(home).join(".config").join("tailorbird");
+            let _ = fs::create_dir_all(&app_dir);
+            return app_dir.join("tailorbird_data.json");
+        }
     }
 
     PathBuf::from("tailorbird_data.json")
 }
 
-pub fn load_stored_data() -> AppData {
-    let path = storage_file_path();
-    let display_path = path.canonicalize().unwrap_or_else(|_| path.clone());
+pub fn load_stored_data_from_path(path: &Path) -> AppData {
+    let display_path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
     println!("[Tailorbird Storage] Checking app data file at: {:?}", display_path);
 
     if path.exists() {
-        match fs::read_to_string(&path) {
+        match fs::read_to_string(path) {
             Ok(content) => match serde_json::from_str::<AppData>(&content) {
                 Ok(data) => {
                     println!(
@@ -201,8 +200,7 @@ pub fn load_stored_data() -> AppData {
     AppData::default()
 }
 
-pub fn save_stored_data(data: &AppData) -> Result<(), String> {
-    let path = storage_file_path();
+pub fn save_stored_data_to_path(data: &AppData, path: &Path) -> Result<(), String> {
     println!(
         "[Tailorbird Storage] Saving data to {:?}: {} history entries, {} special fields, {} prospects.",
         path,
@@ -211,6 +209,160 @@ pub fn save_stored_data(data: &AppData) -> Result<(), String> {
         data.prospects.len()
     );
     let json = serde_json::to_string_pretty(data).map_err(|e| e.to_string())?;
-    fs::write(&path, json).map_err(|e| e.to_string())?;
+    fs::write(path, json).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+pub fn load_stored_data() -> AppData {
+    load_stored_data_from_path(&storage_file_path())
+}
+
+pub fn save_stored_data(data: &AppData) -> Result<(), String> {
+    save_stored_data_to_path(data, &storage_file_path())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_data_default_is_empty() {
+        let app_data = AppData::default();
+        assert!(app_data.candidate_profile.is_none());
+        assert!(app_data.prospects.is_empty());
+        assert!(app_data.hit_list.is_empty());
+        assert!(app_data.work_history.is_empty());
+        assert!(app_data.special_fields.is_empty());
+    }
+
+    #[test]
+    fn test_app_data_deserialization_from_empty_json() {
+        let json = "{}";
+        let parsed: AppData = serde_json::from_str(json).expect("Empty JSON should parse with defaults");
+        assert!(parsed.candidate_profile.is_none());
+        assert!(parsed.prospects.is_empty());
+        assert!(parsed.hit_list.is_empty());
+    }
+
+    #[test]
+    fn test_app_data_backward_compatibility_with_partial_fields() {
+        let json = r#"{
+            "candidateProfile": {
+                "fullName": "Jane Doe",
+                "email": "jane@example.com"
+            },
+            "resumeSource": "/path/to/resume.pdf",
+            "prospects": [
+                {
+                    "id": "p-1",
+                    "company": "Acme Inc",
+                    "jobTitle": "Rust Engineer",
+                    "url": "https://acme.com/jobs/1",
+                    "status": "Applied",
+                    "dateAdded": "2026-10-01"
+                }
+            ]
+        }"#;
+
+        let parsed: AppData = serde_json::from_str(json).expect("Partial legacy JSON should deserialize");
+        let profile = parsed.candidate_profile.expect("Profile should be present");
+        assert_eq!(profile.full_name, "Jane Doe");
+        assert_eq!(profile.email, "jane@example.com");
+        assert_eq!(parsed.prospects.len(), 1);
+        assert_eq!(parsed.prospects[0].company, "Acme Inc");
+        assert!(parsed.hit_list.is_empty());
+        assert!(parsed.special_fields.is_empty());
+    }
+
+    #[test]
+    fn test_hit_list_aliases_deserialization() {
+        // Test that 'outreachRoster' alias correctly maps to hit_list
+        let json = r#"{
+            "outreachRoster": [
+                {
+                    "id": "h-1",
+                    "companyName": "Linear",
+                    "websiteUrl": "https://linear.app",
+                    "industry": "DevTools",
+                    "status": "Targeted",
+                    "contact": {
+                        "name": "Alex",
+                        "title": "Engineering Lead"
+                    }
+                }
+            ]
+        }"#;
+
+        let parsed: AppData = serde_json::from_str(json).expect("Alias outreachRoster should deserialize");
+        assert_eq!(parsed.hit_list.len(), 1);
+        assert_eq!(parsed.hit_list[0].company_name, "Linear");
+        assert_eq!(parsed.hit_list[0].contact.name, "Alex");
+    }
+
+    #[test]
+    fn test_special_field_roundtrip() {
+        let field = SpecialField {
+            id: "sp-1".to_string(),
+            label: "Cover Note".to_string(),
+            content: "Excited about Tailorbird!".to_string(),
+        };
+
+        let json = serde_json::to_string(&field).expect("Serialization should succeed");
+        let decoded: SpecialField = serde_json::from_str(&json).expect("Deserialization should succeed");
+        assert_eq!(decoded.id, "sp-1");
+        assert_eq!(decoded.label, "Cover Note");
+        assert_eq!(decoded.content, "Excited about Tailorbird!");
+    }
+
+    #[test]
+    fn test_save_and_load_filesystem_roundtrip() {
+        let temp_dir = std::env::temp_dir();
+        let unique_name = format!(
+            "tailorbird_test_{}.json",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let test_file = temp_dir.join(unique_name);
+
+        let test_data = AppData {
+            candidate_profile: Some(CandidateProfile {
+                full_name: "Test User".to_string(),
+                email: "test@example.com".to_string(),
+                phone: "555-1234".to_string(),
+                ..Default::default()
+            }),
+            search_criteria: Some(SearchCriteria {
+                title: "Rust Engineer".to_string(),
+                location: "Remote".to_string(),
+                ..Default::default()
+            }),
+            prospects: vec![Prospect {
+                id: "p-test-1".to_string(),
+                company: "Test Corp".to_string(),
+                job_title: "Staff Engineer".to_string(),
+                url: "https://test.example.com".to_string(),
+                status: "Applied".to_string(),
+                date_added: "2026-10-02".to_string(),
+                notes: "Test notes".to_string(),
+            }],
+            ..Default::default()
+        };
+
+        // Test save
+        let save_res = save_stored_data_to_path(&test_data, &test_file);
+        assert!(save_res.is_ok(), "Saving data to temp file should succeed");
+
+        // Test load
+        let loaded = load_stored_data_from_path(&test_file);
+        assert_eq!(loaded.prospects.len(), 1);
+        assert_eq!(loaded.prospects[0].company, "Test Corp");
+        assert_eq!(loaded.prospects[0].notes, "Test notes");
+        assert!(loaded.candidate_profile.is_some());
+        assert_eq!(loaded.candidate_profile.as_ref().unwrap().full_name, "Test User");
+
+        // Clean up
+        let _ = fs::remove_file(&test_file);
+    }
 }

@@ -800,6 +800,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let active_id_for_left = active_tab_id_holder.clone();
     let proxy_for_left = proxy.clone();
     let toolbar_for_left_ipc = toolbar_wv_holder.clone();
+    #[cfg(target_os = "windows")]
     let scale_factor_for_ipc = scale_factor_holder.clone();
 
     let initial_primary_color = initial_app_data.primary_color.clone().unwrap_or_else(|| "#818CF8".to_string());
@@ -1196,11 +1197,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let initial_right_width = (DEFAULT_WINDOW_WIDTH - initial_left_width).max(0.0);
 
     // 2. Initialize Browser Toolbar (Tabs Strip, Back, Forward, Reload, Home, Omnibar)
-    let mut toolbar_builder = WebViewBuilder::new();
+    let toolbar_builder = WebViewBuilder::new();
     #[cfg(target_os = "windows")]
-    {
-        toolbar_builder = toolbar_builder.with_environment(shared_env.clone());
-    }
+    let toolbar_builder = toolbar_builder.with_environment(shared_env.clone());
     let toolbar_webview = toolbar_builder
         .with_bounds(Rect {
             position: Position::Logical(LogicalPosition::new(initial_left_width, 0.0)),
@@ -1260,11 +1259,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let toolbar_h = toolbar_holder.clone();
             let tabs_h = tabs_factory_holder.clone();
 
-            let mut builder = WebViewBuilder::new();
+            let builder = WebViewBuilder::new();
             #[cfg(target_os = "windows")]
-            {
-                builder = builder.with_environment(shared_env.clone());
-            }
+            let builder = builder.with_environment(shared_env.clone());
             let builder = builder
                 .with_bounds(bounds)
                 .with_visible(visible)

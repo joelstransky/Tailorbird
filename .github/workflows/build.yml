@@ -69,7 +69,7 @@ jobs:
       # Automated Verification: Clippy Linter & Test Suite
       # -------------------------------------------------------------
       - name: Run Cargo Clippy
-        run: cargo clippy --target ${{ matrix.target }} -- -D warnings
+        run: cargo clippy --all-targets --target ${{ matrix.target }} -- -D warnings
 
       - name: Run Cargo Tests
         run: cargo test --target ${{ matrix.target }}

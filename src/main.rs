@@ -84,7 +84,7 @@ fn setup_macos_menu() {
     let _ = menu.append(&app_menu);
     let _ = menu.append(&edit_menu);
     let _ = menu.append(&window_menu);
-    let _ = menu.init_for_nsapp();
+    menu.init_for_nsapp();
 }
 
 fn prepare_left_pane_html(primary_color: &str) -> String {

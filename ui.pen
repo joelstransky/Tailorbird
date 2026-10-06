@@ -448,7 +448,7 @@
                                   "id": "oHq46",
                                   "name": "Name",
                                   "fill": "#F8FAFC",
-                                  "content": "Alex Mercer",
+                                  "content": "Barnaby Featherstitch",
                                   "fontFamily": "Inter",
                                   "fontSize": 13,
                                   "fontWeight": "bold"
@@ -458,7 +458,7 @@
                                   "id": "xavqN",
                                   "name": "Sub",
                                   "fill": "#94A3B8",
-                                  "content": "Staff Software Engineer • San Francisco, CA",
+                                  "content": "Chief Leaf Stitcher • Great Oak Canopy",
                                   "fontFamily": "Inter",
                                   "fontSize": 10,
                                   "fontWeight": "normal"
@@ -734,7 +734,7 @@
                               "id": "pOpvL",
                               "name": "Role",
                               "fill": "#F8FAFC",
-                              "content": "Senior Software Developer",
+                              "content": "Master Twig Weaver",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "bold"
@@ -746,7 +746,7 @@
                           "id": "R1Hagp",
                           "name": "Desc",
                           "fill": "#94A3B8",
-                          "content": "Distributed Systems & Full Stack Platforms (Sept 2021 - Present)",
+                          "content": "Leaf Architecture & Spider-Silk Weaving (Sept 2021 - Present)",
                           "fontFamily": "Inter",
                           "fontSize": 10,
                           "fontWeight": "normal"
@@ -769,7 +769,7 @@
                                   "id": "RLDar",
                                   "name": "TT",
                                   "fill": "#94A3B8",
-                                  "content": "Rust",
+                                  "content": "Spider-Silk",
                                   "fontFamily": "Inter",
                                   "fontSize": 8,
                                   "fontWeight": "500"
@@ -788,7 +788,7 @@
                                   "id": "jHClz",
                                   "name": "TT",
                                   "fill": "#94A3B8",
-                                  "content": "TypeScript",
+                                  "content": "Leaf Stitching",
                                   "fontFamily": "Inter",
                                   "fontSize": 8,
                                   "fontWeight": "500"
@@ -807,7 +807,7 @@
                                   "id": "ekMjq",
                                   "name": "TT",
                                   "fill": "#94A3B8",
-                                  "content": "React",
+                                  "content": "Lichen Lining",
                                   "fontFamily": "Inter",
                                   "fontSize": 8,
                                   "fontWeight": "500"
@@ -826,7 +826,7 @@
                                   "id": "a3HcO",
                                   "name": "TT",
                                   "fill": "#94A3B8",
-                                  "content": "Distributed",
+                                  "content": "Canopy Defense",
                                   "fontFamily": "Inter",
                                   "fontSize": 8,
                                   "fontWeight": "500"
@@ -864,7 +864,7 @@
                               "id": "eH2tp",
                               "name": "R2",
                               "fill": "#CBD5E1",
-                              "content": "Frontend Web Developer",
+                              "content": "Senior Nest Artisan",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "600"
@@ -874,7 +874,7 @@
                               "id": "zQEvn",
                               "name": "D2",
                               "fill": "#64748B",
-                              "content": "2019 - 2021 • Web & UI Architecture",
+                              "content": "2019 - 2021 • High-Canopy Nest Design",
                               "fontFamily": "Inter",
                               "fontSize": 9,
                               "fontWeight": "normal"
@@ -920,7 +920,7 @@
                               "id": "gmhl6",
                               "name": "R3",
                               "fill": "#CBD5E1",
-                              "content": "Frontend Developer IV",
+                              "content": "Lead Caterpillar Inspector",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "600"
@@ -930,7 +930,7 @@
                               "id": "gJkNk",
                               "name": "D3",
                               "fill": "#64748B",
-                              "content": "2017 - 2019 • Design Systems",
+                              "content": "2017 - 2019 • Foraging & Berry Selection",
                               "fontFamily": "Inter",
                               "fontSize": 9,
                               "fontWeight": "normal"
@@ -1076,7 +1076,7 @@
                                   "id": "H72LR",
                                   "name": "KWVal",
                                   "fill": "#E2E8F0",
-                                  "content": "Front End Developer",
+                                  "content": "Senior Leaf Stitcher",
                                   "fontFamily": "Inter",
                                   "fontSize": 10,
                                   "fontWeight": "normal"
@@ -1574,7 +1574,7 @@
                               "id": "ab5GM",
                               "name": "CompName",
                               "fill": "#EEEEEE",
-                              "content": "Server Systems",
+                              "content": "Canopy & Cobwebs Co.",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "bold"
@@ -1584,7 +1584,7 @@
                               "id": "VQe8D",
                               "name": "JobTitle",
                               "fill": "#CCCCCC",
-                              "content": "Staff Systems Eng",
+                              "content": "Chief Nest Architect",
                               "fontFamily": "Inter",
                               "fontSize": 9.5,
                               "fontWeight": "normal"
@@ -1639,7 +1639,7 @@
                                   "id": "OvnDS",
                                   "name": "UrlText",
                                   "fill": "#818CF8",
-                                  "content": "ashbyhq.com/...",
+                                  "content": "canopy-cobwebs.forest/...",
                                   "fontFamily": "Inter",
                                   "fontSize": 9,
                                   "fontWeight": "normal"
@@ -1732,7 +1732,7 @@
                               "id": "BrpiC",
                               "name": "CompName",
                               "fill": "#EEEEEE",
-                              "content": "Stripe",
+                              "content": "Bramble & Burlap Guild",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "bold"
@@ -1742,7 +1742,7 @@
                               "id": "TtJQu",
                               "name": "JobTitle",
                               "fill": "#CCCCCC",
-                              "content": "Frontend Architect",
+                              "content": "Master Twig Weaver",
                               "fontFamily": "Inter",
                               "fontSize": 9.5,
                               "fontWeight": "normal"
@@ -1797,7 +1797,7 @@
                                   "id": "WhOwh",
                                   "name": "UrlText",
                                   "fill": "#818CF8",
-                                  "content": "stripe.com/jobs/...",
+                                  "content": "bramble-burlap.forest/...",
                                   "fontFamily": "Inter",
                                   "fontSize": 9,
                                   "fontWeight": "normal"
@@ -1890,7 +1890,7 @@
                               "id": "JSkql",
                               "name": "CompName",
                               "fill": "#EEEEEE",
-                              "content": "Vercel",
+                              "content": "Great Oak Foraging Co.",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "bold"
@@ -1900,7 +1900,7 @@
                               "id": "eSJOO",
                               "name": "JobTitle",
                               "fill": "#CCCCCC",
-                              "content": "Core Systems Dev",
+                              "content": "Berry Quality Inspector",
                               "fontFamily": "Inter",
                               "fontSize": 9.5,
                               "fontWeight": "normal"
@@ -1955,7 +1955,7 @@
                                   "id": "nVtuF",
                                   "name": "UrlText",
                                   "fill": "#818CF8",
-                                  "content": "vercel.com/...",
+                                  "content": "great-oak.forest/...",
                                   "fontFamily": "Inter",
                                   "fontSize": 9,
                                   "fontWeight": "normal"
@@ -2159,7 +2159,7 @@
                           "id": "WI3va",
                           "name": "TabTitle",
                           "fill": "#E2E8F0",
-                          "content": "Server Systems - Staff Distributed Systems Engineer",
+                          "content": "Canopy & Cobwebs - Chief Nest Architect",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -2292,7 +2292,7 @@
                               "id": "BPsiT",
                               "name": "UrlText",
                               "fill": "#94A3B8",
-                              "content": "https://jobs.ashbyhq.com/serversystems/staff-distributed-systems-engineer",
+                              "content": "https://canopy-cobwebs.forest/perch/chief-nest-architect",
                               "fontFamily": "Inter",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -2424,7 +2424,7 @@
                   "id": "wu7LT",
                   "name": "S2",
                   "fill": "#71717A",
-                  "content": "Profile: Alex Mercer",
+                  "content": "Profile: Barnaby Featherstitch",
                   "fontFamily": "Inter",
                   "fontSize": 10,
                   "fontWeight": "normal"
@@ -2453,7 +2453,7 @@
                   "id": "LFsXJ",
                   "name": "SR1",
                   "fill": "#71717A",
-                  "content": "Ashby Parser v2.4",
+                  "content": "Avian Parser v2.4",
                   "fontFamily": "Inter",
                   "fontSize": 10,
                   "fontWeight": "normal"

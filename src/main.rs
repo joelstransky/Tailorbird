@@ -759,6 +759,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_title("Tailorbird — Specialized Job Search Browser")
         .with_inner_size(LogicalSize::new(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT))
         .with_min_inner_size(LogicalSize::new(760.0, 480.0))
+        .with_maximized(true)
         .with_visible(true);
 
     if let Ok(icon) = Icon::from_rgba(ICON_RGBA.to_vec(), 32, 32) {
@@ -772,6 +773,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(target_os = "windows")]
     let hwnd_raw = window.hwnd();
+
+    let initial_inner_size = window.inner_size().to_logical::<f64>(window.scale_factor());
+    let init_win_w = if initial_inner_size.width > 0.0 { initial_inner_size.width } else { DEFAULT_WINDOW_WIDTH };
+    let init_win_h = if initial_inner_size.height > 0.0 { initial_inner_size.height } else { DEFAULT_WINDOW_HEIGHT };
 
     // Load persisted app data to restore split width if available
     let initial_app_data = load_stored_data();
@@ -791,7 +796,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let next_tab_id_holder = Arc::new(Mutex::new(2usize));
 
     let left_width_holder = Arc::new(Mutex::new(initial_left_width));
-    let window_size_holder = Arc::new(Mutex::new((DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)));
+    let window_size_holder = Arc::new(Mutex::new((init_win_w, init_win_h)));
     let scale_factor_holder = Arc::new(Mutex::new(window.scale_factor()));
 
     let left_for_ipc = left_wv_holder.clone();
@@ -1447,6 +1452,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Sync initial tabs & omnibar to toolbar
     sync_tabs(&toolbar_wv_holder, &tabs_holder.lock().unwrap(), 1);
     sync_url(&toolbar_wv_holder, "local://welcome");
+
+    // Perform initial layout sync to ensure maximized window dimensions apply across all panes immediately
+    layout_coordinator(None);
 
     println!("[Tailorbird] All panes, multi-tab manager, and browser toolbar ready! Event loop running.");
 
@@ -2139,14 +2147,14 @@ mod tests {
         let json = r##"{
             "action": "SAVE_DATA",
             "candidateProfile": {
-                "fullName": "Alice Smith"
+                "fullName": "Penelope Plumage"
             },
             "resumeSource": "",
             "workHistory": [],
             "specialFields": [],
             "prospects": [],
             "searchCriteria": {
-                "title": "Frontend Engineer"
+                "title": "Senior Caterpillar QA Specialist"
             },
             "splitWidth": 450.0,
             "primaryColor": "#3B82F6"
@@ -2156,9 +2164,9 @@ mod tests {
         match msg {
             IpcMessage::SaveData { candidate_profile, search_criteria, primary_color, .. } => {
                 let prof = candidate_profile.expect("Profile should be present");
-                assert_eq!(prof.full_name, "Alice Smith");
+                assert_eq!(prof.full_name, "Penelope Plumage");
                 let crit = search_criteria.expect("Search criteria should be present");
-                assert_eq!(crit.title, "Frontend Engineer");
+                assert_eq!(crit.title, "Senior Caterpillar QA Specialist");
                 assert_eq!(primary_color, Some("#3B82F6".to_string()));
             }
             _ => panic!("Expected SaveData variant"),
@@ -2179,8 +2187,8 @@ mod tests {
             "hitList": [
                 {
                     "id": "t-1",
-                    "companyName": "Vercel",
-                    "websiteUrl": "https://vercel.com",
+                    "companyName": "Canopy & Cobwebs Haberdashery",
+                    "websiteUrl": "https://canopy-cobwebs.forest",
                     "status": "Targeted"
                 }
             ]
@@ -2189,7 +2197,7 @@ mod tests {
         match msg_save {
             IpcMessage::SaveHitList { hit_list } => {
                 assert_eq!(hit_list.len(), 1);
-                assert_eq!(hit_list[0].company_name, "Vercel");
+                assert_eq!(hit_list[0].company_name, "Canopy & Cobwebs Haberdashery");
             }
             _ => panic!("Expected SaveHitList variant"),
         }
@@ -2205,11 +2213,11 @@ mod tests {
     fn test_prepare_hitlist_html() {
         let target = crate::prospect::HitListTarget {
             id: "test-1".to_string(),
-            company_name: "Stripe".to_string(),
+            company_name: "Great Oak Haberdashery".to_string(),
             ..Default::default()
         };
         let html = prepare_hitlist_html(&[target]);
         assert!(html.contains("window.__INITIAL_HITLIST_DATA__ = ["));
-        assert!(html.contains("\"companyName\":\"Stripe\""));
+        assert!(html.contains("\"companyName\":\"Great Oak Haberdashery\""));
     }
 }

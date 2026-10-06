@@ -1627,35 +1627,35 @@
           <div class="prop-row">
             <span class="prop-label">Full Name</span>
             <div class="prop-input-wrap">
-              <input type="text" id="fullName" value="" placeholder="e.g. Jane Doe">
+              <input type="text" id="fullName" value="" placeholder="e.g. Barnaby Featherstitch">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Role / Title</span>
             <div class="prop-input-wrap">
-              <input type="text" id="profileRole" value="" placeholder="e.g. Senior Frontend Engineer">
+              <input type="text" id="profileRole" value="" placeholder="e.g. Master Leaf Stitcher & Nest Architect">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Email</span>
             <div class="prop-input-wrap">
-              <input type="email" id="email" value="" placeholder="e.g. jane@example.com">
+              <input type="email" id="email" value="" placeholder="e.g. barnaby@canopy.forest">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Phone</span>
             <div class="prop-input-wrap">
-              <input type="tel" id="phone" value="" placeholder="e.g. (555) 000-0000">
+              <input type="tel" id="phone" value="" placeholder="e.g. (555) CHIRP-01">
             </div>
           </div>
 
           <div class="prop-row">
             <span class="prop-label">Location</span>
             <div class="prop-input-wrap">
-              <input type="text" id="location" value="" placeholder="e.g. San Francisco, CA or Remote">
+              <input type="text" id="location" value="" placeholder="e.g. Great Oak Canopy, Whispering Pines or Migratory">
             </div>
           </div>
 
@@ -1908,14 +1908,14 @@
         <div class="prop-row">
           <span class="prop-label">Keywords</span>
           <div class="prop-input-wrap">
-            <input type="text" id="searchTitle" value="" placeholder="e.g. Staff Software Engineer">
+            <input type="text" id="searchTitle" value="" placeholder="e.g. Chief Twig Weaver & Nest Architect">
           </div>
         </div>
 
         <div class="prop-row">
           <span class="prop-label">Location</span>
           <div class="prop-input-wrap">
-            <input type="text" id="searchLocation" value="" placeholder="e.g. Remote, San Francisco">
+            <input type="text" id="searchLocation" value="" placeholder="e.g. Whispering Pines, High Canopy">
           </div>
         </div>
 
@@ -2640,7 +2640,7 @@
 
         card.innerHTML = `
           <div class="special-field-header">
-            <input type="text" class="special-field-label" value="${escapeHtml(item.label || '')}" placeholder="Question / Label (e.g. What makes you want to work here?)" oninput="handleSpecialFieldInput(${idx}, 'label', this.value)" onchange="updateSpecialField(${idx}, 'label', this.value)">
+            <input type="text" class="special-field-label" value="${escapeHtml(item.label || '')}" placeholder="Question / Label (e.g. Why are you passionate about tailoring leaves with us?)" oninput="handleSpecialFieldInput(${idx}, 'label', this.value)" onchange="updateSpecialField(${idx}, 'label', this.value)">
             <button class="ps-btn ps-btn-sm btn-copy-field" id="btnCopyField_${idx}" onclick="copySpecialField(${idx})" title="Copy text to clipboard">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -3027,8 +3027,8 @@
         queryParts.push('(' + sites.join(' OR ') + ')');
       }
 
-      if (title) queryParts.push(`"${title}"`);
-      if (location) queryParts.push(`"${location}"`);
+      if (location) queryParts.push(location);
+      if (title) queryParts.push(title);
 
       const query = queryParts.join(' ');
       sendIpc('RUN_SEARCH', { query });

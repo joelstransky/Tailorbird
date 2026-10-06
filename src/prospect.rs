@@ -248,16 +248,16 @@ mod tests {
     fn test_app_data_backward_compatibility_with_partial_fields() {
         let json = r#"{
             "candidateProfile": {
-                "fullName": "Jane Doe",
-                "email": "jane@example.com"
+                "fullName": "Barnaby Featherstitch",
+                "email": "barnaby@canopy.forest"
             },
-            "resumeSource": "/path/to/resume.pdf",
+            "resumeSource": "/path/to/nest_tailoring_resume.pdf",
             "prospects": [
                 {
                     "id": "p-1",
-                    "company": "Acme Inc",
-                    "jobTitle": "Rust Engineer",
-                    "url": "https://acme.com/jobs/1",
+                    "company": "Bramble & Burlap Guild",
+                    "jobTitle": "Master Twig Weaver",
+                    "url": "https://bramble-burlap.forest/perch/1",
                     "status": "Applied",
                     "dateAdded": "2026-10-01"
                 }
@@ -266,10 +266,10 @@ mod tests {
 
         let parsed: AppData = serde_json::from_str(json).expect("Partial legacy JSON should deserialize");
         let profile = parsed.candidate_profile.expect("Profile should be present");
-        assert_eq!(profile.full_name, "Jane Doe");
-        assert_eq!(profile.email, "jane@example.com");
+        assert_eq!(profile.full_name, "Barnaby Featherstitch");
+        assert_eq!(profile.email, "barnaby@canopy.forest");
         assert_eq!(parsed.prospects.len(), 1);
-        assert_eq!(parsed.prospects[0].company, "Acme Inc");
+        assert_eq!(parsed.prospects[0].company, "Bramble & Burlap Guild");
         assert!(parsed.hit_list.is_empty());
         assert!(parsed.special_fields.is_empty());
     }
@@ -281,13 +281,13 @@ mod tests {
             "outreachRoster": [
                 {
                     "id": "h-1",
-                    "companyName": "Linear",
-                    "websiteUrl": "https://linear.app",
-                    "industry": "DevTools",
+                    "companyName": "Canopy & Cobwebs Haberdashery",
+                    "websiteUrl": "https://canopy-cobwebs.forest",
+                    "industry": "Fine Leaf Weaving",
                     "status": "Targeted",
                     "contact": {
-                        "name": "Alex",
-                        "title": "Engineering Lead"
+                        "name": "Penelope Plumage",
+                        "title": "Head of Twig Architecture"
                     }
                 }
             ]
@@ -295,8 +295,8 @@ mod tests {
 
         let parsed: AppData = serde_json::from_str(json).expect("Alias outreachRoster should deserialize");
         assert_eq!(parsed.hit_list.len(), 1);
-        assert_eq!(parsed.hit_list[0].company_name, "Linear");
-        assert_eq!(parsed.hit_list[0].contact.name, "Alex");
+        assert_eq!(parsed.hit_list[0].company_name, "Canopy & Cobwebs Haberdashery");
+        assert_eq!(parsed.hit_list[0].contact.name, "Penelope Plumage");
     }
 
     #[test]
@@ -328,24 +328,24 @@ mod tests {
 
         let test_data = AppData {
             candidate_profile: Some(CandidateProfile {
-                full_name: "Test User".to_string(),
-                email: "test@example.com".to_string(),
-                phone: "555-1234".to_string(),
+                full_name: "Robin Needlewing".to_string(),
+                email: "robin@nest.forest".to_string(),
+                phone: "(555) CHIRP-02".to_string(),
                 ..Default::default()
             }),
             search_criteria: Some(SearchCriteria {
-                title: "Rust Engineer".to_string(),
-                location: "Remote".to_string(),
+                title: "Chief Twig Weaver".to_string(),
+                location: "High Canopy".to_string(),
                 ..Default::default()
             }),
             prospects: vec![Prospect {
                 id: "p-test-1".to_string(),
-                company: "Test Corp".to_string(),
-                job_title: "Staff Engineer".to_string(),
-                url: "https://test.example.com".to_string(),
+                company: "Great Oak Guild".to_string(),
+                job_title: "Senior Leaf Stitcher".to_string(),
+                url: "https://great-oak.forest/perch/1".to_string(),
                 status: "Applied".to_string(),
                 date_added: "2026-10-02".to_string(),
-                notes: "Test notes".to_string(),
+                notes: "Notes on spider-silk tensile strength and leaf alignment".to_string(),
             }],
             ..Default::default()
         };
@@ -357,10 +357,10 @@ mod tests {
         // Test load
         let loaded = load_stored_data_from_path(&test_file);
         assert_eq!(loaded.prospects.len(), 1);
-        assert_eq!(loaded.prospects[0].company, "Test Corp");
-        assert_eq!(loaded.prospects[0].notes, "Test notes");
+        assert_eq!(loaded.prospects[0].company, "Great Oak Guild");
+        assert_eq!(loaded.prospects[0].notes, "Notes on spider-silk tensile strength and leaf alignment");
         assert!(loaded.candidate_profile.is_some());
-        assert_eq!(loaded.candidate_profile.as_ref().unwrap().full_name, "Test User");
+        assert_eq!(loaded.candidate_profile.as_ref().unwrap().full_name, "Robin Needlewing");
 
         // Clean up
         let _ = fs::remove_file(&test_file);

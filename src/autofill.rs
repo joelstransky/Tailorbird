@@ -1653,16 +1653,16 @@ mod tests {
     #[test]
     fn test_generate_autofill_script_contains_solvers() {
         let profile = CandidateProfile {
-            full_name: "Alex Mercer".to_string(),
-            role: "Staff Software Engineer".to_string(),
+            full_name: "Barnaby Featherstitch".to_string(),
+            role: "Master Leaf Stitcher & Nest Architect".to_string(),
             pronouns: "They/them".to_string(),
-            email: "alex.mercer.dev@example.com".to_string(),
+            email: "barnaby.featherstitch@canopy.forest".to_string(),
             phone: "(555) 019-2834".to_string(),
-            location: "San Francisco, CA".to_string(),
-            current_company: "Apex Cloud Technologies".to_string(),
-            linkedin: "https://www.linkedin.com/in/alexmercer-dev/".to_string(),
-            github: "https://github.com/alexmercer".to_string(),
-            portfolio_url: "https://alexmercer.dev/".to_string(),
+            location: "Great Oak Canopy, Whispering Pines".to_string(),
+            current_company: "Canopy & Cobwebs Haberdashery".to_string(),
+            linkedin: "https://nestwork.forest/in/barnaby-featherstitch".to_string(),
+            github: "https://featherhub.forest/barnaby".to_string(),
+            portfolio_url: "https://barnabyfeatherstitch.forest".to_string(),
             experience_years: "10".to_string(),
             gender: "Non-binary".to_string(),
             race: "Decline to specify".to_string(),
@@ -1678,10 +1678,10 @@ mod tests {
         assert!(script.contains("NativeInputSolver"));
         assert!(script.contains("NativeSelectSolver"));
         assert!(script.contains("FileAttachmentSolver"));
-        assert!(script.contains("Alex Mercer"));
-        assert!(script.contains("Staff Software Engineer"));
-        assert!(script.contains("Apex Cloud Technologies"));
-        assert!(script.contains("San Francisco, CA"));
+        assert!(script.contains("Barnaby Featherstitch"));
+        assert!(script.contains("Master Leaf Stitcher & Nest Architect"));
+        assert!(script.contains("Canopy & Cobwebs Haberdashery"));
+        assert!(script.contains("Great Oak Canopy, Whispering Pines"));
 
         // Validate syntax with node if available
         let tmp_path = std::env::temp_dir().join("test_autofill_syntax.js");

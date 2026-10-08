@@ -9,7 +9,7 @@ use tao::{
     dpi::{LogicalPosition, LogicalSize, Position, Size},
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy},
-    window::{Icon, WindowBuilder},
+    window::{Icon, Theme, WindowBuilder},
 };
 
 #[cfg(target_os = "windows")]
@@ -791,10 +791,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut win_builder = WindowBuilder::new()
         .with_title("Tailorbird — Specialized Job Search Browser")
+        .with_theme(Some(Theme::Dark))
         .with_inner_size(LogicalSize::new(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT))
         .with_min_inner_size(LogicalSize::new(760.0, 480.0))
         .with_maximized(true)
-        .with_visible(true);
+        .with_visible(false);
 
     if let Ok(icon) = Icon::from_rgba(ICON_RGBA.to_vec(), 32, 32) {
         win_builder = win_builder.with_window_icon(Some(icon));
@@ -802,11 +803,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let window = win_builder.build(&event_loop)?;
 
-    window.set_focus();
-    println!("[Tailorbird] Native parent window created successfully.");
-
     #[cfg(target_os = "windows")]
     let hwnd_raw = window.hwnd();
+
+    #[cfg(target_os = "windows")]
+    {
+        // Enforce Windows 10/11 immersive dark mode on window frame & title bar immediately
+        // 20 = DWMWA_USE_IMMERSIVE_DARK_MODE, 35 = DWMWA_CAPTION_COLOR
+        type DwmSetWindowAttrFn = unsafe extern "system" fn(
+            isize,
+            u32,
+            *const std::ffi::c_void,
+            u32,
+        ) -> i32;
+
+        unsafe {
+            use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
+            let h_dwm = LoadLibraryA(c"dwmapi.dll".as_ptr() as *const u8);
+            if !h_dwm.is_null() {
+                let proc = GetProcAddress(h_dwm, c"DwmSetWindowAttribute".as_ptr() as *const u8);
+                if let Some(func_ptr) = proc {
+                    let func: DwmSetWindowAttrFn = std::mem::transmute(func_ptr);
+                    let dark_mode: i32 = 1;
+                    let _ = func(
+                        hwnd_raw,
+                        20, // DWMWA_USE_IMMERSIVE_DARK_MODE
+                        &dark_mode as *const _ as *const std::ffi::c_void,
+                        std::mem::size_of::<i32>() as u32,
+                    );
+                    // Dark background caption color 0x00130D0B (COLORREF for #0B0D13)
+                    let caption_color: u32 = 0x00130D0B;
+                    let _ = func(
+                        hwnd_raw,
+                        35, // DWMWA_CAPTION_COLOR
+                        &caption_color as *const _ as *const std::ffi::c_void,
+                        std::mem::size_of::<u32>() as u32,
+                    );
+                }
+            }
+        }
+    }
 
     let initial_inner_size = window.inner_size().to_logical::<f64>(window.scale_factor());
     let init_win_w = if initial_inner_size.width > 0.0 { initial_inner_size.width } else { DEFAULT_WINDOW_WIDTH };
@@ -908,6 +944,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             position: Position::Logical(LogicalPosition::new(0.0, 0.0)),
             size: Size::Logical(LogicalSize::new(initial_left_width, DEFAULT_WINDOW_HEIGHT)),
         })
+        .with_background_color((17, 20, 28, 255)) // #11141C match theme
         .with_initialization_script(&init_script)
         .with_devtools(true)
         .with_new_window_req_handler({
@@ -1249,6 +1286,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             position: Position::Logical(LogicalPosition::new(initial_left_width, 0.0)),
             size: Size::Logical(LogicalSize::new(initial_right_width, TOOLBAR_HEIGHT)),
         })
+        .with_background_color((14, 17, 24, 255)) // #0E1118 match tab bar theme
         .with_devtools(true)
         .with_initialization_script(&tb_init_script)
         .with_html(TOOLBAR_HTML)
@@ -1308,6 +1346,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let builder = builder.with_environment(shared_env.clone());
             let builder = builder
                 .with_bounds(bounds)
+                .with_background_color((11, 13, 19, 255)) // #0B0D13 match welcome/dark canvas
                 .with_visible(visible)
                 .with_devtools(true)
                 .with_initialization_script(&tab_init_script)
@@ -1506,6 +1545,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Perform initial layout sync to ensure maximized window dimensions apply across all panes immediately
     layout_coordinator(None);
+
+    // Reveal native window smoothly now that all panes, theme attributes, and bounds are synced
+    window.set_visible(true);
+    window.set_focus();
 
     println!("[Tailorbird] All panes, multi-tab manager, and browser toolbar ready! Event loop running.");
 

@@ -242,7 +242,147 @@
       justify-content: center;
       gap: 1rem;
       flex-wrap: wrap;
-      margin-bottom: 3.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* OS Download Buttons */
+    .download-container {
+      max-width: 960px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 860px) {
+      .download-grid {
+        grid-template-columns: 1fr;
+        max-width: 440px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    .download-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.95rem;
+      padding: 0.95rem 1.25rem;
+      border-radius: 14px;
+      text-decoration: none;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .download-btn:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 25px rgba(249, 115, 22, 0.2);
+    }
+
+    .download-btn.recommended {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.9) 0%, rgba(234, 88, 12, 0.95) 100%);
+      border-color: rgba(253, 224, 71, 0.6);
+      box-shadow: 0 12px 35px -4px rgba(249, 115, 22, 0.65), 0 0 30px rgba(250, 204, 21, 0.3);
+    }
+
+    .download-btn.recommended:hover {
+      background: linear-gradient(135deg, rgba(251, 146, 60, 0.98) 0%, rgba(249, 115, 22, 1) 100%);
+      border-color: rgba(253, 224, 71, 0.9);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 45px -4px rgba(249, 115, 22, 0.8), 0 0 40px rgba(250, 204, 21, 0.4);
+    }
+
+    .download-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .download-meta {
+      flex: 1;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .download-title {
+      font-size: 0.96rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .download-desc {
+      font-size: 0.77rem;
+      color: rgba(255, 255, 255, 0.75);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    .download-btn.recommended .download-desc {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .rec-badge {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.35);
+      color: #fef08a;
+      padding: 1px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .download-action-icon {
+      flex-shrink: 0;
+      color: rgba(255, 255, 255, 0.65);
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .download-btn:hover .download-action-icon {
+      color: #ffffff;
+      transform: translateY(1px);
+    }
+
+    .download-subtext {
+      font-size: 0.86rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .download-subtext a {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.15s ease;
+    }
+
+    .download-subtext a:hover {
+      color: var(--accent-yellow);
     }
 
     /* Video Player Showcase at the Top */
@@ -587,13 +727,17 @@
       <span class="brand-tag">v1.0</span>
     </a>
     <div class="nav-links">
-      <a href="#video">Watch Tour</a>
+      <a href="#download" class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.86rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </a>
+      <a href="#video">Tour</a>
       <a href="#features">Dual-Pane</a>
-      <a href="#autofill">1-Click Autofill</a>
+      <a href="#autofill">Autofill</a>
       <a href="#prospects">Pipeline</a>
-      <a href="#quickstart">Quickstart</a>
-      <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary">
-        <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor">
+      <a href="#quickstart">Source</a>
+      <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 0.45rem 0.9rem; font-size: 0.86rem;">
+        <svg height="15" width="15" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
         </svg>
         GitHub
@@ -607,14 +751,58 @@
     <p>
       Tired of 37 open tabs, lost spreadsheets, and typing your contact details for the 400th time? Tailorbird pairs your candidate profile, work history, and tracking pipeline directly next to a dedicated browser pane.
     </p>
-    <div class="hero-actions">
-      <a href="#quickstart" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        Build From Source
-      </a>
-      <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary">
-        Star on GitHub
-      </a>
+
+    <!-- OS Download Buttons -->
+    <div class="download-container" id="download">
+      <div class="download-grid">
+        <!-- Windows -->
+        <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.1.0/Tailorbird-Setup-v0.1.0.exe" class="download-btn" id="btn-win">
+          <div class="download-icon">
+            <svg width="24" height="24" viewBox="0 0 88 88" fill="currentColor">
+              <path d="M0 12.402l35.687-4.86.016 34.423-35.67.202L0 12.402zm35.67 33.529l.028 34.453L.028 75.48.016 46.133l35.654-.202zM40.998 6.993L87.973 0v41.527l-46.975.344V6.993zm46.999 39.541l-.024 41.466-46.975-6.621V46.877l47-.343z"/>
+            </svg>
+          </div>
+          <div class="download-meta">
+            <div class="download-title">Windows <span class="rec-badge" style="display:none;" id="badge-win">Your OS</span></div>
+            <div class="download-desc">Installer .exe · v0.1.0</div>
+          </div>
+          <svg class="download-action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+
+        <!-- macOS -->
+        <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.1.0/Tailorbird-macOS.dmg" class="download-btn" id="btn-mac">
+          <div class="download-icon">
+            <svg width="24" height="24" viewBox="0 0 170 170" fill="currentColor">
+              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.87-11.93-14.49-5.99-9.33-10.7-19.64-14.13-30.93-3.43-11.29-5.15-22.18-5.15-32.66 0-14.54 3.66-26.68 10.97-36.42 7.31-9.74 16.59-14.73 27.84-14.97 4.91 0 10.22 1.25 15.93 3.75 5.71 2.5 9.77 3.86 12.18 4.09 2.05-.23 6.32-1.67 12.82-4.32 6.5-2.65 12.02-3.8 16.56-3.46 12.37.95 22.39 5.86 30.06 14.73-10.8 6.53-16.1 15.54-15.89 27.02.21 9.07 3.64 16.71 10.29 22.92 6.65 6.21 14.49 9.87 23.51 10.98-2.39 7.34-5.34 14.64-8.86 21.9zM119.22 31.84c0-7.39 2.67-14.41 8.01-21.06 5.34-6.65 11.95-10.66 19.82-12.03.22 1.34.33 2.57.33 3.69 0 7.42-2.82 14.6-8.46 21.54-5.64 6.94-12.44 11.08-20.4 12.42-.44-1.56-.7-2.92-.7-4.08z"/>
+            </svg>
+          </div>
+          <div class="download-meta">
+            <div class="download-title">macOS <span class="rec-badge" style="display:none;" id="badge-mac">Your OS</span></div>
+            <div class="download-desc">Universal .dmg · v0.1.0</div>
+          </div>
+          <svg class="download-action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+
+        <!-- Linux -->
+        <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.1.0/tailorbird-linux-x86_64.tar.gz" class="download-btn" id="btn-linux">
+          <div class="download-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="7 8 10 10 7 12"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
+          </div>
+          <div class="download-meta">
+            <div class="download-title">Linux <span class="rec-badge" style="display:none;" id="badge-linux">Your OS</span></div>
+            <div class="download-desc">x86_64 .tar.gz · v0.1.0</div>
+          </div>
+          <svg class="download-action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+      </div>
+
+      <div class="download-subtext">
+        <span>Free & offline under MIT License</span>
+        <span>·</span>
+        <a href="#quickstart">Build from source</a>
+        <span>·</span>
+        <a href="https://github.com/joelstransky/Tailorbird/releases/tag/v0.1.0" target="_blank" rel="noopener">All v0.1.0 release assets</a>
+      </div>
     </div>
   </header>
 
@@ -624,7 +812,7 @@
       <div class="video-wrapper">
         <iframe
           id="launch-video"
-          src="https://www.youtube-nocookie.com/embed/8g9B286T2iM?autoplay=1&mute=1&loop=1&playlist=8g9B286T2iM&rel=0&modestbranding=1&playsinline=1"
+          src="https://www.youtube.com/embed/8g9B286T2iM?autoplay=1&mute=1&loop=1&playlist=8g9B286T2iM&rel=0&playsinline=1"
           title="Tailorbird — Launch Experience (360° Forest Edition)"
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -796,6 +984,31 @@
     <p>Specialized Desktop Browser for Job Hunting, Form Autofill & Pipeline Tracking.</p>
     <p>Released as open source software under the <a href="https://github.com/joelstransky/Tailorbird/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
   </footer>
+
+  <script>
+    (function() {
+      try {
+        var ua = (navigator.userAgent || '').toLowerCase();
+        var platform = (navigator.platform || '').toLowerCase();
+        if (ua.indexOf('win') !== -1 || platform.indexOf('win') !== -1) {
+          var btn = document.getElementById('btn-win');
+          var badge = document.getElementById('badge-win');
+          if (btn) btn.classList.add('recommended');
+          if (badge) badge.style.display = 'inline-block';
+        } else if (ua.indexOf('mac') !== -1 || platform.indexOf('mac') !== -1) {
+          var btn = document.getElementById('btn-mac');
+          var badge = document.getElementById('badge-mac');
+          if (btn) btn.classList.add('recommended');
+          if (badge) badge.style.display = 'inline-block';
+        } else if (ua.indexOf('linux') !== -1 || platform.indexOf('linux') !== -1) {
+          var btn = document.getElementById('btn-linux');
+          var badge = document.getElementById('badge-linux');
+          if (btn) btn.classList.add('recommended');
+          if (badge) badge.style.display = 'inline-block';
+        }
+      } catch (e) {}
+    })();
+  </script>
 
 </body>
 </html>

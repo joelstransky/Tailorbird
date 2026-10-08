@@ -85,6 +85,7 @@ fn setup_macos_menu() {
     let _ = menu.append(&edit_menu);
     let _ = menu.append(&window_menu);
     menu.init_for_nsapp();
+    Box::leak(Box::new(menu));
 }
 
 fn prepare_left_pane_html(primary_color: &str) -> String {

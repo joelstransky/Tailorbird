@@ -137,10 +137,13 @@ jobs:
           # Ad-hoc code sign the Universal bundle
           codesign --force --deep --sign - Tailorbird.app
 
-          # Create DMG installer with Applications drag-and-drop link
+          # Create DMG installer with Applications drag-and-drop link, Uninstaller, and README guide
           mkdir -p dmg_root
           cp -R Tailorbird.app dmg_root/
           ln -s /Applications dmg_root/Applications
+          cp installer/macos/Uninstall.command dmg_root/
+          chmod +x dmg_root/Uninstall.command
+          cp installer/macos/README.txt dmg_root/
           hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO Tailorbird-macOS.dmg
 
       - name: Upload macOS DMG

@@ -85,12 +85,24 @@ Tailorbird supports standard desktop browser navigation and specialized job-hunt
 
 ---
 
-## Building and Running
+### Running Prebuilt Release (Linux)
 
-### Prerequisites
-- Build tools / toolchain
+Tailorbird releases for Linux include a ready-to-run `.tar.gz` bundle containing the executable binary, desktop launcher, application icon, and `install.sh` script.
 
-### Instructions
+1. Install runtime dependencies:
+   - **Ubuntu / Debian**: `sudo apt install -y libwebkit2gtk-4.1-0 libgtk-3-0 libssl3`
+   - **Fedora**: `sudo dnf install -y webkit2gtk4.1 gtk3 openssl`
+   - **Arch**: `sudo pacman -S webkit2gtk-4.1 openssl`
+
+2. Extract and run:
+   ```bash
+   tar -xzf tailorbird-linux-x86_64.tar.gz
+   cd tailorbird-linux-x86_64
+   ./tailorbird
+   ```
+   *(Optional)* Run `sudo ./install.sh` to install system-wide to `/usr/local/bin` and create an application menu shortcut.
+
+### Building from Source
 
 ```bash
 # Clone the repository
@@ -100,7 +112,7 @@ cd Tailorbird
 # Run the app
 cargo run
 
-# Or compile a release binary
+# Or compile an optimized release binary
 cargo build --release
 ```
 

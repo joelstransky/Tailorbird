@@ -154,20 +154,27 @@ jobs:
           path: Tailorbird-macOS.dmg
 
       # -------------------------------------------------------------
-      # 3. Linux: Upload binary
+      # 3. Linux: Bundle binary with instructions, desktop entry & installer
       # -------------------------------------------------------------
-      - name: Stage Linux binary
+      - name: Package Linux release bundle
         if: runner.os == 'Linux'
         run: |
-          cp target/${{ matrix.target }}/release/${{ matrix.binary-name }} tailorbird-linux-x86_64
-          chmod +x tailorbird-linux-x86_64
+          mkdir -p tailorbird-linux-x86_64
+          cp target/${{ matrix.target }}/release/${{ matrix.binary-name }} tailorbird-linux-x86_64/tailorbird
+          chmod +x tailorbird-linux-x86_64/tailorbird
+          cp installer/linux/README.txt tailorbird-linux-x86_64/README.txt
+          cp installer/linux/tailorbird.desktop tailorbird-linux-x86_64/tailorbird.desktop
+          cp installer/linux/install.sh tailorbird-linux-x86_64/install.sh
+          chmod +x tailorbird-linux-x86_64/install.sh
+          cp src/assets/icon.png tailorbird-linux-x86_64/icon.png
+          tar -czf tailorbird-linux-x86_64.tar.gz tailorbird-linux-x86_64
 
-      - name: Upload Linux Binary
+      - name: Upload Linux Binary Bundle
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: tailorbird-linux-x86_64
-          path: tailorbird-linux-x86_64
+          name: tailorbird-linux-x86_64.tar.gz
+          path: tailorbird-linux-x86_64.tar.gz
 
       # -------------------------------------------------------------
       # Release Draft Publishing
@@ -179,6 +186,6 @@ jobs:
           files: |
             dist/Tailorbird-Setup-v0.1.0.exe
             Tailorbird-macOS.dmg
-            tailorbird-linux-x86_64
+            tailorbird-linux-x86_64.tar.gz
           draft: true
           generate_release_notes: true

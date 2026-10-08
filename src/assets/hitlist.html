@@ -1423,21 +1423,109 @@
       }, 400);
     }
 
-    function copyField(id, field, btn) {
-      const target = hitList.find(t => t.id === id);
-      if (!target) return;
-      const text = (field === 'message')
-        ? (target.draftMessage || target.valueAngle || '')
-        : (target.notes || '');
+    function copyToClipboard(text, onSuccess, onError) {
       if (!text) return;
 
-      navigator.clipboard.writeText(text).then(() => {
-        const originalHtml = btn.innerHTML;
+      // 1. Native IPC copy via Rust backend (immune to browser sandbox & focus restrictions)
+      sendIpc('COPY_TO_CLIPBOARD', { text });
+
+      let feedbackGiven = false;
+      const finish = () => {
+        if (!feedbackGiven) {
+          feedbackGiven = true;
+          if (onSuccess) onSuccess();
+        }
+      };
+
+      // 2. Also execute browser-side copy if available
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(text)
+          .then(finish)
+          .catch(() => {
+            fallbackExecCopy(text, finish, onError);
+          });
+      } else {
+        fallbackExecCopy(text, finish, onError);
+      }
+
+      // Guarantee UI feedback even if browser clipboard API is unresponsive
+      setTimeout(finish, 40);
+    }
+
+    function fallbackExecCopy(text, onSuccess, onError) {
+      try {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        temp.style.top = '0';
+        temp.style.opacity = '0';
+        temp.setAttribute('readonly', '');
+        document.body.appendChild(temp);
+        temp.focus();
+        temp.select();
+        temp.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(temp);
+        if (ok) {
+          if (onSuccess) onSuccess();
+        } else if (onError) {
+          onError();
+        }
+      } catch (err) {
+        if (onError) onError(err);
+      }
+    }
+
+    function copyField(id, field, btn) {
+      // 1. Retrieve live value directly from the card DOM textarea if available
+      const cardEl = document.getElementById(`card-${id}`);
+      let text = '';
+      if (cardEl) {
+        const ta = (field === 'message')
+          ? cardEl.querySelector('.back-msg-input')
+          : cardEl.querySelector('.back-notes-input');
+        if (ta && typeof ta.value === 'string' && ta.value.trim().length > 0) {
+          text = ta.value;
+        }
+      }
+
+      // 2. Fall back to state object
+      if (!text) {
+        const target = hitList.find(t => t.id === id);
+        if (target) {
+          text = (field === 'message')
+            ? (target.draftMessage || target.valueAngle || '')
+            : (target.notes || '');
+        }
+      }
+
+      // 3. Visual indicator if field is genuinely empty
+      if (!text || !text.trim()) {
+        if (btn) {
+          const originalTitle = btn.title;
+          btn.title = 'Field is empty';
+          btn.style.borderColor = '#f85149';
+          setTimeout(() => {
+            btn.title = originalTitle;
+            btn.style.borderColor = '';
+          }, 1200);
+        }
+        return;
+      }
+
+      if (!btn) return;
+      const originalHtml = btn.innerHTML;
+      const originalTitle = btn.title;
+
+      copyToClipboard(text, () => {
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
         btn.classList.add('copied');
+        btn.title = 'Copied!';
         setTimeout(() => {
           btn.innerHTML = originalHtml;
           btn.classList.remove('copied');
+          btn.title = originalTitle;
         }, 1500);
       });
     }

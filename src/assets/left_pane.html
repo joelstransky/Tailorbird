@@ -2716,6 +2716,11 @@
         }
       }
 
+      // Native host clipboard copy (immune to webview focus / permission restrictions)
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(JSON.stringify({ action: 'COPY_TO_CLIPBOARD', text }));
+      }
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(markSuccess).catch(() => {
           fallbackCopy(text, markSuccess);

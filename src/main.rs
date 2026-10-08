@@ -641,6 +641,8 @@ enum IpcMessage {
     CycleTab { direction: i32 },
     #[serde(rename = "SWITCH_TAB_BY_INDEX")]
     SwitchTabByIndex { index: usize },
+    #[serde(rename = "COPY_TO_CLIPBOARD")]
+    CopyToClipboard { text: String },
 }
 
 fn handle_common_shortcut_ipc(msg: &IpcMessage, proxy: &EventLoopProxy<AppEvent>) -> bool {
@@ -1190,6 +1192,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     }
+                    Ok(IpcMessage::CopyToClipboard { text }) => {
+                        if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                            let _ = clipboard.set_text(text);
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -1376,6 +1383,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                             Ok(IpcMessage::SetPrimaryColor { color }) => {
                                 let _ = proxy_ipc.send_event(AppEvent::SetPrimaryColor { color });
+                            }
+                            Ok(IpcMessage::CopyToClipboard { text }) => {
+                                if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                                    let _ = clipboard.set_text(text);
+                                }
                             }
                             _ => {}
                         }
@@ -2140,6 +2152,16 @@ mod tests {
         match msg {
             IpcMessage::Navigate { url } => assert_eq!(url, "https://google.com"),
             _ => panic!("Expected Navigate variant"),
+        }
+    }
+
+    #[test]
+    fn test_ipc_message_deserialization_copy_to_clipboard() {
+        let json = r#"{"action": "COPY_TO_CLIPBOARD", "text": "Strategic value alignment hook"}"#;
+        let msg: IpcMessage = serde_json::from_str(json).expect("COPY_TO_CLIPBOARD should deserialize");
+        match msg {
+            IpcMessage::CopyToClipboard { text } => assert_eq!(text, "Strategic value alignment hook"),
+            _ => panic!("Expected CopyToClipboard variant"),
         }
     }
 

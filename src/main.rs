@@ -373,6 +373,30 @@ const WINDOW_HOOKS_SCRIPT: &str = r#"(function() {
             }
         }
     }, true);
+
+    // Detect external website favicon from <link rel="icon">
+    function detectFavicon() {
+        try {
+            if (!window.location.protocol.startsWith('http')) return;
+            const link = document.querySelector('link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]');
+            let iconUrl = '';
+            if (link && link.href) {
+                iconUrl = link.href;
+            }
+            if (iconUrl && window.ipc && typeof window.ipc.postMessage === 'function') {
+                window.ipc.postMessage(JSON.stringify({
+                    action: "TAB_FAVICON_DETECTED",
+                    favicon: iconUrl
+                }));
+            }
+        } catch(_) {}
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', detectFavicon);
+    } else {
+        detectFavicon();
+    }
 })();"#;
 
 const GLOBAL_SHORTCUTS_SCRIPT: &str = r#"(function() {
@@ -518,6 +542,7 @@ enum AppEvent {
     CycleTab { direction: i32 },
     SwitchTabByIndex { index: usize },
     TabTitleChanged { id: usize, title: String },
+    TabFaviconChanged { id: usize, favicon: String },
     TabPageLoaded { id: usize, url: String },
     NavigateActiveTab { url: String },
     RunSearch { query: String },
@@ -537,6 +562,8 @@ struct TabInfo {
     url: String,
     #[serde(rename = "isSearch")]
     is_search: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    favicon: Option<String>,
 }
 
 struct BrowserTab {
@@ -545,6 +572,7 @@ struct BrowserTab {
     url: String,
     webview: WebView,
     is_search: bool,
+    favicon: Option<String>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -643,6 +671,8 @@ enum IpcMessage {
     SwitchTabByIndex { index: usize },
     #[serde(rename = "COPY_TO_CLIPBOARD")]
     CopyToClipboard { text: String },
+    #[serde(rename = "TAB_FAVICON_DETECTED")]
+    TabFaviconDetected { favicon: String },
 }
 
 fn handle_common_shortcut_ipc(msg: &IpcMessage, proxy: &EventLoopProxy<AppEvent>) -> bool {
@@ -719,6 +749,7 @@ fn sync_tabs(toolbar_holder: &Arc<Mutex<Option<WebView>>>, tabs: &[BrowserTab], 
             title: t.title.clone(),
             url: t.url.clone(),
             is_search: t.is_search,
+            favicon: t.favicon.clone(),
         })
         .collect();
     if let Ok(guard) = toolbar_holder.lock() {
@@ -1384,6 +1415,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             Ok(IpcMessage::SetPrimaryColor { color }) => {
                                 let _ = proxy_ipc.send_event(AppEvent::SetPrimaryColor { color });
                             }
+                            Ok(IpcMessage::TabFaviconDetected { favicon }) => {
+                                let _ = proxy_ipc.send_event(AppEvent::TabFaviconChanged {
+                                    id: tab_id,
+                                    favicon,
+                                });
+                            }
                             Ok(IpcMessage::CopyToClipboard { text }) => {
                                 if let Ok(mut clipboard) = arboard::Clipboard::new() {
                                     let _ = clipboard.set_text(text);
@@ -1447,6 +1484,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         id: 1,
         title: "Welcome".to_string(),
         url: "local://welcome".to_string(),
+        favicon: None,
         webview: initial_tab_wv,
         is_search: false,
     };
@@ -1568,6 +1606,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     id: new_id,
                                     title: initial_title,
                                     url: formatted_url.clone(),
+                                    favicon: None,
                                     webview: wv,
                                     is_search: false,
                                 };
@@ -1678,6 +1717,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
                     }
                 }
+                AppEvent::TabFaviconChanged { id, favicon } => {
+                    if !favicon.is_empty() {
+                        let mut tabs = tabs_holder.lock().unwrap();
+                        let cur_active = *active_tab_id_holder.lock().unwrap();
+                        if let Some(tab) = tabs.iter_mut().find(|t| t.id == id) {
+                            if tab.favicon.as_deref() != Some(&favicon) {
+                                tab.favicon = Some(favicon);
+                                sync_tabs(&toolbar_wv_holder, &tabs, cur_active);
+                            }
+                        }
+                    }
+                }
                 AppEvent::TabPageLoaded { id, url } => {
                     let mut tabs = tabs_holder.lock().unwrap();
                     let cur_active = *active_tab_id_holder.lock().unwrap();
@@ -1697,6 +1748,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         // Never overwrite an existing URL with about:blank, data:..., or empty string
                         if !is_blank_or_data {
                             tab.url = url.clone();
+                        }
+
+                        if url.starts_with("http://") || url.starts_with("https://") {
+                            let js_fav = "(function(){ if (window.__TB_DETECT_FAVICON) { window.__TB_DETECT_FAVICON(); } })();";
+                            let _ = tab.webview.evaluate_script(js_fav);
                         }
 
                         if id == cur_active {
@@ -1761,6 +1817,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
                             let _ = tab.webview.evaluate_script(&js);
                         } else {
+                            tab.favicon = None;
                             let _ = tab.webview.load_url(&formatted);
                             tab.url = formatted.clone();
                         }
@@ -1798,6 +1855,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 t.is_search = true;
                                 t.url = search_url.clone();
                                 t.title = "Job Search".to_string();
+                                t.favicon = None;
                                 let _ = t.webview.load_url(&search_url);
                                 let _ = t.webview.set_bounds(bounds);
                                 let _ = t.webview.set_visible(true);
@@ -1824,6 +1882,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     id: new_id,
                                     title: "Job Search".to_string(),
                                     url: search_url.clone(),
+                                    favicon: None,
                                     webview: wv,
                                     is_search: true,
                                 };
@@ -2242,5 +2301,17 @@ mod tests {
         let html = prepare_hitlist_html(&[target]);
         assert!(html.contains("window.__INITIAL_HITLIST_DATA__ = ["));
         assert!(html.contains("\"companyName\":\"Great Oak Haberdashery\""));
+    }
+
+    #[test]
+    fn test_ipc_message_deserialization_tab_favicon_detected() {
+        let json = r#"{"action": "TAB_FAVICON_DETECTED", "favicon": "https://example.com/favicon.ico"}"#;
+        let msg: IpcMessage = serde_json::from_str(json).expect("TAB_FAVICON_DETECTED should deserialize");
+        match msg {
+            IpcMessage::TabFaviconDetected { favicon } => {
+                assert_eq!(favicon, "https://example.com/favicon.ico");
+            }
+            _ => panic!("Expected TabFaviconDetected variant"),
+        }
     }
 }

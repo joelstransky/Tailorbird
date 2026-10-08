@@ -254,70 +254,22 @@
       z-index: 2;
     }
 
-    .window-mockup {
-      background: rgba(18, 10, 31, 0.88);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
+    .video-frame {
+      border-radius: 18px;
       overflow: hidden;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      background: #000;
       box-shadow:
         0 30px 80px -15px rgba(0, 0, 0, 0.85),
         0 0 70px -10px rgba(249, 115, 22, 0.25);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     }
 
-    .window-mockup:hover {
+    .video-frame:hover {
       border-color: rgba(249, 115, 22, 0.35);
       box-shadow:
         0 35px 90px -15px rgba(0, 0, 0, 0.9),
         0 0 85px -5px rgba(249, 115, 22, 0.35);
-    }
-
-    .window-header {
-      background: rgba(14, 7, 24, 0.95);
-      padding: 0.75rem 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .window-dots {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-    }
-
-    .dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-    }
-
-    .dot-red { background: #ef4444; }
-    .dot-yellow { background: #f59e0b; }
-    .dot-green { background: #10b981; }
-
-    .window-title {
-      font-size: 0.84rem;
-      color: var(--text-dim);
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .badge-pill {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--accent-warm);
-      background: rgba(249, 115, 22, 0.14);
-      padding: 2px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(249, 115, 22, 0.28);
     }
 
     .video-wrapper {
@@ -668,21 +620,7 @@
 
   <!-- Launch Video at the Top -->
   <div class="video-showcase" id="video">
-    <div class="window-mockup">
-      <div class="window-header">
-        <div class="window-dots">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
-        </div>
-        <div class="window-title">
-          <img src="images/tailorbird_icon.png" width="14" height="14" alt="Tailorbird">
-          Tailorbird — Launch Experience (360° Forest Edition)
-        </div>
-        <div>
-          <span class="badge-pill">1080p HD</span>
-        </div>
-      </div>
+    <div class="video-frame">
       <div class="video-wrapper">
         <iframe
           id="launch-video"

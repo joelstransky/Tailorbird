@@ -328,14 +328,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
-    .launch-video-player {
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
+      border: 0;
       display: block;
-      object-fit: cover;
-      outline: none;
     }
 
     /* Content Sections */
@@ -681,19 +684,15 @@
         </div>
       </div>
       <div class="video-wrapper">
-        <video
+        <iframe
           id="launch-video"
-          class="launch-video-player"
-          controls
-          autoplay
-          muted
-          loop
-          playsinline
-          poster="images/video_poster.png"
-        >
-          <source src="tailorbird-launch.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+          src="https://www.youtube-nocookie.com/embed/8g9B286T2iM?autoplay=1&mute=1&loop=1&playlist=8g9B286T2iM&rel=0&modestbranding=1&playsinline=1"
+          title="Tailorbird — Launch Experience (360° Forest Edition)"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
       </div>
     </div>
   </div>

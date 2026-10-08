@@ -151,6 +151,13 @@
       transform: translateY(1px);
     }
 
+    .ribbon-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+      filter: grayscale(1);
+    }
+
     .ribbon-search-wrap {
       position: relative;
       width: 260px;
@@ -806,6 +813,10 @@
       padding: 16px;
     }
 
+    #deleteConfirmModal {
+      z-index: 1100;
+    }
+
     .modal-box {
       background: #1c2029;
       border: 1px solid #373e4f;
@@ -1085,6 +1096,8 @@
         </div>
       </form>
     </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div class="modal-overlay" id="deleteConfirmModal" style="display: none;">
     <div class="modal-box" style="max-width: 420px;">
@@ -1169,6 +1182,7 @@
     }
 
     function openAddModal() {
+      closeDeleteModal();
       editTargetId.value = '';
       modalTitle.innerHTML = `
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1192,6 +1206,7 @@
     }
 
     function openEditModal(id) {
+      closeDeleteModal();
       const target = hitList.find(t => t.id === id);
       if (!target) return;
 
@@ -1276,6 +1291,7 @@
     const deleteMessage = document.getElementById('deleteConfirmMessage');
 
     function deleteTarget(id) {
+      closeModal();
       const target = hitList.find(t => t.id === id);
       if (!target) return;
       pendingDeleteTargetId = id;
@@ -1455,6 +1471,18 @@
       if (elTotal) elTotal.textContent = total;
       if (elTargeted) elTargeted.textContent = targeted;
       if (elContacted) elContacted.textContent = contacted;
+
+      const btnSample = document.getElementById('btnLoadExamples');
+      if (btnSample) {
+        const hasUserCards = hitList.some(t => !t.id.startsWith('sample-'));
+        if (hasUserCards) {
+          btnSample.disabled = true;
+          btnSample.title = 'Sample cards disabled once custom cards are added';
+        } else {
+          btnSample.disabled = false;
+          btnSample.title = 'Load sample roster cards';
+        }
+      }
     }
 
     function getInitials(name) {
@@ -1636,6 +1664,9 @@
 
     // Load sample cards for immediate exploration
     document.getElementById('btnLoadExamples').addEventListener('click', () => {
+      if (hitList.some(t => !t.id.startsWith('sample-'))) {
+        return;
+      }
       if (hitList.length > 0 && !confirm('Add sample cards alongside your existing targets?')) {
         return;
       }

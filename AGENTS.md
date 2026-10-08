@@ -23,3 +23,17 @@ All placeholder text, sample profiles, demo job applications, company names, and
 - **Divider Silhouette**: Massive organic dark silhouette tree transitions between scenes, moving across in one continuous motion without lingering over slide text.
 - **Broadcast Motion Aesthetics**: Punchy typography slams and 2.5D perspective views without generic rounded web-style containers or eyebrows.
 - **Audio Integrity**: Upbeat synthesized music track in `public/audio/music.wav` preserved intact.
+
+## 4. RELEASE DOWNLOAD LINKS MAINTENANCE (NEW BUILDS)
+Whenever a new build number or release version tag is created (e.g., `v0.1.1`, `v0.2.0`), the agent MUST update the OS download links in `docs/index.html`:
+- **Windows**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-Setup-<TAG>.exe`
+- **macOS**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-macOS.dmg`
+- **Linux**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/tailorbird-linux-x86_64.tar.gz`
+- **Release notes**: `https://github.com/joelstransky/Tailorbird/releases/tag/<TAG>`
+- **Button Presentation**:
+  - Do NOT display raw file names or file extensions (e.g. avoid `.exe`, `.dmg`, `.tar.gz`, or `Tailorbird-Setup...`).
+  - Maintain clean OS labels and architecture/version badges:
+    - Windows: `Windows` / `64-bit · <TAG>`
+    - macOS: `macOS` / `Apple Silicon & Intel · <TAG>`
+    - Linux: `Linux` / `64-bit · <TAG>`
+  - Preserve standard platform SVG logos and the active OS detection script.

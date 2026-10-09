@@ -31,9 +31,7 @@ Whenever a new build number or release version tag is created (e.g., `v0.1.1`, `
 - **Linux**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/tailorbird-linux-x86_64.tar.gz`
 - **Release notes**: `https://github.com/joelstransky/Tailorbird/releases/tag/<TAG>`
 - **Button Presentation**:
-  - Do NOT display raw file names or file extensions (e.g. avoid `.exe`, `.dmg`, `.tar.gz`, or `Tailorbird-Setup...`).
-  - Maintain clean OS labels and architecture/version badges:
-    - Windows: `Windows` / `64-bit · <TAG>`
-    - macOS: `macOS` / `Apple Silicon & Intel · <TAG>`
-    - Linux: `Linux` / `64-bit · <TAG>`
+  - Keep buttons strictly minimal: only the platform icon, the name of the OS (`Windows`, `macOS`, `Linux`), and the download action icon.
+  - Do NOT display file names, file extensions (e.g., avoid `.exe`, `.dmg`, `.tar.gz`), architecture strings, version tags, or subtitles inside the buttons.
   - Preserve standard platform SVG logos and the active OS detection script.
+

@@ -35,3 +35,8 @@ Whenever a new build number or release version tag is created (e.g., `v0.1.1`, `
   - Do NOT display file names, file extensions (e.g., avoid `.exe`, `.dmg`, `.tar.gz`), architecture strings, version tags, or subtitles inside the buttons.
   - Preserve standard platform SVG logos and the active OS detection script.
 
+## 5. ALWAYS FINISH WITH A NEW LOCAL INSTALLER
+Whenever code or UI changes are made to the Tailorbird application, ALWAYS finish by:
+1. Building the release executable (`cargo build --release`).
+2. Compiling a fresh local installer (`installer/tailorbird.iss` via Inno Setup `ISCC.exe`) into `dist/Tailorbird-Setup-v<VERSION>.exe`.
+

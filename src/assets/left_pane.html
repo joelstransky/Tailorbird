@@ -1389,46 +1389,192 @@
 
 
 
-    /* Pro Status Bar (F1CNCF) */
+    /* Pro Status Bar — MCP Control Footer */
     .app-status-bar {
-      height: 24px;
+      height: 28px;
       background: #0B0D13;
       border-top: 1px solid var(--app-border);
-      padding: 0 12px;
+      padding: 0 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
       flex-shrink: 0;
       z-index: 15;
       overflow: hidden;
       box-sizing: border-box;
+      user-select: none;
     }
 
-    .status-left {
+    .mcp-status-left {
       min-width: 0;
       flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      font-size: 11px;
-      color: #94A3B8;
-      font-weight: 500;
-      line-height: 24px;
     }
 
-    .status-right {
+    .mcp-indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #475569;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      flex-shrink: 0;
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .mcp-indicator-dot.active {
+      background: #10B981;
+      border-color: #34D399;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+    }
+
+    @keyframes mcpActivityPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.85); background: #38BDF8; }
+      60% { transform: scale(1.3); box-shadow: 0 0 10px 4px rgba(56, 189, 248, 0.35); background: #38BDF8; }
+      100% { transform: scale(1); box-shadow: 0 0 8px rgba(16, 185, 129, 0.8); background: #10B981; }
+    }
+
+    .mcp-indicator-dot.pulse {
+      animation: mcpActivityPulse 0.75s ease-out;
+    }
+
+    .mcp-status-label {
       min-width: 0;
-      flex: 0 1 auto;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      text-align: right;
-      font-size: 11px;
-      font-family: var(--font-mono, monospace);
-      color: #38BDF8;
-      font-weight: 500;
-      line-height: 24px;
+      font-size: 10.5px;
+      color: #94A3B8;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      transition: color 0.15s ease;
+    }
+
+    .mcp-status-label.active {
+      color: #E2E8F0;
+    }
+
+    .mcp-status-right {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mcp-footer-btn {
+      height: 20px;
+      padding: 0 7px;
+      border-radius: 4px;
+      background: #161B29;
+      border: 1px solid #2A324B;
+      color: #CBD5E1;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .mcp-footer-btn:hover:not(:disabled) {
+      background: #1F273B;
+      border-color: #475569;
+      color: #FFFFFF;
+    }
+
+    .mcp-footer-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .mcp-footer-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .mcp-footer-btn svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    .mcp-footer-btn.copied {
+      background: #059669 !important;
+      border-color: #10B981 !important;
+      color: #FFFFFF !important;
+    }
+
+    .mcp-undo-badge {
+      background: var(--accent, #818CF8);
+      color: #FFFFFF;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 0 4px;
+      border-radius: 8px;
+      line-height: 13px;
+      min-width: 13px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    /* Compact Pill Toggle Switch for MCP Server */
+    .mcp-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 30px;
+      height: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin: 0;
+    }
+
+    .mcp-switch input.mcp-switch-input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .mcp-switch-slider {
+      position: absolute;
+      inset: 0;
+      background: #1E2436;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .mcp-switch-slider::before {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      left: 2px;
+      top: 2px;
+      border-radius: 50%;
+      background: #94A3B8;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .mcp-switch input.mcp-switch-input:checked + .mcp-switch-slider {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10B981;
+    }
+
+    .mcp-switch input.mcp-switch-input:checked + .mcp-switch-slider::before {
+      transform: translateX(14px);
+      background: #10B981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
     }
   </style>
 </head>
@@ -2023,10 +2169,32 @@
 
 
 
-  <!-- Pro Status Bar (F1CNCF) -->
-  <div class="app-status-bar">
-    <div class="status-left" id="statusBarLeftText"></div>
-    <div class="status-right" id="statusBarRightText"></div>
+  <!-- Pro Status Bar — MCP Control Footer -->
+  <div class="app-status-bar" id="mcpStatusBar">
+    <div class="mcp-status-left" title="Toggle the MCP server on to let your AI assistant populate and update Tailorbird data">
+      <span class="mcp-indicator-dot" id="mcpIndicatorDot"></span>
+      <span class="mcp-status-label" id="mcpStatusLabel">MCP Server: Off</span>
+    </div>
+    <div class="mcp-status-right">
+      <button type="button" class="mcp-footer-btn" id="btnMcpUndo" title="No MCP changes to undo" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6"></path>
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+        </svg>
+        <span>Undo</span>
+        <span class="mcp-undo-badge" id="mcpUndoBadge" style="display: none;">0</span>
+      </button>
+      <button type="button" class="mcp-footer-btn" id="btnMcpCopyUrl" title="Open MCP Client Setup & Copy Configs (local://settings#mcp-config)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+      <label class="mcp-switch" title="Turn Local MCP Server On / Off">
+        <input type="checkbox" class="mcp-switch-input" id="chkMcpServer">
+        <span class="mcp-switch-slider"></span>
+      </label>
+    </div>
   </div>
 
   <!-- Photoshop-style Modal Confirmation Dialog (Import Overwrite) -->
@@ -3070,7 +3238,7 @@
     // --- Storage & Sync ---
     let isDataLoaded = false;
 
-    function applyLoadedData(data) {
+    function applyLoadedData(data, preserveDrawers = false) {
       if (!data) return;
       console.log('[Tailorbird UI] Loading data into Control Panel:', data);
 
@@ -3149,8 +3317,10 @@
         document.getElementById('searchLocation').value = '';
       }
 
-      // 6. Drawer Collapse States (always start collapsed)
-      applyDrawerStates();
+      // 6. Drawer Collapse States (only collapse on initial load)
+      if (!isDataLoaded && !preserveDrawers) {
+        applyDrawerStates();
+      }
 
       // 7. Primary Theme Accent Color
       if (data.primaryColor) {
@@ -3209,22 +3379,125 @@
     }
     window.updateCandidateSummaryUI = updateCandidateSummaryUI;
 
+    // --- MCP Status Bar & Undo Controls ---
+    let mcpUiState = {
+      enabled: false,
+      port: 42427,
+      endpoint: 'http://127.0.0.1:42427/mcp',
+      undoCount: 0,
+      lastUndoLabel: null,
+      lastAction: null
+    };
+
+    function renderMcpStatusBar(flashPulse = false) {
+      const dot = document.getElementById('mcpIndicatorDot');
+      const label = document.getElementById('mcpStatusLabel');
+      const chk = document.getElementById('chkMcpServer');
+      const undoBtn = document.getElementById('btnMcpUndo');
+      const undoBadge = document.getElementById('mcpUndoBadge');
+      const copyBtn = document.getElementById('btnMcpCopyUrl');
+
+      if (chk && chk.checked !== Boolean(mcpUiState.enabled)) {
+        chk.checked = Boolean(mcpUiState.enabled);
+      }
+
+      if (dot) {
+        if (mcpUiState.enabled) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+        if (flashPulse) {
+          dot.classList.remove('pulse');
+          void dot.offsetWidth;
+          dot.classList.add('pulse');
+        }
+      }
+
+      if (label) {
+        if (mcpUiState.enabled) {
+          label.classList.add('active');
+          label.textContent = mcpUiState.lastAction || `MCP Ready · :${mcpUiState.port || 42427}`;
+          label.title = `MCP Server active on ${mcpUiState.endpoint || 'http://127.0.0.1:42427/mcp'}`;
+        } else {
+          label.classList.remove('active');
+          label.textContent = mcpUiState.lastAction || 'MCP Server: Off';
+          label.title = 'Toggle MCP Server On to allow your AI assistant to populate Tailorbird data';
+        }
+      }
+
+      if (copyBtn) {
+        copyBtn.title = 'Open MCP Client Setup & Copy Configs (local://settings#mcp-config)';
+      }
+
+      const count = Number(mcpUiState.undoCount) || 0;
+      if (undoBtn) {
+        undoBtn.disabled = count <= 0;
+        undoBtn.title = count > 0
+          ? `Undo last MCP change: ${mcpUiState.lastUndoLabel || 'Restore previous snapshot'} (${count} in stack)`
+          : 'No MCP changes to undo';
+      }
+      if (undoBadge) {
+        if (count > 0) {
+          undoBadge.style.display = 'inline-block';
+          undoBadge.textContent = String(count);
+        } else {
+          undoBadge.style.display = 'none';
+        }
+      }
+    }
+
     function updateStatusBar() {
-      const leftEl = document.getElementById('statusBarLeftText');
-      const rightEl = document.getElementById('statusBarRightText');
-      if (!leftEl || !rightEl) return;
-
-      const name = (document.getElementById('fullName') ? document.getElementById('fullName').value : '').trim();
-      const keywords = (document.getElementById('searchTitle') ? document.getElementById('searchTitle').value : '').trim();
-
-      leftEl.textContent = name;
-      rightEl.textContent = keywords;
+      renderMcpStatusBar(false);
     }
     window.updateStatusBar = updateStatusBar;
     window.updateHitListCount = function() {};
 
+    window.setMcpStatus = function(status, flashPulse = false) {
+      if (status && typeof status === 'object') {
+        mcpUiState = { ...mcpUiState, ...status };
+        renderMcpStatusBar(Boolean(flashPulse));
+      }
+    };
+
+    window.onMcpDataUpdated = function(data, status) {
+      if (data) {
+        applyLoadedData(data, true);
+      }
+      if (status) {
+        window.setMcpStatus(status, true);
+      }
+    };
+
+    const chkMcpServerEl = document.getElementById('chkMcpServer');
+    if (chkMcpServerEl) {
+      chkMcpServerEl.addEventListener('change', () => {
+        const enabled = chkMcpServerEl.checked;
+        mcpUiState.enabled = enabled;
+        mcpUiState.lastAction = enabled ? `MCP Ready · :${mcpUiState.port || 42427}` : 'MCP Server: Off';
+        renderMcpStatusBar(false);
+        sendIpc('SET_MCP_ENABLED', { enabled });
+      });
+    }
+
+    const btnMcpUndoEl = document.getElementById('btnMcpUndo');
+    if (btnMcpUndoEl) {
+      btnMcpUndoEl.addEventListener('click', () => {
+        if (mcpUiState.undoCount > 0) {
+          sendIpc('MCP_UNDO');
+        }
+      });
+    }
+
+    const btnMcpCopyUrlEl = document.getElementById('btnMcpCopyUrl');
+    if (btnMcpCopyUrlEl) {
+      btnMcpCopyUrlEl.addEventListener('click', () => {
+        sendIpc('OPEN_NEW_TAB', { url: 'local://settings#mcp-config' });
+      });
+    }
+
     window.setAllData = function(data) {
-      applyLoadedData(data);
+      applyLoadedData(data, true);
     };
 
     window.setResumePath = function(path) {

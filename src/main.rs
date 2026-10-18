@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod autofill;
+mod mcp;
 mod prospect;
 mod resume;
 
@@ -19,6 +20,7 @@ use wry::{NewWindowResponse, PageLoadEvent, Rect, WebView, WebViewBuilder};
 use wry::{WebViewBuilderExtWindows, WebViewExtWindows};
 
 use crate::autofill::{generate_autofill_script, generate_context_menu_script, CandidateProfile};
+use crate::mcp::{McpManager, DEFAULT_MCP_PORT};
 use crate::prospect::{load_stored_data, save_stored_data, AppData, Prospect, SearchCriteria};
 use crate::resume::{load_resume_text, parse_work_history, WorkHistoryEntry};
 use base64::Engine;
@@ -39,11 +41,30 @@ const HITLIST_HTML: &str = include_str!("assets/hitlist.html");
 const SETTINGS_HTML: &str = include_str!("assets/settings.html");
 const WELCOME_HTML: &str = include_str!("assets/welcome.html");
 
+fn is_settings_url(url: &str) -> bool {
+    url == "local://settings" || url.starts_with("local://settings#")
+}
+
+fn extract_settings_anchor(url: &str) -> Option<&str> {
+    url.strip_prefix("local://settings#").filter(|s| !s.is_empty())
+}
+
+#[cfg(test)]
 fn prepare_settings_html(primary_color: &str) -> String {
+    prepare_settings_html_with_anchor(primary_color, None)
+}
+
+fn prepare_settings_html_with_anchor(primary_color: &str, anchor: Option<&str>) -> String {
     let color_json = serde_json::to_string(primary_color).unwrap_or_else(|_| "\"#818CF8\"".to_string());
+    let anchor_script = if let Some(anc) = anchor {
+        let anc_json = serde_json::to_string(anc).unwrap_or_else(|_| "\"\"".to_string());
+        format!(" window.__INITIAL_SECTION_ANCHOR__ = {};", anc_json)
+    } else {
+        String::new()
+    };
     SETTINGS_HTML.replace(
         "/*__INITIAL_COLOR__*/",
-        &format!("window.__INITIAL_ACCENT_COLOR__ = {};", color_json),
+        &format!("window.__INITIAL_ACCENT_COLOR__ = {};{}", color_json, anchor_script),
     )
 }
 
@@ -549,6 +570,7 @@ enum AppEvent {
     SetLeftWidth { width: f64 },
     SetPrimaryColor { color: String },
     ScrapeCurrentPage,
+    McpStateChanged { reload_data: bool },
     Back,
     Forward,
     Reload,
@@ -673,6 +695,10 @@ enum IpcMessage {
     CopyToClipboard { text: String },
     #[serde(rename = "TAB_FAVICON_DETECTED")]
     TabFaviconDetected { favicon: String },
+    #[serde(rename = "SET_MCP_ENABLED")]
+    SetMcpEnabled { enabled: bool },
+    #[serde(rename = "MCP_UNDO")]
+    McpUndo,
 }
 
 fn handle_common_shortcut_ipc(msg: &IpcMessage, proxy: &EventLoopProxy<AppEvent>) -> bool {
@@ -859,6 +885,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Shared references
+    let mcp_manager = Arc::new(McpManager::new(DEFAULT_MCP_PORT));
     let left_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     let toolbar_wv_holder: Arc<Mutex<Option<WebView>>> = Arc::new(Mutex::new(None));
     let tabs_holder: Arc<Mutex<Vec<BrowserTab>>> = Arc::new(Mutex::new(Vec::new()));
@@ -875,6 +902,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let active_id_for_left = active_tab_id_holder.clone();
     let proxy_for_left = proxy.clone();
     let toolbar_for_left_ipc = toolbar_wv_holder.clone();
+    let mcp_for_left_ipc = mcp_manager.clone();
     #[cfg(target_os = "windows")]
     let scale_factor_for_ipc = scale_factor_holder.clone();
 
@@ -968,6 +996,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let proxy_ipc = proxy_for_left.clone();
             let left_w_holder = left_width_for_ipc.clone();
             let toolbar_for_left = toolbar_for_left_ipc.clone();
+            let mcp_mgr = mcp_for_left_ipc.clone();
             #[cfg(target_os = "windows")]
             let win_sz_for_ipc = window_size_holder.clone();
             #[cfg(target_os = "windows")]
@@ -1253,11 +1282,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(IpcMessage::LoadData) => {
                         let data = load_stored_data();
                         let json_str = serde_json::to_string(&data).unwrap_or_else(|_| "{}".to_string());
+                        let mcp_status_str = serde_json::to_string(&mcp_mgr.status()).unwrap_or_else(|_| "{}".to_string());
                         if let Ok(guard) = left_holder.lock() {
                             if let Some(ref left_wv) = *guard {
-                                let js = format!("if (window.setAllData) {{ window.setAllData({}); }}", json_str);
+                                let js = format!(
+                                    "if (window.setAllData) {{ window.setAllData({}); }} if (window.setMcpStatus) {{ window.setMcpStatus({}, false); }}",
+                                    json_str, mcp_status_str
+                                );
                                 let _ = left_wv.evaluate_script(&js);
                             }
+                        }
+                    }
+                    Ok(IpcMessage::SetMcpEnabled { enabled }) => {
+                        let proxy_for_mcp = proxy_ipc.clone();
+                        mcp_mgr.set_enabled(enabled, move |_summary| {
+                            let _ = proxy_for_mcp.send_event(AppEvent::McpStateChanged { reload_data: true });
+                        });
+                        let _ = proxy_ipc.send_event(AppEvent::McpStateChanged { reload_data: false });
+                    }
+                    Ok(IpcMessage::McpUndo) => {
+                        if let Some(snapshot) = mcp_mgr.pop_undo() {
+                            println!("[Tailorbird MCP] Reverting snapshot: {}", snapshot.action_label);
+                            if let Err(e) = save_stored_data(&snapshot.data) {
+                                eprintln!("[Tailorbird MCP] Failed to save reverted snapshot: {}", e);
+                            }
+                            let _ = proxy_ipc.send_event(AppEvent::McpStateChanged { reload_data: true });
                         }
                     }
                     Ok(IpcMessage::CopyToClipboard { text }) => {
@@ -1332,7 +1381,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let is_mock = url == "local://mock";
             let is_welcome = url == "local://welcome";
             let is_hitlist = url == "local://hitlist" || url == "local://roster";
-            let is_settings = url == "local://settings";
+            let is_settings = is_settings_url(url);
+            let settings_anchor = extract_settings_anchor(url);
             let proxy_title = proxy.clone();
             let proxy_load = proxy.clone();
             let proxy_new_win = proxy.clone();
@@ -1481,7 +1531,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if is_settings {
                 let stored = load_stored_data();
                 let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
-                let html = prepare_settings_html(&current_color);
+                let html = prepare_settings_html_with_anchor(&current_color, settings_anchor);
                 builder.with_html(&html).build_as_child(win)?
             } else {
                 builder.with_url(url).build_as_child(win)?
@@ -1503,7 +1553,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if is_settings {
                 let stored = load_stored_data();
                 let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
-                let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                let anchor_call = if let Some(anc) = settings_anchor {
+                    format!(
+                        " if (window.scrollToSettingsSection) {{ window.scrollToSettingsSection({}); }}",
+                        serde_json::to_string(anc).unwrap_or_default()
+                    )
+                } else {
+                    String::new()
+                };
+                let js = format!(
+                    "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}{}",
+                    serde_json::to_string(&current_color).unwrap_or_default(),
+                    anchor_call
+                );
                 let _ = webview.evaluate_script(&js);
             }
 
@@ -1577,12 +1639,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // the new tab (+) button always creates a new tab unconditionally.
                     let is_singleton_page = formatted_url == "local://hitlist"
                         || formatted_url == "local://roster"
-                        || formatted_url == "local://settings";
+                        || is_settings_url(&formatted_url);
                     let already_open_id = if is_singleton_page {
                         let tabs = tabs_holder.lock().unwrap();
                         tabs.iter().find(|t| {
                             ((formatted_url == "local://hitlist" || formatted_url == "local://roster") && (t.url == "local://hitlist" || t.url == "local://roster" || t.title.contains("Roster")))
-                                || (formatted_url == "local://settings" && (t.url == "local://settings" || t.title.contains("Settings")))
+                                || (is_settings_url(&formatted_url) && (is_settings_url(&t.url) || t.title.contains("Settings")))
                         }).map(|t| t.id)
                     } else {
                         None
@@ -1592,10 +1654,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let mut tabs = tabs_holder.lock().unwrap();
                         let stored = load_stored_data();
                         let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
+                        let anchor_js = if let Some(anc) = extract_settings_anchor(&formatted_url) {
+                            format!(
+                                " if (window.scrollToSettingsSection) {{ window.scrollToSettingsSection({}); }}",
+                                serde_json::to_string(anc).unwrap_or_default()
+                            )
+                        } else {
+                            String::new()
+                        };
                         let js_accent = format!(
-                            "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }} if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}",
+                            "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }} if (window.setPrimaryColor) {{ window.setPrimaryColor({}); }}{}",
                             serde_json::to_string(&current_color).unwrap_or_default(),
-                            serde_json::to_string(&current_color).unwrap_or_default()
+                            serde_json::to_string(&current_color).unwrap_or_default(),
+                            anchor_js
                         );
                         let hitlist_js = if formatted_url == "local://hitlist" || formatted_url == "local://roster" {
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
@@ -1639,7 +1710,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     "Tailorbird Test Bench".to_string()
                                 } else if formatted_url == "local://hitlist" || formatted_url == "local://roster" {
                                     "Outreach Roster".to_string()
-                                } else if formatted_url == "local://settings" {
+                                } else if is_settings_url(&formatted_url) {
                                     "Settings".to_string()
                                 } else {
                                     "New Tab".to_string()
@@ -1850,14 +1921,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
                             let _ = tab.webview.evaluate_script(&js);
-                        } else if formatted == "local://settings" {
+                        } else if is_settings_url(&formatted) {
                             let stored = load_stored_data();
                             let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
-                            let html = prepare_settings_html(&current_color);
+                            let anchor = extract_settings_anchor(&formatted);
+                            let html = prepare_settings_html_with_anchor(&current_color, anchor);
                             let _ = tab.webview.load_html(&html);
-                            tab.url = "local://settings".to_string();
+                            tab.url = formatted.clone();
                             tab.title = "Settings".to_string();
-                            let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                            let anchor_js = if let Some(anc) = anchor {
+                                format!(
+                                    " if (window.scrollToSettingsSection) {{ window.scrollToSettingsSection({}); }}",
+                                    serde_json::to_string(anc).unwrap_or_default()
+                                )
+                            } else {
+                                String::new()
+                            };
+                            let js = format!(
+                                "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}{}",
+                                serde_json::to_string(&current_color).unwrap_or_default(),
+                                anchor_js
+                            );
                             let _ = tab.webview.evaluate_script(&js);
                         } else {
                             tab.favicon = None;
@@ -2025,12 +2109,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let data_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
                             let js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", data_json);
                             let _ = tab.webview.evaluate_script(&js);
-                        } else if tab.url == "local://settings" {
+                        } else if is_settings_url(&tab.url) {
                             let stored = load_stored_data();
                             let current_color = stored.primary_color.unwrap_or_else(|| "#818CF8".to_string());
-                            let html = prepare_settings_html(&current_color);
+                            let anchor = extract_settings_anchor(&tab.url);
+                            let html = prepare_settings_html_with_anchor(&current_color, anchor);
                             let _ = tab.webview.load_html(&html);
-                            let js = format!("if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}", serde_json::to_string(&current_color).unwrap_or_default());
+                            let anchor_js = if let Some(anc) = anchor {
+                                format!(
+                                    " if (window.scrollToSettingsSection) {{ window.scrollToSettingsSection({}); }}",
+                                    serde_json::to_string(anc).unwrap_or_default()
+                                )
+                            } else {
+                                String::new()
+                            };
+                            let js = format!(
+                                "if (window.setInitialAccentColor) {{ window.setInitialAccentColor({}); }}{}",
+                                serde_json::to_string(&current_color).unwrap_or_default(),
+                                anchor_js
+                            );
                             let _ = tab.webview.evaluate_script(&js);
                         } else if tab.url == "local://mock" {
                             let _ = tab.webview.load_html(MOCK_JOB_HTML);
@@ -2109,11 +2206,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let _ = proxy.send_event(AppEvent::SwitchTab { id: target_id });
                     }
                 }
+                AppEvent::McpStateChanged { reload_data } => {
+                    let status = mcp_manager.status();
+                    let status_json = serde_json::to_string(&status).unwrap_or_else(|_| "{}".to_string());
+
+                    if reload_data {
+                        let stored = load_stored_data();
+                        let data_json = serde_json::to_string(&stored).unwrap_or_else(|_| "{}".to_string());
+                        if let Ok(guard) = left_wv_holder.lock() {
+                            if let Some(ref left_wv) = *guard {
+                                let js = format!(
+                                    "if (window.onMcpDataUpdated) {{ window.onMcpDataUpdated({}, {}); }}",
+                                    data_json, status_json
+                                );
+                                let _ = left_wv.evaluate_script(&js);
+                            }
+                        }
+
+                        if let Ok(guard) = tabs_holder.lock() {
+                            let active_id = *active_tab_id_holder.lock().unwrap();
+                            let hitlist_json = serde_json::to_string(&stored.hit_list).unwrap_or_else(|_| "[]".to_string());
+                            let hitlist_js = format!("if (window.setHitListData) {{ window.setHitListData({}); }}", hitlist_json);
+                            let context_data = serde_json::json!({
+                                "candidateProfile": stored.candidate_profile,
+                                "specialFields": stored.special_fields,
+                            });
+                            let context_js = format!(
+                                "if (window.__UPDATE_TAILORBIRD_CONTEXT_MENU__) {{ window.__UPDATE_TAILORBIRD_CONTEXT_MENU__({}); }}",
+                                context_data
+                            );
+
+                            for tab in guard.iter() {
+                                if tab.url == "local://hitlist" || tab.url == "local://roster" || tab.title.contains("Roster") {
+                                    let _ = tab.webview.evaluate_script(&hitlist_js);
+                                }
+                                if tab.id == active_id {
+                                    let _ = tab.webview.evaluate_script(&context_js);
+                                }
+                            }
+                        }
+                    } else if let Ok(guard) = left_wv_holder.lock() {
+                        if let Some(ref left_wv) = *guard {
+                            let js = format!("if (window.setMcpStatus) {{ window.setMcpStatus({}, false); }}", status_json);
+                            let _ = left_wv.evaluate_script(&js);
+                        }
+                    }
+                }
             },
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
             } => {
+                mcp_manager.set_enabled(false, |_| {});
                 println!("[Tailorbird] Window close requested, exiting application cleanly.");
                 *control_flow = ControlFlow::Exit;
             }
@@ -2157,6 +2301,24 @@ fn format_input_to_url(input: &str) -> String {
     }
     if trimmed == "local://settings" || trimmed.eq_ignore_ascii_case("settings") {
         return "local://settings".to_string();
+    }
+    if let Some(anchor) = trimmed.strip_prefix("local://settings#") {
+        let clean_anchor = anchor.trim();
+        return if clean_anchor.is_empty() {
+            "local://settings".to_string()
+        } else {
+            format!("local://settings#{}", clean_anchor)
+        };
+    }
+    if let Some((prefix, anchor)) = trimmed.split_once('#') {
+        if prefix.eq_ignore_ascii_case("settings") {
+            let clean_anchor = anchor.trim();
+            return if clean_anchor.is_empty() {
+                "local://settings".to_string()
+            } else {
+                format!("local://settings#{}", clean_anchor)
+            };
+        }
     }
 
     // Explicit protocol schemes
@@ -2218,6 +2380,11 @@ mod tests {
         assert_eq!(format_input_to_url("file:///path/to/file"), "file:///path/to/file");
         assert_eq!(format_input_to_url("local://roster"), "local://roster");
         assert_eq!(format_input_to_url("local://settings"), "local://settings");
+        assert_eq!(format_input_to_url("local://settings#mcp-config"), "local://settings#mcp-config");
+        assert_eq!(format_input_to_url("settings#mcp-config"), "local://settings#mcp-config");
+        assert!(is_settings_url("local://settings"));
+        assert!(is_settings_url("local://settings#mcp-config"));
+        assert_eq!(extract_settings_anchor("local://settings#mcp-config"), Some("mcp-config"));
     }
 
     #[test]

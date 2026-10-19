@@ -24,12 +24,21 @@ All placeholder text, sample profiles, demo job applications, company names, and
 - **Broadcast Motion Aesthetics**: Punchy typography slams and 2.5D perspective views without generic rounded web-style containers or eyebrows.
 - **Audio Integrity**: Upbeat synthesized music track in `public/audio/music.wav` preserved intact.
 
-## 4. RELEASE DOWNLOAD LINKS MAINTENANCE (NEW BUILDS)
-Whenever a new build number or release version tag is created (e.g., `v0.1.1`, `v0.2.0`), the agent MUST update the OS download links in `docs/index.html`:
-- **Windows**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-Setup-<TAG>.exe`
-- **macOS**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-macOS.dmg`
-- **Linux**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/tailorbird-linux-x86_64.tar.gz`
-- **Release notes**: `https://github.com/joelstransky/Tailorbird/releases/tag/<TAG>`
+## 4. VERSION & RELEASE DOWNLOAD LINKS MAINTENANCE (NEW BUILDS)
+Whenever a new build number or release version tag is created (e.g., `v0.1.1`, `v0.2.0`), the agent MUST update the version number and OS download links in `docs/index.html` and across the project:
+- **GitHub Landing Page (`docs/index.html`)**:
+  - **Navbar Version Badge**: `<span class="brand-tag">v<VERSION></span>` (must always match the actual release version)
+  - **Windows**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-Setup-<TAG>.exe`
+  - **macOS**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/Tailorbird-macOS.dmg`
+  - **Linux**: `https://github.com/joelstransky/Tailorbird/releases/download/<TAG>/tailorbird-linux-x86_64.tar.gz`
+  - **Release notes**: `<a href="https://github.com/joelstransky/Tailorbird/releases/tag/<TAG>" ...><TAG> release notes</a>`
+- **Application & Packaging Version Locations**:
+  - `Cargo.toml` (`version`)
+  - `src/assets/left_pane.html` (`.about-badge` and `.about-section-val` Build Info)
+  - `src/assets/welcome.html` (`.version-text`)
+  - `src/assets/settings.html` (Installed version display and `currentVersion` in `checkForUpdates()`)
+  - `src/mcp.rs` (MCP server info `version`)
+  - `installer/tailorbird.iss` (`#define MyAppVersion`), `installer/macos/Info.plist`, `installer/linux/PKGBUILD`, and `.github/workflows/build.yml`
 - **Button Presentation**:
   - Keep buttons strictly minimal: only the platform icon, the name of the OS (`Windows`, `macOS`, `Linux`), and the download action icon.
   - Do NOT display file names, file extensions (e.g., avoid `.exe`, `.dmg`, `.tar.gz`), architecture strings, version tags, or subtitles inside the buttons.

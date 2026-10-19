@@ -30,9 +30,19 @@ pub struct SearchCriteria {
     #[serde(default)]
     pub lever: bool,
     #[serde(default)]
-    pub linkedin: bool,
+    pub ashby: bool,
     #[serde(default)]
-    pub indeed: bool,
+    pub workday: bool,
+    #[serde(default)]
+    pub rippling: bool,
+    #[serde(default)]
+    pub workable: bool,
+    #[serde(default)]
+    pub smartrecruiters: bool,
+    #[serde(default)]
+    pub bamboohr: bool,
+    #[serde(default)]
+    pub icims: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

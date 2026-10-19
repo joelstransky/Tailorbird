@@ -1,6 +1,6 @@
 # Maintainer: Joel Stransky <stranskydesign@gmail.com>
 pkgname=tailorbird
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Specialized desktop browser for job hunting, application tracking, and form filling"
 arch=('x86_64')

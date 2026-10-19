@@ -671,7 +671,7 @@
       <div class="card-title-row" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
           <h2 class="card-title">Software Updates</h2>
-          <p class="card-desc">Installed version: <span style="font-family: var(--mono); color: var(--text-bright); font-weight: 600;">v0.1.0</span></p>
+          <p class="card-desc">Installed version: <span style="font-family: var(--mono); color: var(--text-bright); font-weight: 600;">v0.2.0</span></p>
         </div>
         <button class="btn-check-updates" id="btnCheckUpdates" type="button" onclick="checkForUpdates()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="updateSpinner">
@@ -861,7 +861,7 @@
         }
         const data = await res.json();
         const latestTag = (data.tag_name || '').trim();
-        const currentVersion = 'v0.1.0';
+        const currentVersion = 'v0.2.0';
 
         box.style.display = 'block';
         if (latestTag && latestTag !== currentVersion) {
@@ -877,14 +877,14 @@
           box.style.background = 'rgba(16, 185, 129, 0.12)';
           box.style.border = '1px solid rgba(16, 185, 129, 0.3)';
           box.style.color = '#10B981';
-          box.innerHTML = `<strong>Tailorbird is up to date!</strong> (v0.1.0 is currently the latest version)`;
+          box.innerHTML = `<strong>Tailorbird is up to date!</strong> (v0.2.0 is currently the latest version)`;
         }
       } catch (err) {
         box.style.display = 'block';
         box.style.background = 'rgba(255, 255, 255, 0.04)';
         box.style.border = '1px solid var(--border)';
         box.style.color = 'var(--text-muted)';
-        box.innerHTML = `Tailorbird v0.1.0 is currently the latest version.`;
+        box.innerHTML = `Tailorbird v0.2.0 is currently the latest version.`;
       } finally {
         btn.disabled = false;
         text.textContent = 'Check for Updates';

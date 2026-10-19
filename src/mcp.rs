@@ -214,7 +214,7 @@ fn handle_http_connection<F>(
         return;
     }
 
-    let parts: Vec<&str> = request_line.trim().split_whitespace().collect();
+    let parts: Vec<&str> = request_line.split_whitespace().collect();
     if parts.len() < 2 {
         return;
     }
@@ -273,7 +273,7 @@ fn handle_http_connection<F>(
 
         let info = json!({
             "name": "tailorbird-mcp",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "status": "ready",
             "endpoint": format!("http://127.0.0.1:{}/mcp", port),
             "description": "Tailorbird Local MCP Server for managing candidate profile, work history, prospects, and outreach cards."
@@ -399,7 +399,7 @@ where
                     },
                     "serverInfo": {
                         "name": "tailorbird",
-                        "version": "0.1.0"
+                        "version": "0.2.0"
                     }
                 }
             }))

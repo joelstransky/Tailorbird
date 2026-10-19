@@ -1,8 +1,8 @@
 ; Inno Setup Script for Tailorbird Desktop Application
-; Generates Tailorbird-Setup-v0.1.0.exe
+; Generates Tailorbird-Setup-v0.2.0.exe
 
 #define MyAppName "Tailorbird"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.2.0"
 #define MyAppPublisher "Joel Stransky"
 #define MyAppURL "https://github.com/joelstransky/Tailorbird"
 #define MyAppExeName "tailorbird.exe"

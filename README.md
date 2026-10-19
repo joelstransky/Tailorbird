@@ -42,9 +42,12 @@ For proactive networking and direct outreach, the Outreach Roster tracks compani
 ![Outreach Roster](docs/images/tailorbird_dual_pane_hitlist.png)
 
 ### Job Finder
-Build targeted search queries for platforms like Greenhouse, Lever, LinkedIn, and Indeed based on job title, location, and remote preferences.
+Build targeted search queries across the top 9 ATS platforms—Greenhouse, Lever, Ashby, Workday, Rippling, Workable, SmartRecruiters, BambooHR, and iCIMS—based on keywords and location.
 
 ![Job Finder](docs/images/tailorbird_job_finder.png)
+
+### Local MCP Server (AI Agent Integration)
+Toggle on the built-in localhost Model Context Protocol (MCP) server (`http://127.0.0.1:42427/mcp`) from the bottom-left status bar to let AI assistants (Antigravity, Cursor, Windsurf, VS Code, Zed, OpenCode, or Claude Desktop) populate your candidate profile, work history, prospects, and outreach cards—complete with automatic undo snapshots.
 
 ### Local Data Storage
 All candidate profiles, application tracking, and notes are saved locally on your computer in a JSON file (`tailorbird_data.json`). Your information stays on your device.

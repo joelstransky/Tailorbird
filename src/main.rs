@@ -236,10 +236,36 @@ const SCRAPE_PAGE_SCRIPT: &str = r#"(function() {
             company = badgeCompany || ghCompany || compElem || '';
         }
 
-        // Filter out job board platform names from company
-        const jobBoardPlatforms = ['linkedin', 'indeed', 'glassdoor', 'ziprecruiter', 'dice', 'monster', 'careerbuilder', 'simplyhired', 'builtin'];
+        // Filter out job board & ATS platform names from company
+        const jobBoardPlatforms = [
+            'linkedin', 'indeed', 'glassdoor', 'ziprecruiter', 'dice', 'monster', 'careerbuilder', 'simplyhired', 'builtin',
+            'greenhouse', 'lever', 'ashby', 'workday', 'rippling', 'workable', 'smartrecruiters', 'bamboohr', 'icims'
+        ];
         if (company && jobBoardPlatforms.includes(company.toLowerCase().trim())) {
             company = '';
+        }
+
+        // 3b. Extract company slug from Top 9 ATS URL patterns when DOM/JSON-LD omits company name
+        if (!company) {
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            const formatSlug = (slug) => slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
+            if (
+                hostname.includes('greenhouse.io') ||
+                hostname.includes('jobs.lever.co') ||
+                hostname.includes('jobs.ashbyhq.com') ||
+                hostname.includes('ats.rippling.com') ||
+                hostname.includes('apply.workable.com') ||
+                hostname.includes('jobs.smartrecruiters.com')
+            ) {
+                if (pathParts.length > 0 && !['jobs', 'careers', 'embed', 'j'].includes(pathParts[0].toLowerCase())) {
+                    company = formatSlug(decodeURIComponent(pathParts[0]));
+                }
+            } else if (hostname.endsWith('.myworkdayjobs.com') || hostname.endsWith('.bamboohr.com') || hostname.endsWith('.icims.com')) {
+                const sub = hostname.split('.')[0].replace(/^(careers-|jobs-)/i, '');
+                if (sub && !['www', 'jobs', 'careers', 'apply'].includes(sub.toLowerCase())) {
+                    company = formatSlug(sub);
+                }
+            }
         }
 
         // If company still empty, check ogSite (only if not a job board platform!)

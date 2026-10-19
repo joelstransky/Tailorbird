@@ -345,6 +345,8 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
 
             const ariaLabel = el.getAttribute('aria-label');
             if (ariaLabel) label += ' ' + ariaLabel;
+            const autoId = el.getAttribute('data-automation-id') || el.getAttribute('data-testid') || el.getAttribute('data-qa') || el.getAttribute('data-ui');
+            if (autoId) label += ' ' + autoId;
             if (el.placeholder) label += ' ' + el.placeholder;
             if (el.name) label += ' ' + el.name;
             if (el.id) label += ' ' + el.id;
@@ -355,13 +357,16 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
                 const tag = (curr.tagName || '').toLowerCase();
                 if (
                     cls.includes('field') || cls.includes('question') || cls.includes('input') ||
-                    cls.includes('group') || cls.includes('row') || tag === 'fieldset' || tag === 'li'
+                    cls.includes('group') || cls.includes('row') || cls.includes('entry') ||
+                    tag === 'fieldset' || tag === 'li'
                 ) {{
                     const innerLabels = curr.querySelectorAll('label, legend, .label, [class*="label"], [class*="title"], h1, h2, h3, h4, h5, h6');
-                    innerLabels.forEach(lbl => {{
-                        label += ' ' + lbl.textContent;
-                    }});
-                    break;
+                    if (innerLabels.length > 0) {{
+                        innerLabels.forEach(lbl => {{
+                            label += ' ' + lbl.textContent;
+                        }});
+                        break;
+                    }}
                 }}
                 curr = curr.parentElement;
             }}
@@ -385,7 +390,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             if (/last.*name|family.*name|surname/i.test(lbl)) {{
                 return {{ field: 'lastName', value: this.lastName }};
             }}
-            if (/\bfull.*name\b|^name$/i.test(lbl) && !/company|file|user|user_name/i.test(lbl)) {{
+            if ((/\bfull.*name\b|_systemfield_name|applicant\.name|candidate\.name|^name$/i.test(lbl)) && !/company|file|user|user_name/i.test(lbl)) {{
                 return {{ field: 'fullName', value: this.profile.fullName }};
             }}
 
@@ -414,7 +419,7 @@ pub fn generate_autofill_script(profile: &CandidateProfile) -> String {
             }}
 
             // Employment & Sponsorship
-            if (/current.*company|recent.*company|\bcurrent.*employer\b|\brecent.*employer\b|^company$|^current company$/i.test(lbl)) {{
+            if (/current.*company|recent.*company|\bcurrent.*employer\b|\brecent.*employer\b|^company$|^current company$|\borg\b|organization/i.test(lbl)) {{
                 return {{ field: 'currentCompany', value: this.profile.currentCompany }};
             }}
             if (/sponsorship|require.*visa|require.*immigration|work.*authorization.*future/i.test(lbl)) {{

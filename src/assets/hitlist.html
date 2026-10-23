@@ -40,6 +40,22 @@
       overflow-y: auto;
     }
 
+    /* Custom Scrollbars for Outreach Roster */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
     /* Application Ribbon Bar */
     .app-ribbon {
       background: #141722;
@@ -451,16 +467,31 @@
 
     .card-front {
       transform: rotateX(0deg);
+      -webkit-transform: rotateX(0deg);
       z-index: 2;
+      pointer-events: auto;
     }
 
     .card-back {
       transform: rotateX(180deg);
+      -webkit-transform: rotateX(180deg);
       z-index: 1;
       background: #151822;
       border: none;
       cursor: default;
       user-select: text;
+      -webkit-user-select: text;
+      pointer-events: none;
+    }
+
+    .card-scene.is-flipped .card-front {
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .card-scene.is-flipped .card-back {
+      z-index: 3;
+      pointer-events: auto;
     }
 
     /* Business Card Header */
@@ -707,6 +738,8 @@
     .textarea-corner-wrap {
       position: relative;
       width: 100%;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .back-msg-input, .back-notes-input {
@@ -714,7 +747,7 @@
       background: #0e1017;
       border: 1px solid #222836;
       border-radius: 0;
-      padding: 6px 28px 6px 8px;
+      padding: 6px 32px 6px 8px;
       font-size: 11px;
       line-height: 1.4;
       color: #e2e8f0;
@@ -723,6 +756,39 @@
       outline: none;
       box-sizing: border-box;
       transition: border-color 0.12s ease;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: #3b4559 #0d1117;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .back-msg-input::-webkit-scrollbar,
+    .back-notes-input::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .back-msg-input::-webkit-scrollbar-track,
+    .back-notes-input::-webkit-scrollbar-track {
+      background: #0d1117;
+      border-radius: 3px;
+    }
+
+    .back-msg-input::-webkit-scrollbar-thumb,
+    .back-notes-input::-webkit-scrollbar-thumb {
+      background: #3b4559;
+      border-radius: 3px;
+      border: 1px solid #1e2430;
+    }
+
+    .back-msg-input::-webkit-scrollbar-thumb:hover,
+    .back-notes-input::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
     }
 
     .back-msg-input:focus, .back-notes-input:focus {
@@ -741,8 +807,8 @@
     .corner-copy-btn {
       position: absolute;
       top: 5px;
-      right: 5px;
-      z-index: 2;
+      right: 8px;
+      z-index: 5;
       width: 22px;
       height: 22px;
       display: inline-flex;
@@ -1737,7 +1803,36 @@
 
         grid.appendChild(card);
       });
+      grid.querySelectorAll('.back-msg-input, .back-notes-input').forEach(attachTextareaScrollFix);
     }
+
+    // Bulletproof Mac WebKit scrolling fix for textareas on 3D rotated card back
+    function attachTextareaScrollFix(el) {
+      if (!el || el.__wheelFixAttached) return;
+      el.__wheelFixAttached = true;
+      el.addEventListener('wheel', function(e) {
+        if (this.scrollHeight > this.clientHeight) {
+          const prevTop = this.scrollTop;
+          this.scrollTop += e.deltaY;
+          if (this.scrollTop !== prevTop) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }
+      }, { passive: false });
+    }
+
+    document.addEventListener('wheel', function(e) {
+      const textarea = e.target && e.target.closest && e.target.closest('.back-msg-input, .back-notes-input');
+      if (textarea && textarea.scrollHeight > textarea.clientHeight) {
+        const prevTop = textarea.scrollTop;
+        textarea.scrollTop += e.deltaY;
+        if (textarea.scrollTop !== prevTop) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }, { passive: false });
 
     function persistData() {
       sendIpc('SAVE_HIT_LIST', { hitList });

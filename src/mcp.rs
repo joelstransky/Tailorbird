@@ -255,19 +255,66 @@ fn handle_http_connection<F>(
 
     if method == "GET" {
         if path.starts_with("/sse") || accept_header.contains("text/event-stream") {
-            // Legacy SSE endpoint handshake
-            let sse_headers = format!(
+            let _ = stream.set_read_timeout(None);
+            let _ = stream.set_write_timeout(Some(std::time::Duration::from_secs(10)));
+            
+            // Distinguish legacy MCP SSE endpoint (/sse) from Streamable HTTP (/mcp)
+            let is_legacy_sse = path.starts_with("/sse");
+            let initial_response = if is_legacy_sse {
+                format!(
+                    "HTTP/1.1 200 OK\r\n\
+                     Content-Type: text/event-stream\r\n\
+                     Cache-Control: no-cache\r\n\
+                     Connection: keep-alive\r\n\
+                     Access-Control-Allow-Origin: *\r\n\r\n\
+                     event: endpoint\r\n\
+                     data: http://127.0.0.1:{}/mcp\r\n\r\n",
+                    port
+                )
+            } else {
                 "HTTP/1.1 200 OK\r\n\
                  Content-Type: text/event-stream\r\n\
                  Cache-Control: no-cache\r\n\
                  Connection: keep-alive\r\n\
                  Access-Control-Allow-Origin: *\r\n\r\n\
-                 event: endpoint\r\n\
-                 data: http://127.0.0.1:{}/mcp\r\n\r\n",
-                port
-            );
-            let _ = stream.write_all(sse_headers.as_bytes());
-            let _ = stream.flush();
+                 : stream opened\r\n\r\n".to_string()
+            };
+
+            if stream.write_all(initial_response.as_bytes()).is_ok() && stream.flush().is_ok() {
+                let _ = stream.set_read_timeout(Some(std::time::Duration::from_millis(500)));
+                let mut buf = [0u8; 16];
+                let mut ping_ticks = 0;
+                while enabled.load(Ordering::SeqCst) {
+                    match stream.read(&mut buf) {
+                        Ok(0) => {
+                            // Client closed connection (FIN / EOF received)
+                            break;
+                        }
+                        Ok(_) => {
+                            // Non-empty client data on GET stream, ignore and continue
+                        }
+                        Err(ref e)
+                            if e.kind() == std::io::ErrorKind::WouldBlock
+                                || e.kind() == std::io::ErrorKind::TimedOut =>
+                        {
+                            // 500ms timeout expired with no data; connection is alive and idle
+                        }
+                        Err(_) => {
+                            // Socket reset or network error, terminate stream
+                            break;
+                        }
+                    }
+
+                    ping_ticks += 1;
+                    // Send an SSE keep-alive comment every 15 seconds (30 * 500ms)
+                    if ping_ticks >= 30 {
+                        ping_ticks = 0;
+                        if stream.write_all(b": ping\r\n\r\n").is_err() || stream.flush().is_err() {
+                            break;
+                        }
+                    }
+                }
+            }
             return;
         }
 

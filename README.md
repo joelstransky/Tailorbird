@@ -1,128 +1,100 @@
 <div align="center">
   <img src="docs/images/tailorbird_icon.png" width="96" height="96" alt="Tailorbird Logo" style="border-radius: 20px;" />
   <h1>Tailorbird</h1>
-  <p><strong>Specialized Desktop Browser for Job Hunting</strong></p>
+  <p><strong>The Specialized Desktop Browser Built for the Job Search</strong></p>
+
+  <p>
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-Setup-v0.2.0.exe">Windows Setup</a> •
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-macOS.dmg">macOS DMG</a> •
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/tailorbird-linux-x86_64.tar.gz">Linux tar.gz</a> •
+    <a href="https://joelstransky.github.io/Tailorbird/">Website</a>
+  </p>
 </div>
 
-Tailorbird pairs a personal information panel with a full web browser in a split-screen view, keeping your resume details, past positions, tracked listings, and outreach notes right next to the application forms you are filling out.
+Tired of juggling 30 open tabs, lost spreadsheets, and retyping your contact details into dozens of application portals? 
 
-![Tailorbird Main Dashboard](docs/images/tailorbird_dual_pane_dashboard.png)
+**Tailorbird** pairs your candidate profile, work history, and job tracking pipeline directly alongside a dedicated Chromium browser pane. Everything you need to research, apply, and track is in one focused workspace.
+
+![Tailorbird Dual-Pane Workspace](docs/images/dual-pane-workspace.png)
 
 ---
 
-## Features
+## How It Works
 
-### Side-by-Side Workspace
-The left panel keeps your candidate information accessible while you browse job listings on the right. The divider between panels can be resized to whatever width fits your display.
+### 1. Dual-Pane Workspace
+Keep your reference notes, portfolio links, and complete work history locked right next to the application form.
+- **Left Cockpit**: Pinned candidate profile, past positions, education, open-ended question snippets, job finder, pipeline tracker, and outreach roster.
+- **Right Browser**: Full-featured web browser that renders any company career site or application form natively.
+- **Adjustable Split**: Drag the divider to whatever width fits your screen, with persistent layout memory across sessions.
 
-### Candidate Profile & Work History
-- Store your core application details (contact information, portfolio links, standard demographic responses).
-- Import past work history from a resume file or manage positions manually.
-- Save reusable answers to open-ended application questions (e.g. background summaries, cover notes).
-- Right-click any input in the browser pane to insert specific profile fields or saved snippets directly into the form.
+### 2. 1-Click Application Autofill
+Stop typing your name, email, phone number, address, and profile links on every single company application.
+- **Smart ATS Detection**: One-click fill detects common fields across top application systems—including Greenhouse, Lever, Ashby, Workday, Rippling, Workable, SmartRecruiters, BambooHR, and iCIMS.
+- **Visual Highlighting**: Incomplete or required questions are highlighted so you never miss a submission detail.
+- **Context Menu Paste**: Right-click any text box in the browser to paste custom bullet points, cover paragraphs, or portfolio URLs directly from your profile.
 
-### Application Form Filling
-- Fill common form fields across job boards with a single click.
-- Highlights remaining unfilled fields so required questions are easily spotted before submitting.
+![1-Click Application Autofill](docs/images/one-click-auto-fill.png)
 
-### Prospects Tracking
-Track positions as you find them without keeping dozens of tabs open or switching to a separate spreadsheet.
-- Save the current job listing directly from the toolbar.
-- Record company name, role, application status, date added, and personal notes.
-- Filter records and export your prospect list to a CSV file at any time.
+### 3. Prospects Pipeline
+Track job opportunities as you discover them without switching to external spreadsheets.
+- **Instant Save**: Click **Record Listing** (or press <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>) on any active job page to capture the company name, role title, and posting URL immediately.
+- **Stage Progression**: Move applications through stages—*Bookmarked*, *Applied*, *Screening*, *Interviewing*, *Offer*, or *Archived*.
+- **CSV Export**: Export your complete pipeline to CSV at any time for your personal records or reporting.
 
-![Prospects Pipeline](docs/images/tailorbird_prospects_pipeline.png)
+![Prospects Pipeline](docs/images/prospects-pipeline.png)
 
-### Outreach Roster
-For proactive networking and direct outreach, the Outreach Roster tracks companies and key contacts.
-- Track target companies, contacts, and communication status.
-- Draft custom outreach messages and value alignment notes.
-- Copy draft messages to your clipboard with one click.
+### 4. Job Finder
+Quickly search across 9 major ATS platforms using role keywords and location filters. Browse open postings directly in Tailorbird without opening separate search engines.
 
-![Outreach Roster](docs/images/tailorbird_dual_pane_hitlist.png)
+### 5. Outreach Roster
+Proactively manage company networking, recruiters, and key contacts.
+- Track target companies, interview leads, and follow-up timelines.
+- Draft custom intro notes and value propositions.
+- Copy outreach messages to your clipboard with one click.
 
-### Job Finder
-Build targeted search queries across the top 9 ATS platforms—Greenhouse, Lever, Ashby, Workday, Rippling, Workable, SmartRecruiters, BambooHR, and iCIMS—based on keywords and location.
+### 6. Workspace Themes & Personalization
+Tailor your workspace with your choice of accent colors to match your personal aesthetic.
 
-![Job Finder](docs/images/tailorbird_job_finder.png)
+![Settings & Personalization](docs/images/settings.png)
 
-### Local MCP Server (AI Agent Integration)
-Toggle on the built-in localhost Model Context Protocol (MCP) server (`http://127.0.0.1:42427/mcp`) from the bottom-left status bar to let AI assistants (Antigravity, Cursor, Windsurf, VS Code, Zed, OpenCode, or Claude Desktop) populate your candidate profile, work history, prospects, and outreach cards—complete with automatic undo snapshots.
+---
 
-### Local Data Storage
-All candidate profiles, application tracking, and notes are saved locally on your computer in a JSON file (`tailorbird_data.json`). Your information stays on your device.
+## 100% Private & Offline-First
 
-### Appearance
-Choose from multiple accent colors to personalize your workspace.
-
-![Settings](docs/images/tailorbird_settings.png)
+Your job search data belongs to you—period.
+- **Zero Cloud Accounts**: No logins, passwords, or subscriptions required.
+- **Local JSON Storage**: All profiles, tracked listings, and notes are saved directly on your computer in `tailorbird_data.json`.
+- **No Tracking or Telemetry**: Your resumes, notes, and activity never leave your machine.
 
 ---
 
 ## Keyboard Shortcuts
 
-Tailorbird supports standard desktop browser navigation and specialized job-hunting shortcuts:
-
-### Tab Management & Navigation
-
-| Action | macOS | Windows / Linux |
-| :--- | :--- | :--- |
-| **New Tab** | <kbd>Cmd</kbd> + <kbd>T</kbd> | <kbd>Ctrl</kbd> + <kbd>T</kbd> |
-| **Close Tab** | <kbd>Cmd</kbd> + <kbd>W</kbd> | <kbd>Ctrl</kbd> + <kbd>W</kbd> |
-| **Focus Address Bar (Omnibar)** | <kbd>Cmd</kbd> + <kbd>L</kbd> | <kbd>Ctrl</kbd> + <kbd>L</kbd> |
-| **Reload Tab** | <kbd>Cmd</kbd> + <kbd>R</kbd> | <kbd>Ctrl</kbd> + <kbd>R</kbd> / <kbd>F5</kbd> |
-| **Back in History** | <kbd>Cmd</kbd> + <kbd>[</kbd> | <kbd>Alt</kbd> + <kbd>←</kbd> |
-| **Forward in History** | <kbd>Cmd</kbd> + <kbd>]</kbd> | <kbd>Alt</kbd> + <kbd>→</kbd> |
-| **Next Tab** | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> |
-| **Previous Tab** | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> |
-| **Switch to Tab (1–9)** | <kbd>Cmd</kbd> + <kbd>1</kbd> – <kbd>9</kbd> | <kbd>Ctrl</kbd> + <kbd>1</kbd> – <kbd>9</kbd> |
-
-### Tailorbird Actions
+Tailorbird includes standard browser shortcuts and quick actions for rapid job searching:
 
 | Action | macOS | Windows / Linux |
 | :--- | :--- | :--- |
 | **Record Listing to Prospects** | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> |
-| **Dismiss Dialogs / Cancel Edit** | <kbd>Esc</kbd> | <kbd>Esc</kbd> |
-| **Save In-Line Row Edit** | <kbd>Enter</kbd> | <kbd>Enter</kbd> |
-| **Standard Text Operations** (Copy / Paste / Undo / Select All) | <kbd>Cmd</kbd> + <kbd>C</kbd> / <kbd>V</kbd> / <kbd>Z</kbd> / <kbd>A</kbd> | <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>V</kbd> / <kbd>Z</kbd> / <kbd>A</kbd> |
+| **New Tab** | <kbd>Cmd</kbd> + <kbd>T</kbd> | <kbd>Ctrl</kbd> + <kbd>T</kbd> |
+| **Close Tab** | <kbd>Cmd</kbd> + <kbd>W</kbd> | <kbd>Ctrl</kbd> + <kbd>W</kbd> |
+| **Focus Address Bar (Omnibar)** | <kbd>Cmd</kbd> + <kbd>L</kbd> | <kbd>Ctrl</kbd> + <kbd>L</kbd> |
+| **Reload Tab** | <kbd>Cmd</kbd> + <kbd>R</kbd> | <kbd>Ctrl</kbd> + <kbd>R</kbd> / <kbd>F5</kbd> |
+| **Back / Forward** | <kbd>Cmd</kbd> + <kbd>[</kbd> / <kbd>]</kbd> | <kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> |
+| **Next / Previous Tab** | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> | <kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> |
+| **Switch to Tab (1–9)** | <kbd>Cmd</kbd> + <kbd>1</kbd> – <kbd>9</kbd> | <kbd>Ctrl</kbd> + <kbd>1</kbd> – <kbd>9</kbd> |
 
 ---
 
-### Running Prebuilt Release (Linux)
+## Installation & Downloads
 
-Tailorbird releases for Linux include a ready-to-run `.tar.gz` bundle containing the executable binary, desktop launcher, application icon, and `install.sh` script.
+Official installers and portable releases are available on the [Releases page](https://github.com/joelstransky/Tailorbird/releases):
 
-1. Install runtime dependencies:
-   - **Ubuntu / Debian**: `sudo apt install -y libwebkit2gtk-4.1-0 libgtk-3-0 libssl3`
-   - **Fedora**: `sudo dnf install -y webkit2gtk4.1 gtk3 openssl`
-   - **Arch**: `sudo pacman -S webkit2gtk-4.1 openssl`
-
-2. Extract and run:
-   ```bash
-   tar -xzf tailorbird-linux-x86_64.tar.gz
-   cd tailorbird-linux-x86_64
-   ./tailorbird
-   ```
-   *(Optional)* Run `sudo ./install.sh` to install system-wide to `/usr/local/bin` and create an application menu shortcut.
-
-### Building from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/joelstransky/Tailorbird.git
-cd Tailorbird
-
-# Run the app
-cargo run
-
-# Or compile an optimized release binary
-cargo build --release
-```
-
-The compiled binary will be located in `target/release/tailorbird` (or `tailorbird.exe` on Windows).
+- **Windows**: Download and run [`Tailorbird-Setup-v0.2.0.exe`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-Setup-v0.2.0.exe).
+- **macOS**: Open [`Tailorbird-macOS.dmg`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-macOS.dmg) and drag Tailorbird to Applications.
+- **Linux**: Download [`tailorbird-linux-x86_64.tar.gz`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/tailorbird-linux-x86_64.tar.gz), extract, and run `./tailorbird`.
 
 ---
 
 ## License
 
-MIT License. See `LICENSE` for details.
+Tailorbird is open source software released under the [MIT License](LICENSE).

@@ -1,0 +1,9 @@
+# Local agent dependencies & skill-creator install
+.agents/
+
+# Logs and test execution workspaces
+*.log
+evals-workspace/
+tmp/
+node_modules/
+.DS_Store

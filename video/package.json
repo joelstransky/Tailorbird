@@ -5,9 +5,12 @@
   "description": "Remotion launch video for Tailorbird",
   "scripts": {
     "dev": "remotion studio",
-    "build": "remotion render Launch out/tailorbird-launch.mp4",
-    "still": "remotion still Launch out/thumbnail.png --frame=120",
-    "audio": "node scripts/make-audio.mjs",
+    "build": "remotion render LaunchModern out/tailorbird-launch-modern.mp4",
+    "build:modern": "remotion render LaunchModern out/tailorbird-launch-modern.mp4",
+    "build:v2": "remotion render LaunchV2 out/tailorbird-launch-v2.mp4",
+    "build:v1": "remotion render Launch out/tailorbird-launch.mp4",
+    "still": "remotion still LaunchModern out/thumbnail-modern.png --frame=260",
+    "audio": "node scripts/make-audio-modern.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

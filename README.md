@@ -7,13 +7,14 @@
     <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-Setup-v0.2.0.exe">Windows Setup</a> •
     <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-macOS.dmg">macOS DMG</a> •
     <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/tailorbird-linux-x86_64.tar.gz">Linux tar.gz</a> •
-    <a href="https://joelstransky.github.io/Tailorbird/">Website</a>
+    <a href="https://joelstransky.github.io/Tailorbird/">Website</a> •
+    <a href="https://youtu.be/Uh7QckQQxEA">Video Tour (48s)</a>
   </p>
 </div>
 
-Tired of juggling 30 open tabs, lost spreadsheets, and retyping your contact details into dozens of application portals? 
+What if there was a tool to actually help with the job search?
 
-**Tailorbird** pairs your candidate profile, work history, and job tracking pipeline directly alongside a dedicated Chromium browser pane. Everything you need to research, apply, and track is in one focused workspace.
+**Tailorbird** pairs your candidate profile, work history, and job tracking pipeline directly alongside a dedicated Chromium browser pane. Everything you need to research, apply, and track is in one calm, focused workspace.
 
 ![Tailorbird Dual-Pane Workspace](docs/images/dual-pane-workspace.png)
 
@@ -43,16 +44,75 @@ Track job opportunities as you discover them without switching to external sprea
 
 ![Prospects Pipeline](docs/images/prospects-pipeline.png)
 
-### 4. Job Finder
+### 4. AI Agent Control via MCP (Model Context Protocol)
+Control your entire job search workflow directly from your favorite AI agent—including **Claude Desktop**, **Cursor**, **Windsurf**, **Antigravity**, **VS Code**, and **OpenCode**.
+
+Tailorbird includes a built-in, local Model Context Protocol (MCP) server that exposes your candidate profile, work history, application prospects, and outreach roster directly to external AI coding and chat agents over HTTP/SSE.
+
+- **Ask Your Agent to Research & Apply**: Tell your assistant, *"Find high-growth engineering roles at Falcon Dynamics and add them to my Tailorbird pipeline with screening notes."*
+- **Auto-Tailor Resumes & Experience**: Let your agent analyze job descriptions and optimize your master work history or custom snippets directly in Tailorbird.
+- **Full Safety & 1-Click Undo**: Every write action taken by an AI agent creates an automatic pre-write snapshot. Restore your exact workspace state with a single click of the **Undo** button in the app footer.
+- **100% Local & Private**: The MCP server listens strictly on `http://127.0.0.1:42427/mcp`. Zero data leaves your machine or is routed to third-party clouds.
+
+#### Quick Setup in Your Favorite AI Client
+
+**Cursor, Antigravity, Windsurf, VS Code, & Zed** (`mcpServers` config):
+```json
+{
+  "mcpServers": {
+    "tailorbird": {
+      "url": "http://127.0.0.1:42427/mcp"
+    }
+  }
+}
+```
+
+**Claude Desktop** (`claude_desktop_config.json` via `mcp-remote` bridge):
+```json
+{
+  "mcpServers": {
+    "tailorbird": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://127.0.0.1:42427/mcp"]
+    }
+  }
+}
+```
+
+**OpenCode CLI** (`opencode.json`):
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "tailorbird": {
+      "type": "remote",
+      "url": "http://127.0.0.1:42427/mcp",
+      "enabled": true,
+      "oauth": false
+    }
+  }
+}
+```
+
+#### Available MCP Tools
+- `get_tailorbird_data`: Read profile details, work history, snippets, prospects, and outreach contacts.
+- `update_candidate_profile`: Automatically update candidate fields (contact, location, links, demographics).
+- `set_work_history`: Append or update career positions, accomplishments, and bullet points.
+- `upsert_special_field`: Save tailored answers and reusable Q&A snippets.
+- `add_prospect`: Capture new job postings with company, role, posting URL, and initial stage.
+- `update_prospect_status`: Transition application stages (*Screening*, *Interviewing*, *Offer*).
+- `add_outreach_card` & `update_outreach_card`: Manage networking targets, key contacts, and draft intro pitches.
+
+### 5. Job Finder
 Quickly search across 9 major ATS platforms using role keywords and location filters. Browse open postings directly in Tailorbird without opening separate search engines.
 
-### 5. Outreach Roster
+### 6. Outreach Roster
 Proactively manage company networking, recruiters, and key contacts.
 - Track target companies, interview leads, and follow-up timelines.
 - Draft custom intro notes and value propositions.
 - Copy outreach messages to your clipboard with one click.
 
-### 6. Workspace Themes & Personalization
+### 7. Workspace Themes & Personalization
 Tailor your workspace with your choice of accent colors to match your personal aesthetic.
 
 ![Settings & Personalization](docs/images/settings.png)

@@ -772,6 +772,7 @@
       <a href="#features">Dual-Pane</a>
       <a href="#autofill">Autofill</a>
       <a href="#prospects">Pipeline</a>
+      <a href="#mcp">MCP Agent</a>
       <a href="#quickstart">Source</a>
       <a href="https://github.com/joelstransky/Tailorbird" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 0.45rem 0.95rem; font-size: 0.88rem;">
         <svg height="15" width="15" viewBox="0 0 16 16" fill="currentColor">
@@ -874,8 +875,8 @@
       <div class="video-wrapper">
         <iframe
           id="launch-video"
-          src="https://www.youtube.com/embed/xrPCF72UoOc?autoplay=1&mute=1&loop=1&playlist=xrPCF72UoOc&rel=0&playsinline=1"
-          title="Tailorbird — Launch Experience (360° Forest Edition)"
+          src="https://www.youtube.com/embed/Uh7QckQQxEA?autoplay=1&mute=1&loop=1&playlist=Uh7QckQQxEA&rel=0&playsinline=1"
+          title="Tailorbird — The Browser Built for the Job Search"
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -1020,6 +1021,82 @@
         <p>
           Organize key decision-makers, company leaders, and custom value propositions before openings go public. Export to CSV whenever needed.
         </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Model Context Protocol (MCP) Section -->
+  <section id="mcp">
+    <div class="section-header">
+      <div class="section-eyebrow">Agentic Automation</div>
+      <h2 class="section-title">Control Tailorbird With Your AI Agent</h2>
+      <p class="section-desc">
+        Connect your favorite AI assistant via Model Context Protocol (MCP). Let Claude, Cursor, Windsurf, Antigravity, or OpenCode research roles, tailor bullet points, and manage your pipeline directly in Tailorbird.
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <h3>Native AI Tool Calling</h3>
+        <p>
+          Exposes 8 native tools (<code style="font-family: var(--font-mono); font-size: 0.85em;">get_tailorbird_data</code>, <code style="font-family: var(--font-mono); font-size: 0.85em;">add_prospect</code>, <code style="font-family: var(--font-mono); font-size: 0.85em;">set_work_history</code>, <code style="font-family: var(--font-mono); font-size: 0.85em;">upsert_special_field</code>) so your agent can take direct action.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+        </div>
+        <h3>1-Click Undo Stack</h3>
+        <p>
+          Complete confidence and safety. Every write operation automatically creates a pre-write snapshot in the app footer. Revert any agent change with one click.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3>100% Offline & Local</h3>
+        <p>
+          The MCP server runs exclusively on <code style="font-family: var(--font-mono); font-size: 0.85em;">http://127.0.0.1:42427/mcp</code>. Zero cloud hops, zero telemetry, and your candidate data stays completely private.
+        </p>
+      </div>
+    </div>
+
+    <div class="code-box-wrapper" style="margin-top: 1.5rem; margin-bottom: 3.5rem;">
+      <img src="images/bird-waving-no-bg.png" class="terminal-mascot" alt="Tailorbird Mascot Waving">
+      <div class="code-box">
+        <div class="code-top">
+          <div class="window-dots">
+            <span class="window-dot dot-close"></span>
+            <span class="window-dot dot-min"></span>
+            <span class="window-dot dot-max"></span>
+          </div>
+          <span>MCP Client Setup — Cursor / Claude / Windsurf / Antigravity</span>
+          <span>http://127.0.0.1:42427/mcp</span>
+        </div>
+        <pre><code><span class="comment">// 1. Native HTTP Clients (Cursor, Antigravity, Windsurf, VS Code)</span>
+{
+  <span class="cmd">"mcpServers"</span>: {
+    <span class="subcmd">"tailorbird"</span>: {
+      <span class="cmd">"url"</span>: <span class="url">"http://127.0.0.1:42427/mcp"</span>
+    }
+  }
+}
+
+<span class="comment">// 2. Claude Desktop (claude_desktop_config.json via mcp-remote bridge)</span>
+{
+  <span class="cmd">"mcpServers"</span>: {
+    <span class="subcmd">"tailorbird"</span>: {
+      <span class="cmd">"command"</span>: <span class="arg">"npx"</span>,
+      <span class="cmd">"args"</span>: [<span class="arg">"-y"</span>, <span class="arg">"mcp-remote"</span>, <span class="url">"http://127.0.0.1:42427/mcp"</span>]
+    }
+  }
+}</code></pre>
       </div>
     </div>
   </section>

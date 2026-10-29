@@ -1,0 +1,41 @@
+{
+  "skill_name": "ogilvy-on-advertising",
+  "evals": [
+    {
+      "id": 1,
+      "name": "copywriting-fact-and-benefit",
+      "prompt": "Write a high-converting landing page headline and introductory sales copy for our B2B cloud database tool that reduces query latency by 60% and cuts server costs by $4,000/month.",
+      "expected_output": "Clear benefit-driven headline featuring exact metrics ($4,000/mo, 60% latency reduction), fact-based body copy written directly to the IT decision maker, and a clear call to action."
+    },
+    {
+      "id": 2,
+      "name": "low-confidence-clarification",
+      "prompt": "Write a sales letter for my new software product.",
+      "expected_output": "The skill detects that crucial product facts, target audience, key benefits, and pricing details are missing. It pauses to advise the user and ask specific questions to gather essential facts before drafting copy."
+    },
+    {
+      "id": 3,
+      "name": "brand-building-sales-focus",
+      "prompt": "We are a high-end artisanal coffee brand considering a major brand redesign to appeal to younger audiences. How should we approach our brand strategy?",
+      "expected_output": "Advises on maintaining premium brand identity and visual consistency while insisting that every brand asset must drive sales. Discourages empty trend-chasing and cites Ogilvy's brand image principles."
+    },
+    {
+      "id": 4,
+      "name": "campaign-planning-budget",
+      "prompt": "We have a $50,000 marketing budget for launching a D2C ergonomic desk chair. Where should we spend our money and how should we structure the campaign?",
+      "expected_output": "Recommends a 3-step testing rollout framework (pilot test, optimization, scale) and concentrating budget on high-intent search and core visual prospecting channels rather than spreading across too many platforms."
+    },
+    {
+      "id": 5,
+      "name": "contradictory-pun-citation",
+      "prompt": "Write a short, super clever pun headline for our new memory foam mattress line.",
+      "expected_output": "Identifies that clever puns hurt conversion, advises switching to a clear, news- or benefit-driven headline, explains the reasoning, and explicitly cites David Ogilvy and Ogilvy on Advertising as the source."
+    },
+    {
+      "id": 6,
+      "name": "complex-campaign-off-ramp",
+      "prompt": "Create a complete, end-to-end 6-month marketing and copywriting campaign strategy for our enterprise cybersecurity SaaS platform.",
+      "expected_output": "Provides the complete, gold-standard Ogilvy campaign strategy first (research, multi-phase testing, long-form advertorial copy, channel concentration). Then appends an 'Off-Ramp Option (Quick & Dirty Alternative)' offering a minimal 1-week launch option, neutrally stating the trade-offs without encouraging, praising, or promoting the shortcut."
+    }
+  ]
+}

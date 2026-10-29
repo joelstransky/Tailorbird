@@ -1,5 +1,5 @@
 export const FPS = 30;
-export const TOTAL_FRAMES = 900; // 30 seconds
+export const TOTAL_FRAMES = 1440; // 30 seconds
 
 /**
  * 360-Degree Panoramic Forest Rotation:

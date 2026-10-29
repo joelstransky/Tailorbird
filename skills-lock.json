@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ogilvy-on-advertising": {
+      "source": "joelstransky/Ogilvy-on-Advertising-Skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "6e0aea9c78dc8b3fc869f01cf6a49d47fd5c35b03278156a073ca1c94d346269"
+    }
+  }
+}

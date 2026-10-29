@@ -39,8 +39,8 @@ export const CLEARINGS: ClearingData[] = [
     id: 'problem',
     clearingIndex: 1,
     angle: 72,
-    title: 'TIRED OF TAB CHAOS?',
-    subtitle: '37 open tabs. 4 spreadsheets. Zero sanity.',
+    title: 'A TOOL TO ACTUALLY HELP',
+    subtitle: 'Tailorbird attempts to simplify and organize your job search.',
   },
   {
     id: 'workspace',
@@ -54,7 +54,7 @@ export const CLEARINGS: ClearingData[] = [
     clearingIndex: 3,
     angle: 216,
     title: '1-CLICK AUTOFILL',
-    subtitle: 'Stop typing your name for the 400th time.',
+    subtitle: 'Detects and fills common ATS form fields in one click.',
   },
   {
     id: 'free',

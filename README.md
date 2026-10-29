@@ -14,7 +14,7 @@
 
 What if there was a tool to actually help with the job search?
 
-**Tailorbird** pairs your candidate profile, work history, and job tracking pipeline directly alongside a dedicated Chromium browser pane. Everything you need to research, apply, and track is in one calm, focused workspace.
+**Tailorbird** attempts to simplify and organize your job search by bringing your candidate profile, 1-click form autofill, and application tracking directly into a dedicated, private browser.
 
 ![Tailorbird Dual-Pane Workspace](docs/images/dual-pane-workspace.png)
 

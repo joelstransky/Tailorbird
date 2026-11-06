@@ -4,9 +4,9 @@
   <p><strong>The Specialized Desktop Browser Built for the Job Search</strong></p>
 
   <p>
-    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-Setup-v0.2.0.exe">Windows Setup</a> •
-    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-macOS.dmg">macOS DMG</a> •
-    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/tailorbird-linux-x86_64.tar.gz">Linux tar.gz</a> •
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/Tailorbird-Setup-v0.2.1.exe">Windows Setup</a> •
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/Tailorbird-macOS.dmg">macOS DMG</a> •
+    <a href="https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/tailorbird-linux-x86_64.tar.gz">Linux tar.gz</a> •
     <a href="https://joelstransky.github.io/Tailorbird/">Website</a> •
     <a href="https://youtu.be/Uh7QckQQxEA">Video Tour (48s)</a>
   </p>
@@ -149,9 +149,9 @@ Tailorbird includes standard browser shortcuts and quick actions for rapid job s
 
 Official installers and portable releases are available on the [Releases page](https://github.com/joelstransky/Tailorbird/releases):
 
-- **Windows**: Download and run [`Tailorbird-Setup-v0.2.0.exe`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-Setup-v0.2.0.exe).
-- **macOS**: Open [`Tailorbird-macOS.dmg`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/Tailorbird-macOS.dmg) and drag Tailorbird to Applications.
-- **Linux**: Download [`tailorbird-linux-x86_64.tar.gz`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.0/tailorbird-linux-x86_64.tar.gz), extract, and run `./tailorbird`.
+- **Windows**: Download and run [`Tailorbird-Setup-v0.2.1.exe`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/Tailorbird-Setup-v0.2.1.exe).
+- **macOS**: Open [`Tailorbird-macOS.dmg`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/Tailorbird-macOS.dmg) and drag Tailorbird to Applications.
+- **Linux**: Download [`tailorbird-linux-x86_64.tar.gz`](https://github.com/joelstransky/Tailorbird/releases/download/v0.2.1/tailorbird-linux-x86_64.tar.gz), extract, and run `./tailorbird`.
 
 ---
 

@@ -201,7 +201,7 @@ jobs:
               --key "$API_KEY_PATH" \
               --key-id "$APPLE_API_KEY_ID" \
               --issuer "$APPLE_API_ISSUER" \
-              --timeout 10m \
+              --timeout 30m \
               --wait
 
             echo "Stapling notarization ticket to DMG..."

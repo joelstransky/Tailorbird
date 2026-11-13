@@ -110,10 +110,16 @@ jobs:
           path: dist/Tailorbird-Setup-v0.2.1.exe
 
       # -------------------------------------------------------------
-      # 2. macOS: Universal 2 Bundle, Sign & Upload DMG only
+      # 2. macOS: Universal 2 Bundle, Sign & Notarize DMG
       # -------------------------------------------------------------
-      - name: Build macOS Application Bundle and DMG
+      - name: Build macOS Application Bundle, Sign & Notarize DMG
         if: runner.os == 'macOS'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           mkdir -p Tailorbird.iconset
           sips -z 16 16     src/assets/icon.png --out Tailorbird.iconset/icon_16x16.png
@@ -134,8 +140,35 @@ jobs:
           cp installer/macos/Info.plist Tailorbird.app/Contents/
           cp icon.icns Tailorbird.app/Contents/Resources/
 
-          # Ad-hoc code sign the Universal bundle
-          codesign --force --deep --sign - Tailorbird.app
+          # Setup Keychain and import Developer ID Certificate if configured
+          SIGNING_IDENTITY=""
+          if [ -n "$MACOS_CERTIFICATE" ] && [ -n "$MACOS_CERTIFICATE_PWD" ]; then
+            KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+            KEYCHAIN_PWD="build_temp_password"
+
+            security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+            security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+
+            CERT_PATH=$RUNNER_TEMP/certificate.p12
+            echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_PATH"
+            security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+            security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+
+            SIGNING_IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -n 1 | awk -F '"' '{print $2}')
+            echo "Signing Identity: $SIGNING_IDENTITY"
+
+            # Sign the .app bundle with Hardened Runtime, Entitlements, and Timestamp
+            codesign --force --deep --options runtime --timestamp \
+              --entitlements installer/macos/Tailorbird.entitlements \
+              --sign "$SIGNING_IDENTITY" \
+              --keychain "$KEYCHAIN_PATH" \
+              Tailorbird.app
+          else
+            echo "No signing certificate found in secrets. Falling back to ad-hoc signing."
+            codesign --force --deep --sign - Tailorbird.app
+          fi
 
           # Create DMG installer with Applications drag-and-drop link, Uninstaller, and README guide
           mkdir -p dmg_root
@@ -145,6 +178,33 @@ jobs:
           chmod +x dmg_root/Uninstall.command
           cp installer/macos/README.txt dmg_root/
           hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO Tailorbird-macOS.dmg
+
+          # Sign and Notarize DMG if credentials are present
+          if [ -n "$SIGNING_IDENTITY" ] && [ -n "$APPLE_API_KEY" ] && [ -n "$APPLE_API_KEY_ID" ] && [ -n "$APPLE_API_ISSUER" ]; then
+            echo "Signing DMG container..."
+            codesign --force --timestamp --sign "$SIGNING_IDENTITY" --keychain "$KEYCHAIN_PATH" Tailorbird-macOS.dmg
+
+            echo "Preparing App Store Connect API Key for notarization..."
+            API_KEY_PATH=$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8
+            if echo "$APPLE_API_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+              echo "$APPLE_API_KEY" > "$API_KEY_PATH"
+            else
+              echo "$APPLE_API_KEY" | base64 --decode > "$API_KEY_PATH" 2>/dev/null || echo "$APPLE_API_KEY" > "$API_KEY_PATH"
+            fi
+
+            echo "Submitting DMG to Apple Notary Service..."
+            xcrun notarytool submit Tailorbird-macOS.dmg \
+              --key "$API_KEY_PATH" \
+              --key-id "$APPLE_API_KEY_ID" \
+              --issuer "$APPLE_API_ISSUER" \
+              --wait
+
+            echo "Stapling notarization ticket to DMG..."
+            xcrun stapler staple Tailorbird-macOS.dmg
+
+            # Verify notarization assessment
+            spctl --assess -vv --type install Tailorbird-macOS.dmg || true
+          fi
 
       - name: Upload macOS DMG
         if: runner.os == 'macOS'

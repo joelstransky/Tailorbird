@@ -143,6 +143,7 @@ jobs:
           # Setup Keychain and import Developer ID Certificate if configured
           SIGNING_IDENTITY=""
           if [ -n "$MACOS_CERTIFICATE" ] && [ -n "$MACOS_CERTIFICATE_PWD" ]; then
+            echo "Setting up temporary build keychain..."
             KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
             KEYCHAIN_PWD="build_temp_password"
 
@@ -152,14 +153,16 @@ jobs:
 
             CERT_PATH=$RUNNER_TEMP/certificate.p12
             echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_PATH"
-            security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+            security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign -T /usr/bin/security
             security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+            security default-keychain -s "$KEYCHAIN_PATH"
             security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
 
             SIGNING_IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -n 1 | awk -F '"' '{print $2}')
-            echo "Signing Identity: $SIGNING_IDENTITY"
+            echo "Signing Identity detected: $SIGNING_IDENTITY"
 
             # Sign the .app bundle with Hardened Runtime, Entitlements, and Timestamp
+            echo "Signing Tailorbird.app..."
             codesign --force --deep --options runtime --timestamp \
               --entitlements installer/macos/Tailorbird.entitlements \
               --sign "$SIGNING_IDENTITY" \
@@ -177,6 +180,7 @@ jobs:
           cp installer/macos/Uninstall.command dmg_root/
           chmod +x dmg_root/Uninstall.command
           cp installer/macos/README.txt dmg_root/
+          echo "Packaging DMG..."
           hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO Tailorbird-macOS.dmg
 
           # Sign and Notarize DMG if credentials are present
@@ -197,6 +201,7 @@ jobs:
               --key "$API_KEY_PATH" \
               --key-id "$APPLE_API_KEY_ID" \
               --issuer "$APPLE_API_ISSUER" \
+              --timeout 10m \
               --wait
 
             echo "Stapling notarization ticket to DMG..."

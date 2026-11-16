@@ -3210,7 +3210,10 @@
       const location = document.getElementById('searchLocation').value.trim();
 
       const sites = [];
-      if (document.getElementById('chkGreenhouse').checked) sites.push('site:boards.greenhouse.io');
+      if (document.getElementById('chkGreenhouse').checked) {
+        sites.push('site:boards.greenhouse.io');
+        sites.push('site:job-boards.greenhouse.io');
+      }
       if (document.getElementById('chkLever').checked) sites.push('site:jobs.lever.co');
       if (document.getElementById('chkAshby').checked) sites.push('site:jobs.ashbyhq.com');
       if (document.getElementById('chkWorkday').checked) sites.push('site:myworkdayjobs.com');
@@ -3221,7 +3224,9 @@
       if (document.getElementById('chkIcims').checked) sites.push('site:icims.com');
 
       let queryParts = [];
-      if (sites.length > 0) {
+      if (sites.length === 1) {
+        queryParts.push(sites[0]);
+      } else if (sites.length > 1) {
         queryParts.push('(' + sites.join(' OR ') + ')');
       }
 

@@ -1446,6 +1446,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let builder = WebViewBuilder::new();
             #[cfg(target_os = "windows")]
             let builder = builder.with_environment(shared_env.clone());
+            #[cfg(target_os = "macos")]
+            let builder = builder.with_user_agent(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15"
+            );
             let builder = builder
                 .with_bounds(bounds)
                 .with_background_color((11, 13, 19, 255)) // #0B0D13 match welcome/dark canvas
@@ -2408,8 +2412,12 @@ fn format_input_to_url(input: &str) -> String {
 }
 
 fn format_search_url(query: &str) -> String {
+    let sanitized: String = query
+        .chars()
+        .filter(|c| !('\u{F700}'..='\u{F8FF}').contains(c))
+        .collect();
     let mut encoded = String::new();
-    for b in query.bytes() {
+    for b in sanitized.bytes() {
         match b {
             b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
                 encoded.push(b as char);

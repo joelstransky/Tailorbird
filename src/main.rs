@@ -525,6 +525,32 @@ const GLOBAL_SHORTCUTS_SCRIPT: &str = r#"(function() {
         }
     }, true);
 
+    // Guard against macOS WKWebView inserting AppKit function-key Private Use Area glyphs
+    // (such as \uF703 NSRightArrowFunctionKey) when pressing Right Arrow at the end of a text input.
+    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+        window.addEventListener('beforeinput', function(e) {
+            if (e.data && /[\uF700-\uF8FF]/.test(e.data)) {
+                e.preventDefault();
+            }
+        }, true);
+
+        window.addEventListener('keydown', function(e) {
+            if (e.defaultPrevented) return;
+            if (e.key !== 'ArrowRight' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+            const el = document.activeElement;
+            if (!el) return;
+            if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+                try {
+                    if (typeof el.selectionStart === 'number' &&
+                        el.selectionStart === el.selectionEnd &&
+                        el.selectionStart === el.value.length) {
+                        e.preventDefault();
+                    }
+                } catch (_) {}
+            }
+        }, false);
+    }
+
     function sendShortcutIpc(msg) {
         if (window.ipc && typeof window.ipc.postMessage === 'function') {
             window.ipc.postMessage(JSON.stringify(msg));

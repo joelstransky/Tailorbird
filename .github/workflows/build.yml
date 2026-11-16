@@ -106,8 +106,8 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: Tailorbird-Setup-v0.2.1.exe
-          path: dist/Tailorbird-Setup-v0.2.1.exe
+          name: Tailorbird-Setup-v0.2.2.exe
+          path: dist/Tailorbird-Setup-v0.2.2.exe
 
       # -------------------------------------------------------------
       # 2. macOS: Universal 2 Bundle, Sign & Notarize DMG
@@ -246,7 +246,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/Tailorbird-Setup-v0.2.1.exe
+            dist/Tailorbird-Setup-v0.2.2.exe
             Tailorbird-macOS.dmg
             tailorbird-linux-x86_64.tar.gz
           draft: true

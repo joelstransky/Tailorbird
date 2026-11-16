@@ -173,13 +173,10 @@ jobs:
             codesign --force --deep --sign - Tailorbird.app
           fi
 
-          # Create DMG installer with Applications drag-and-drop link, Uninstaller, and README guide
+          # Create standard macOS DMG with app bundle and Applications symlink
           mkdir -p dmg_root
           cp -R Tailorbird.app dmg_root/
           ln -s /Applications dmg_root/Applications
-          cp installer/macos/Uninstall.command dmg_root/
-          chmod +x dmg_root/Uninstall.command
-          cp installer/macos/README.txt dmg_root/
           echo "Packaging DMG..."
           hdiutil create -volname "Tailorbird" -srcfolder dmg_root -ov -format UDZO Tailorbird-macOS.dmg
 
